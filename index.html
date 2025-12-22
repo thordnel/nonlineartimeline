@@ -1,0 +1,895 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Story Beat Manager</title>
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --secondary: #64748b;
+            --danger: #ef4444;
+            --success: #22c55e;
+            --warning: #f59e0b;
+            --bg: #f3f4f6;
+            --drag-bg: #e0e7ff;
+        }
+
+        body { 
+            font-family: system-ui, -apple-system, sans-serif; 
+            max-width: 950px; 
+            margin: 0 auto; 
+            padding: 20px; 
+            background-color: var(--bg);
+        }
+
+        /* --- Input Panel --- */
+        .panel {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        .controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            align-items: start; /* Changed to start for textarea alignment */
+        }
+
+        .input-group { display: flex; flex-direction: column; }
+        label { font-size: 0.8rem; font-weight: bold; margin-bottom: 5px; color: var(--secondary); }
+        
+        input, textarea { 
+            padding: 10px; 
+            border: 1px solid #d1d5db; 
+            border-radius: 6px; 
+            font-size: 1rem; 
+            font-family: inherit;
+        }
+
+        /* Specific style for the new textarea */
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        /* --- Buttons --- */
+        .btn-row { margin-top: 15px; display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+        
+        button {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            color: white;
+            transition: all 0.2s;
+            font-size: 0.9rem;
+        }
+        button:hover { opacity: 0.9; transform: translateY(-1px); }
+
+        .btn-add { background-color: var(--success); }
+        .btn-update { background-color: var(--warning); }
+        .btn-cancel { background-color: var(--secondary); display: none; }
+        
+        .btn-sort { background-color: var(--primary); }
+        .btn-dl { background-color: var(--secondary); }
+        .btn-reset { background-color: var(--danger); }
+        
+        /* View Toggles */
+        .btn-view { background-color: white; color: var(--secondary); border: 1px solid #d1d5db; }
+        .btn-view.active { background-color: var(--primary); color: white; border-color: var(--primary); }
+
+        /* --- Views Container --- */
+        .view-container { 
+            background: white; 
+            padding: 20px; 
+            border-radius: 12px; 
+            min-height: 250px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            position: relative;
+        }
+
+        /* --- 1. TABLE VIEW --- */
+        table { width: 100%; border-collapse: collapse; display: none; table-layout: fixed; }
+        table.show { display: table; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #e5e7eb; vertical-align: top; }
+        th { background: #f8fafc; font-weight: 600; }
+        
+        /* Column Widths */
+        th:nth-child(1) { width: 40px; } /* Drag Handle */
+        th:nth-child(2) { width: 130px; } /* Date */
+        th:nth-child(3) { width: 80px; }  /* Chapter */
+        th:nth-child(5) { width: 100px; } /* Action */
+        
+        /* Details Column Styling (List View) */
+        td:nth-child(4) { 
+            font-size: 0.85rem; /* Decreased font size */
+            color: #334155;
+            white-space: pre-wrap; /* Allows multiline */
+            word-wrap: break-word;
+            line-height: 1.4;
+        }
+
+        /* Dragging Styles */
+        tr.draggable { cursor: grab; }
+        tr.draggable:active { cursor: grabbing; }
+        tr.dragging { background-color: var(--drag-bg); opacity: 0.8; }
+        tr.drag-over { border-bottom: 2px solid var(--primary); }
+        
+        .drag-handle { cursor: grab; color: #cbd5e1; font-size: 1.2rem; margin-right: 8px; }
+        .drag-handle:hover { color: var(--primary); }
+
+        /* Move Arrows (Mobile) */
+        .move-btn { background: none; border: none; cursor: pointer; color: var(--secondary); font-weight: bold; padding: 2px 5px; font-size: 1rem; }
+        .move-btn:hover { color: var(--primary); background: #f1f5f9; border-radius: 4px; }
+
+        .action-btn { background: none; border: none; cursor: pointer; font-size: 1.1rem; padding: 5px; color: var(--secondary); }
+        .action-btn:hover { color: var(--primary); transform: scale(1.1); }
+        .del-btn { color: var(--danger); }
+
+        /* --- 2. HORIZONTAL TIMELINE VIEW --- */
+        #visualArea { 
+            display: none; 
+            overflow-x: auto;
+            padding: 20px 0;
+            white-space: nowrap;
+            align-items: flex-start; 
+            scroll-behavior: smooth;
+        }
+        #visualArea.show { display: flex; }
+
+        /* Timeline Item */
+        .h-item {
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+            min-width: 180px; /* Increased slightly for longer text */
+            padding: 0 10px;
+            vertical-align: top;
+        }
+
+        /* The Horizontal Line Connector */
+        .h-item::after {
+            content: '';
+            position: absolute;
+            top: 75px; 
+            left: 50%; 
+            width: 100%; 
+            height: 4px;
+            background: #e2e8f0;
+            z-index: 0;
+        }
+        .h-item:last-child::after { display: none; }
+
+        /* Date Label */
+        .h-date-wrap {
+            text-align: center;
+            margin-bottom: 8px;
+            min-height: 55px; 
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+        }
+        .h-date {
+            font-size: 0.8rem;
+            font-weight: bold;
+            color: #334155;
+            line-height: 1.2;
+        }
+        .h-day {
+            font-size: 0.75rem;
+            color: var(--primary);
+            font-weight: 600;
+            margin: 2px 0;
+        }
+        .h-time {
+            font-size: 0.7rem;
+            color: var(--secondary);
+            font-weight: normal;
+        }
+
+        /* The Dot */
+        .h-dot {
+            width: 20px;
+            height: 20px;
+            background: var(--primary);
+            border: 4px solid white;
+            border-radius: 50%;
+            z-index: 1;
+            box-shadow: 0 0 0 2px #e2e8f0;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .h-dot:hover { transform: scale(1.3); background: var(--warning); border-color: #fff; }
+
+        /* Details Box */
+        .h-card {
+            margin-top: 15px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 10px;
+            width: 160px; /* Slightly wider for text */
+            white-space: normal;
+            text-align: center;
+            position: relative;
+        }
+        .h-card:hover { border-color: var(--primary); background: #fff; }
+        
+        .h-detail-text { 
+            font-size: 0.85rem; 
+            font-weight: 600; 
+            color: #1e293b; 
+            line-height: 1.3;
+            white-space: pre-wrap; /* Allows multiline in Visual view too */
+        }
+        .h-val-text { font-size: 0.75rem; color: var(--primary); margin-top: 5px; font-weight: bold; }
+
+        /* Delete X on Card */
+        .card-del {
+            position: absolute;
+            top: 2px;
+            right: 5px;
+            font-size: 1rem;
+            color: var(--danger);
+            cursor: pointer;
+            font-weight: bold;
+            opacity: 0.5;
+            z-index: 5;
+        }
+        .card-del:hover { opacity: 1; transform: scale(1.2); }
+
+        /* --- MODAL STYLES --- */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-content {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            max-width: 300px;
+            width: 90%;
+        }
+        .modal-buttons {
+            margin-top: 20px;
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        /* Toast Notification */
+        #toast {
+            visibility: hidden;
+            min-width: 250px;
+            background-color: #333;
+            color: #fff;
+            text-align: center;
+            border-radius: 8px;
+            padding: 16px;
+            position: fixed;
+            z-index: 2000;
+            left: 50%;
+            bottom: 30px;
+            transform: translateX(-50%);
+            font-size: 0.9rem;
+            opacity: 0;
+            transition: opacity 0.3s, bottom 0.3s;
+        }
+        #toast.show {
+            visibility: visible;
+            opacity: 1;
+            bottom: 50px;
+        }
+        
+        .drag-hint {
+            font-size: 0.8rem; color: var(--secondary); margin-left: 10px; font-style: italic; display: none;
+        }
+
+        /* --- MOBILE MEDIA QUERIES --- */
+        @media (max-width: 600px) {
+            body { padding: 10px; }
+            .panel { padding: 15px; }
+            h2 { font-size: 1.5rem; margin-top: 5px; margin-bottom: 15px; }
+            
+            /* Stack controls */
+            .controls { grid-template-columns: 1fr; gap: 10px; }
+            
+            /* Button row flow */
+            .btn-row { gap: 8px; justify-content: space-between; }
+            .btn-row > button { flex-grow: 1; padding: 12px 10px; }
+            
+            /* Hide drag hint on mobile */
+            .drag-hint { display: none !important; }
+
+            /* Table adjustments */
+            th, td { padding: 8px 4px; font-size: 0.85rem; }
+            .action-btn { font-size: 1.3rem; padding: 8px; } /* Bigger for touch */
+            
+            /* Timeline horizontal scroll snap */
+            #visualArea { 
+                scroll-snap-type: x mandatory; 
+                padding-bottom: 20px;
+            }
+            .h-item { scroll-snap-align: center; }
+        }
+
+    </style>
+</head>
+<body>
+
+    <h2 style="text-align:center; color:#333;">Non-Linear Timeline Manager</h2>
+    <h4 style="text-align:center; color:#333; margin-top: -10px; font-weight: normal; font-size: 0.9rem;">Visualize story beats in chronological order or in chapter sequence (linear or non-linear timeline).</h4>
+
+    <!-- Controls -->
+    <div class="panel">
+        <div class="controls">
+            <div class="input-group">
+                <label>Date & Time</label>
+                <!-- Changed to datetime-local for time support -->
+                <input type="datetime-local" id="dateIn">
+            </div>
+            <div class="input-group">
+                <label>Chapter</label>
+                <input type="number" id="numIn" placeholder="e.g. 12.3" step="0.01">
+            </div>
+            <div class="input-group" style="flex-grow: 2;">
+                <label>Details</label>
+                <!-- Replaced Input with Textarea for Multiline Support -->
+                <textarea id="detailIn" rows="3" maxlength="500" placeholder="Event description... (Max 500 chars)"></textarea>
+            </div>
+        </div>
+
+        <div class="btn-row">
+            <button id="btnAdd" class="btn-add" onclick="handleAdd()">+ Add Event</button>
+            <button id="btnCancel" class="btn-cancel" onclick="cancelEdit()">Cancel</button>
+            
+            <!-- Spacer only for desktop -->
+            <span style="width: 20px;" class="desktop-only"></span>
+
+            <button class="btn-sort" onclick="sortData('date')">Sort Date</button>
+            <button class="btn-sort" onclick="sortData('number')">Sort Chapter</button>
+            <span class="drag-hint" id="dragHint">⇅ Drag rows to reorder decimal chapters</span>
+
+            <!-- Spacer only for desktop -->
+            <span style="flex-grow:1" class="desktop-only"></span>
+            
+            <button class="btn-view active" id="btnVis" onclick="toggleView('visual')">Visual</button>
+            <button class="btn-view" id="btnTab" onclick="toggleView('table')">List</button>
+        </div>
+    </div>
+
+    <!-- Display Area -->
+    <div class="view-container">
+        <!-- Visual Timeline (Horizontal) -->
+        <div id="visualArea" class="show"></div>
+        
+        <!-- Table List (Vertical) -->
+        <table id="tableArea">
+            <thead>
+                <tr>
+                    <th></th>
+                    <th>Date / Time</th>
+                    <th>Chapter</th>
+                    <th>Details</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+        </table>
+        
+        <p id="emptyMsg" style="text-align:center; color:#94a3b8; margin-top:2rem;">No events added yet.</p>
+    </div>
+
+    <!-- File Tools -->
+    <div class="panel" style="margin-top: 20px; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 10px;">
+        <div style="flex-grow: 1;">
+            <button class="btn-dl" onclick="downloadCSV()" style="width:100%">Save CSV</button>
+        </div>
+        <div style="flex-grow: 1;">
+            <input type="file" id="fileIn" accept=".csv" onchange="uploadCSV(this)" style="width:95%">
+        </div>
+        <div style="flex-grow: 1;">
+            <button class="btn-reset" onclick="confirmReset()" style="width:100%">Reset</button>
+        </div>
+    </div>
+
+    <!-- Custom Delete Modal -->
+    <div id="deleteModal" class="modal-overlay">
+        <div class="modal-content">
+            <h3>Confirm Delete</h3>
+            <p>Are you sure you want to remove this event?</p>
+            <div class="modal-buttons">
+                <button class="btn-reset" onclick="executeDelete()">Yes, Delete</button>
+                <button class="btn-dl" onclick="closeModal()">Cancel</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Custom Reset Modal -->
+    <div id="resetModal" class="modal-overlay">
+        <div class="modal-content">
+            <h3>Reset All</h3>
+            <p>This will clear all events. Are you sure?</p>
+            <div class="modal-buttons">
+                <button class="btn-reset" onclick="executeReset()">Yes, Clear All</button>
+                <button class="btn-dl" onclick="closeModal()">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Message -->
+    <div id="toast"></div>
+
+    <script>
+        let events = [];
+        let editIndex = -1; 
+        let deleteTargetIndex = null;
+        let currentSortMethod = 'date'; // 'date' or 'number'
+
+        const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+        // --- HELPER: Normalize Date for Input ---
+        function normalizeDateForInput(dateStr) {
+            if (!dateStr) return '';
+            if (dateStr.length === 10) { 
+                return dateStr + "T00:00"; 
+            }
+            return dateStr;
+        }
+
+        // --- HELPER: Get Friendly Date String (14 Apr 1914) ---
+        function getFormattedDate(dateStr) {
+            if (!dateStr) return '';
+            const parts = dateStr.split('T');
+            const datePart = parts[0];
+            const [y, m, d] = datePart.split('-');
+            if (!y || !m || !d) return dateStr; 
+            const monthName = MONTHS[parseInt(m) - 1];
+            return `${parseInt(d)} ${monthName} ${y}`;
+        }
+
+        function formatDisplayDate(dateStr) {
+            if(!dateStr) return '';
+            const parts = dateStr.split('T');
+            const friendlyDate = getFormattedDate(dateStr);
+            if (parts.length > 1 && parts[1]) {
+                return `${friendlyDate} ${parts[1]}`;
+            }
+            return friendlyDate;
+        }
+        
+        function splitDateDisplay(dateStr) {
+             if(!dateStr) return { d: '', t: '' };
+             const parts = dateStr.split('T');
+             const friendlyDate = getFormattedDate(dateStr);
+             if(parts.length === 2) {
+                 return { d: friendlyDate, t: parts[1] };
+             }
+             return { d: friendlyDate, t: '' };
+        }
+
+        function getDayName(dateStr) {
+            if (!dateStr) return '';
+            const safeDateStr = dateStr.indexOf('T') === -1 ? dateStr + "T00:00" : dateStr;
+            const date = new Date(safeDateStr);
+            if (isNaN(date.getTime())) return '';
+            return date.toLocaleDateString('en-US', { weekday: 'long' }); 
+        }
+
+        // --- CORE LOGIC ---
+
+        function handleAdd() {
+            const date = document.getElementById('dateIn').value;
+            const num = document.getElementById('numIn').value;
+            const details = document.getElementById('detailIn').value;
+
+            if (!date || num === '' || !details) {
+                showToast("Please fill in Date/Time, Chapter, and Details.");
+                return;
+            }
+
+            // Note: We keep newlines in memory, but replace commas for simple CSV safety if desired,
+            // though we'll handle CSV logic separately.
+            const cleanDetails = details.replace(/,/g, ' ');
+
+            if (editIndex > -1) {
+                // UPDATE
+                events[editIndex] = {
+                    date: date,
+                    number: parseFloat(num),
+                    details: cleanDetails
+                };
+                cancelEdit();
+                showToast("Event updated!");
+            } else {
+                // CREATE
+                events.push({
+                    date: date,
+                    number: parseFloat(num),
+                    details: cleanDetails
+                });
+                
+                if (currentSortMethod === 'number') {
+                    sortData('number');
+                } else {
+                    sortData('date'); 
+                }
+                
+                clearInputs();
+                showToast("Event added!");
+            }
+            render();
+        }
+
+        function editEvent(i) {
+            editIndex = i;
+            const evt = events[i];
+            
+            document.getElementById('dateIn').value = normalizeDateForInput(evt.date);
+            document.getElementById('numIn').value = evt.number;
+            document.getElementById('detailIn').value = evt.details;
+
+            const btn = document.getElementById('btnAdd');
+            btn.innerText = "Update Event";
+            btn.className = "btn-update";
+            document.getElementById('btnCancel').style.display = "inline-block";
+        }
+
+        function cancelEdit() {
+            editIndex = -1;
+            clearInputs();
+            const btn = document.getElementById('btnAdd');
+            btn.innerText = "+ Add Event";
+            btn.className = "btn-add";
+            document.getElementById('btnCancel').style.display = "none";
+        }
+
+        // --- DRAG & DROP & MOBILE MOVE LOGIC ---
+
+        let dragSrcIndex = null;
+
+        function handleDragStart(e) {
+            if(currentSortMethod !== 'number') return;
+            dragSrcIndex = parseInt(e.target.getAttribute('data-index'));
+            e.target.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/html', e.target.innerHTML);
+        }
+
+        function handleDragOver(e) {
+            if (e.preventDefault) e.preventDefault();
+            if(currentSortMethod !== 'number') return false;
+            e.dataTransfer.dropEffect = 'move';
+            const row = e.target.closest('tr');
+            if(row) row.classList.add('drag-over');
+            return false;
+        }
+
+        function handleDragLeave(e) {
+            const row = e.target.closest('tr');
+            if(row) row.classList.remove('drag-over');
+        }
+
+        function handleDrop(e) {
+            if (e.stopPropagation) e.stopPropagation();
+            const row = e.target.closest('tr');
+            if(row) row.classList.remove('drag-over');
+
+            if(currentSortMethod !== 'number') {
+                showToast("Switch to 'Sort Chapter' to reorder.");
+                return false;
+            }
+
+            const dropTargetIndex = parseInt(row.getAttribute('data-index'));
+            if (dragSrcIndex === null || dragSrcIndex === dropTargetIndex) return false;
+
+            attemptMove(dragSrcIndex, dropTargetIndex);
+            
+            render();
+            return false;
+        }
+
+        function handleDragEnd(e) {
+            e.target.classList.remove('dragging');
+            document.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
+        }
+
+        function attemptMove(fromIndex, toIndex) {
+            const draggedItem = events[fromIndex];
+            const targetItem = events[toIndex];
+
+            const draggedInt = Math.floor(draggedItem.number);
+            const targetInt = Math.floor(targetItem.number);
+
+            if (draggedInt !== targetInt) {
+                showToast(`Cannot move Chapter ${draggedInt}.x into ${targetInt}.x`);
+                return false;
+            }
+
+            events.splice(fromIndex, 1);
+            events.splice(toIndex, 0, draggedItem);
+            recalculateDecimals(draggedInt);
+            return true;
+        }
+
+        function moveItem(index, direction) {
+            const targetIndex = index + direction;
+            if (targetIndex < 0 || targetIndex >= events.length) return;
+            
+            if(attemptMove(index, targetIndex)) {
+                render();
+            }
+        }
+
+        function recalculateDecimals(integerPart) {
+            const groupIndices = [];
+            events.forEach((evt, i) => {
+                if (Math.floor(evt.number) === integerPart) {
+                    groupIndices.push(i);
+                }
+            });
+
+            const step = groupIndices.length > 9 ? 0.01 : 0.1;
+            
+            groupIndices.forEach((arrayIndex, k) => {
+                let newDec = (k + 1) * step;
+                let newNum = integerPart + newDec;
+                events[arrayIndex].number = Math.round(newNum * 100) / 100;
+            });
+        }
+
+        // --- RENDER LOGIC ---
+
+        function render() {
+            const visualDiv = document.getElementById('visualArea');
+            const tableBody = document.getElementById('tableBody');
+            const emptyMsg = document.getElementById('emptyMsg');
+
+            if (events.length === 0) {
+                emptyMsg.style.display = 'block';
+                visualDiv.innerHTML = '';
+                tableBody.innerHTML = '';
+                return;
+            } else {
+                emptyMsg.style.display = 'none';
+            }
+
+            let tableHtml = '';
+            let visualHtml = '';
+            
+            const isNumberSort = currentSortMethod === 'number';
+
+            events.forEach((evt, i) => {
+                const dragAttr = isNumberSort ? 'draggable="true"' : '';
+                const dragClass = isNumberSort ? 'draggable' : '';
+                
+                let firstCol = isNumberSort ? '<span class="drag-handle">☰</span>' : '';
+                
+                let mobileArrows = '';
+                if(isNumberSort) {
+                   mobileArrows = `
+                     <button class="move-btn" onclick="moveItem(${i}, -1)" title="Move Up">↑</button>
+                     <button class="move-btn" onclick="moveItem(${i}, 1)" title="Move Down">↓</button>
+                   `;
+                }
+                
+                const displayDate = formatDisplayDate(evt.date);
+                const {d, t} = splitDateDisplay(evt.date);
+                const dayName = getDayName(evt.date);
+
+                // Table Row
+                tableHtml += `
+                    <tr class="${dragClass}" data-index="${i}" ${dragAttr}>
+                        <td>${firstCol}</td>
+                        <td style="font-size: 0.9rem;">
+                            ${displayDate}
+                            <div style="font-size:0.8em; color:var(--secondary)">${dayName}</div>
+                        </td>
+                        <td>${evt.number}</td>
+                        <td>${evt.details}</td>
+                        <td style="white-space:nowrap">
+                            ${mobileArrows}
+                            <button class="action-btn" onclick="editEvent(${i})" title="Edit">✎</button>
+                            <button class="action-btn del-btn" onclick="askDelete(${i})" title="Delete">×</button>
+                        </td>
+                    </tr>
+                `;
+
+                // Timeline Item
+                visualHtml += `
+                    <div class="h-item">
+                        <div class="h-date-wrap">
+                            <div class="h-date">${d}</div>
+                            <div class="h-day">${dayName}</div>
+                            <div class="h-time">${t}</div>
+                        </div>
+                        <div class="h-dot" title="Click to Edit" onclick="editEvent(${i})"></div>
+                        <div class="h-card">
+                            <span class="card-del" onclick="event.stopPropagation(); askDelete(${i});" title="Delete">×</span>
+                            <div class="h-detail-text">${evt.details}</div>
+                            <div class="h-val-text">Ch: ${evt.number}</div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            tableBody.innerHTML = tableHtml;
+            visualDiv.innerHTML = visualHtml;
+
+            if (isNumberSort) {
+                const rows = document.querySelectorAll('tr.draggable');
+                rows.forEach(row => {
+                    row.addEventListener('dragstart', handleDragStart);
+                    row.addEventListener('dragover', handleDragOver);
+                    row.addEventListener('dragleave', handleDragLeave);
+                    row.addEventListener('drop', handleDrop);
+                    row.addEventListener('dragend', handleDragEnd);
+                });
+            }
+        }
+
+        // --- UTILS ---
+
+        function sortData(type) {
+            cancelEdit();
+            currentSortMethod = type;
+            const hint = document.getElementById('dragHint');
+            
+            if (type === 'number') {
+                events.sort((a, b) => a.number - b.number);
+            } else {
+                events.sort((a, b) => new Date(a.date) - new Date(b.date));
+            }
+            
+            const isTableActive = document.getElementById('btnTab').classList.contains('active');
+            
+            if(hint) {
+                if(type === 'number' && isTableActive) {
+                    hint.style.display = 'inline-block';
+                } else {
+                    hint.style.display = 'none';
+                }
+            }
+
+            render();
+        }
+
+        function toggleView(view) {
+            const vBtn = document.getElementById('btnVis');
+            const tBtn = document.getElementById('btnTab');
+            const vArea = document.getElementById('visualArea');
+            const tArea = document.getElementById('tableArea');
+            const hint = document.getElementById('dragHint');
+
+            if (view === 'visual') {
+                vBtn.classList.add('active'); tBtn.classList.remove('active');
+                vArea.classList.add('show'); tArea.classList.remove('show');
+                if(hint) hint.style.display = 'none';
+            } else {
+                tBtn.classList.add('active'); vBtn.classList.remove('active');
+                tArea.classList.add('show'); vArea.classList.remove('show');
+                if(hint) {
+                    if(currentSortMethod === 'number') hint.style.display = 'inline-block';
+                    else hint.style.display = 'none';
+                }
+            }
+        }
+
+        function clearInputs() {
+            document.getElementById('dateIn').value = '';
+            document.getElementById('numIn').value = '';
+            document.getElementById('detailIn').value = '';
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById("toast");
+            toast.className = "show";
+            toast.innerText = message;
+            setTimeout(function(){ toast.className = toast.className.replace("show", ""); }, 3000);
+        }
+
+        // --- MODAL & DELETE ---
+
+        function askDelete(index) {
+            deleteTargetIndex = index;
+            document.getElementById('deleteModal').style.display = 'flex';
+        }
+
+        function executeDelete() {
+            if (deleteTargetIndex !== null) {
+                if (deleteTargetIndex === editIndex) cancelEdit();
+                else if (deleteTargetIndex < editIndex) editIndex--;
+
+                events.splice(deleteTargetIndex, 1);
+                render();
+                showToast("Event deleted.");
+            }
+            closeModal();
+        }
+
+        function confirmReset() {
+            document.getElementById('resetModal').style.display = 'flex';
+        }
+
+        function executeReset() {
+            events = [];
+            cancelEdit();
+            render();
+            closeModal();
+            showToast("All events cleared.");
+        }
+
+        function closeModal() {
+            document.getElementById('deleteModal').style.display = 'none';
+            document.getElementById('resetModal').style.display = 'none';
+            deleteTargetIndex = null;
+        }
+
+        // --- FILE I/O ---
+
+        function downloadCSV() {
+            if (events.length === 0) return showToast("No data to save.");
+            let csv = "Date,Chapter,Details\n";
+            events.forEach(e => {
+                // Replace newline with special placeholder {nl} for CSV safety
+                const safeDetails = e.details.replace(/\n/g, '{nl}');
+                csv += `${e.date},${e.number},${safeDetails}\n`;
+            });
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url; a.download = 'timeline.csv'; a.click();
+        }
+
+        function uploadCSV(input) {
+            const file = input.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const lines = e.target.result.split('\n');
+                let newEvents = [];
+                for(let i=1; i<lines.length; i++) {
+                    const line = lines[i].trim();
+                    if(!line) continue;
+                    const parts = line.split(',');
+                    if(parts.length >= 3) {
+                        const d = parts[0]; 
+                        const n = parseFloat(parts[1]);
+                        let det = parts.slice(2).join(' ');
+                        
+                        // Restore newlines from placeholder
+                        det = det.replace(/{nl}/g, '\n');
+                        
+                        if(d && !isNaN(n)) newEvents.push({ date: d, number: n, details: det });
+                    }
+                }
+                if(newEvents.length > 0) {
+                    events = newEvents;
+                    currentSortMethod = 'date';
+                    sortData('date'); 
+                    cancelEdit();
+                    render();
+                    showToast("Loaded " + events.length + " events.");
+                } else {
+                    showToast("No valid data found in CSV.");
+                }
+            };
+            reader.readAsText(file);
+        }
+    </script>
+</body>
+</html>
