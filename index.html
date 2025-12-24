@@ -346,9 +346,8 @@
 </head>
 <body>
 
-    <h2 style="text-align:center; color:#333;">Storylines</h2>
-    <h4 style="text-align:center; color:#333; margin-top: -10px; font-weight: normal; font-size: 0.9rem;">Non-Linear Timeline Manager</h4>
-
+<h2 style="text-align:center; color:#333;">Non-Linear Timeline Manager</h2>
+    <h4 style="text-align:center; color:#333; margin-top: -10px; font-weight: normal; font-size: 0.9rem;">Visualize story beats in chronological order or in chapter sequence (linear or non-linear timeline).</h4>
     <!-- Controls -->
     <div class="panel">
         <div class="controls">
@@ -360,7 +359,8 @@
                 <label>Chapter</label>
                 <input type="number" id="numIn" placeholder="e.g. 12.3" step="0.01">
             </div>
-            <div class="input-group" style="flex-grow: 2;">
+            <!-- Details now span full width (column 1 to end) -->
+            <div class="input-group" style="grid-column: 1 / -1;">
                 <label>Details</label>
                 <textarea id="detailIn" rows="3" maxlength="500" placeholder="Event description... (Max 500 chars)"></textarea>
             </div>
@@ -368,6 +368,7 @@
 
         <div class="btn-row">
             <button id="btnAdd" class="btn-add" onclick="handleAdd()">+ Add Event</button>
+            <button id="btnSaveNew" class="btn-success" style="display:none; background-color: #10b981;" onclick="saveAsNew()">+ Save as New</button>
             <button id="btnCancel" class="btn-cancel" onclick="cancelEdit()">Cancel</button>
             
             <span style="width: 20px;" class="desktop-only"></span>
@@ -583,6 +584,8 @@
             btn.innerText = "Update Event";
             btn.className = "btn-update";
             document.getElementById('btnCancel').style.display = "inline-block";
+            // Show Save as New button
+            document.getElementById('btnSaveNew').style.display = "inline-block";
         }
 
         function cancelEdit() {
@@ -592,6 +595,26 @@
             btn.innerText = "+ Add Event";
             btn.className = "btn-add";
             document.getElementById('btnCancel').style.display = "none";
+            // Hide Save as New button
+            document.getElementById('btnSaveNew').style.display = "none";
+        }
+
+        function saveAsNew() {
+            // Validate first before changing editIndex
+            const date = document.getElementById('dateIn').value;
+            const num = document.getElementById('numIn').value;
+            const details = document.getElementById('detailIn').value;
+
+            if (!date || num === '' || !details) {
+                showToast("Please fill in Date/Time, Chapter, and Details.");
+                return;
+            }
+
+            // Force "Create" mode
+            editIndex = -1;
+            handleAdd();
+            // Reset UI
+            cancelEdit();
         }
 
         // --- DRAG & DROP & MOBILE MOVE ---
