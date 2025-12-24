@@ -124,3 +124,4 @@ Notes about import/export:
 
 ---
 
+Demo: https://thordnel.github.io/nonlineartimeline/
