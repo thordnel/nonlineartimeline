@@ -34,8 +34,10 @@
 
         .controls {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 15px;
+            /* Widened columns to fit Date & Time picker */
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            /* Increased gap for visual separation */
+            gap: 30px;
             align-items: start;
         }
 
@@ -48,6 +50,8 @@
             border-radius: 6px; 
             font-size: 1rem; 
             font-family: inherit;
+            width: 100%; /* Ensure inputs take full grid width */
+            box-sizing: border-box;
         }
 
         textarea {
@@ -209,7 +213,16 @@
             line-height: 1.3;
             white-space: pre-wrap;
         }
-        .h-val-text { font-size: 0.75rem; color: var(--primary); margin-top: 5px; font-weight: bold; }
+        /* Updated style for Chapter Label on top */
+        .h-val-text { 
+            font-size: 0.75rem; 
+            color: var(--primary); 
+            margin-bottom: 5px; /* Space below chapter title */
+            margin-top: 12px; /* Space from top edge/delete button */
+            font-weight: bold; 
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
 
         .card-del {
             position: absolute;
@@ -346,8 +359,9 @@
 </head>
 <body>
 
-<h2 style="text-align:center; color:#333;">Non-Linear Timeline Manager</h2>
+    <h2 style="text-align:center; color:#333;">Non-Linear Timeline Manager</h2>
     <h4 style="text-align:center; color:#333; margin-top: -10px; font-weight: normal; font-size: 0.9rem;">Visualize story beats in chronological order or in chapter sequence (linear or non-linear timeline).</h4>
+
     <!-- Controls -->
     <div class="panel">
         <div class="controls">
@@ -780,8 +794,8 @@
                         <div class="h-dot" title="Click to Edit" onclick="editEvent(${i})"></div>
                         <div class="h-card">
                             <span class="card-del" onclick="event.stopPropagation(); askDelete(${i});" title="Delete">×</span>
+                            <div class="h-val-text">Chapter ${evt.number}</div>
                             <div class="h-detail-text">${evt.details}</div>
-                            <div class="h-val-text">Ch: ${evt.number}</div>
                         </div>
                     </div>
                 `;
