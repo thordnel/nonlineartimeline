@@ -419,23 +419,33 @@
             render();
         }
 
+        /**
+         * ROBUST CONVERSION ENGINE
+         * Takes a naive local string (YYYY-MM-DDTHH:MM) and a source timezone.
+         * Returns the corresponding YYYY-MM-DDTHH:MM string in the USER'S DEVICE timezone.
+         */
         function convertToLocal(inputDateValue, sourceTz) {
             if (!inputDateValue) return null;
+            
             const [datePart, timePart] = inputDateValue.split('T');
             const [y, m, d] = datePart.split('-').map(Number);
             const [hh, mm] = timePart.split(':').map(Number);
+
             const formatter = new Intl.DateTimeFormat('en-US', {
                 timeZone: sourceTz,
                 year: 'numeric', month: 'numeric', day: 'numeric',
                 hour: 'numeric', minute: 'numeric', second: 'numeric',
                 hour12: false
             });
+
             let testDate = new Date(Date.UTC(y, m - 1, d, hh, mm));
             const parts = formatter.formatToParts(testDate);
             const getP = t => parseInt(parts.find(p => p.type === t).value);
+            
             const sourceWallClock = Date.UTC(getP('year'), getP('month') - 1, getP('day'), getP('hour') % 24, getP('minute'));
             const diff = testDate.getTime() - sourceWallClock;
             const actualUtc = new Date(testDate.getTime() + diff);
+
             const pad = (n) => n.toString().padStart(2, '0');
             return `${actualUtc.getFullYear()}-${pad(actualUtc.getMonth()+1)}-${pad(actualUtc.getDate())}T${pad(actualUtc.getHours())}:${pad(actualUtc.getMinutes())}`;
         }
@@ -473,26 +483,45 @@
             return `${parseInt(d)} ${MONTHS[parseInt(m)-1]} ${y}`;
         }
 
+        // --- CORE LOGIC ---
+
         function handleAdd() {
             const rawDate = document.getElementById('dateIn').value;
             const sourceTz = document.getElementById('inputTzSelect').value;
             const num = document.getElementById('numIn').value;
             const details = document.getElementById('detailIn').value;
+
             if (!rawDate || num === '' || !details) { showToast("Fill all fields"); return; }
+
+            // Convert Input Wall-Clock time to Device time before saving
             const date = convertToLocal(rawDate, sourceTz);
-            const beat = { date, number: parseFloat(num), details: details.replace(/,/g, ' ') };
-            if (editIndex > -1) { events[editIndex] = beat; cancelEdit(); } 
-            else { events.push(beat); sortData(currentSortMethod); clearInputs(); }
-            saveData(); render();
+
+            // FIXED: Do NOT strip commas here anymore. Commas are fine in memory/LocalStorage.
+            const beat = { date, number: parseFloat(num), details: details };
+            
+            if (editIndex > -1) { 
+                events[editIndex] = beat; 
+                cancelEdit(); 
+            } 
+            else { 
+                events.push(beat); 
+                sortData(currentSortMethod); 
+                clearInputs(); 
+            }
+            saveData(); 
+            render();
         }
 
         function editEvent(i) {
             editIndex = i;
             const e = events[i];
+            
             document.getElementById('dateIn').value = e.date;
             document.getElementById('numIn').value = e.number;
             document.getElementById('detailIn').value = e.details;
+            
             detectUserNearestZone();
+
             document.getElementById('btnAdd').innerText = "Update Event";
             document.getElementById('btnAdd').className = "btn-update";
             document.getElementById('btnCancel').style.display = "inline-block";
@@ -500,7 +529,8 @@
         }
 
         function cancelEdit() {
-            editIndex = -1; clearInputs();
+            editIndex = -1; 
+            clearInputs();
             detectUserNearestZone();
             document.getElementById('btnAdd').innerText = "+ Add Event";
             document.getElementById('btnAdd').className = "btn-add";
@@ -526,7 +556,6 @@
                 const dayName = new Date(evt.date).toLocaleDateString('en-US', { weekday: 'long' });
                 const conv = convertTime(evt.date, currentTz);
                 
-                // Structured detailed comparison time for List view
                 const tzHtml = conv ? `<div class="tz-display">✈ ${conv.zone}: ${conv.day}, ${conv.time}<br><span style="font-weight: normal;">${conv.weekday}</span></div>` : '';
 
                 body.innerHTML += `
@@ -541,7 +570,6 @@
                         </td>
                     </tr>`;
 
-                // Structured detailed comparison time for Visual view with normal font weight for weekday
                 vis.innerHTML += `
                     <div class="h-item">
                         <div class="h-date-wrap">
@@ -593,8 +621,15 @@
         function closeModal() { document.querySelectorAll('.modal-overlay').forEach(m => m.style.display = 'none'); }
 
         function downloadCSV() {
+            if (events.length === 0) return showToast("No data to save.");
             let csv = "Date,Chapter,Details\n";
-            events.forEach(e => csv += `${e.date},${e.number},${e.details.replace(/\n/g, '{nl}')}\n`);
+            events.forEach(e => {
+                // Properly escape details for CSV
+                const safeDetails = e.details
+                    .replace(/\n/g, '{nl}')   // Escape newlines
+                    .replace(/,/g, '{com}');  // Escape commas (NEW FIX)
+                csv += `${e.date},${e.number},${safeDetails}\n`;
+            });
             const blob = new Blob([csv], { type: 'text/csv' });
             const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'storylines.csv'; a.click();
         }
@@ -604,12 +639,26 @@
             const reader = new FileReader();
             reader.onload = (e) => {
                 const lines = e.target.result.split('\n');
-                events = lines.slice(1).filter(l => l.trim()).map(l => {
-                    const p = l.split(',');
-                    return { date: p[0], number: parseFloat(p[1]), details: p.slice(2).join(' ').replace(/{nl}/g, '\n') };
-                });
-                saveData(); render();
-                showToast("Data imported successfully");
+                let newEvents = [];
+                for(let i=1; i<lines.length; i++) {
+                    const line = lines[i].trim();
+                    if(!line) continue;
+                    const p = line.split(',');
+                    if(p.length >= 3) {
+                        const d = p[0];
+                        const n = parseFloat(p[1]);
+                        let det = p.slice(2).join(',');
+                        // RESTORE logic:
+                        det = det.replace(/{nl}/g, '\n').replace(/{com}/g, ',');
+                        if(d && !isNaN(n)) newEvents.push({ date: d, number: n, details: det });
+                    }
+                }
+                if(newEvents.length > 0) {
+                    events = newEvents;
+                    saveData();
+                    render();
+                    showToast("Data imported successfully");
+                }
             };
             reader.readAsText(input.files[0]);
         }
