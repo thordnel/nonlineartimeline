@@ -25,7 +25,7 @@
             background-color: var(--bg);
         }
 
-        /* --- Panels --- */
+        /* --- UI Components --- */
         .panel {
             background: white;
             padding: 20px;
@@ -56,7 +56,6 @@
 
         textarea { resize: vertical; min-height: 100px; }
 
-        /* --- Buttons --- */
         .btn-row { margin-top: 15px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
         
         button {
@@ -71,11 +70,7 @@
             white-space: nowrap;
         }
         button:hover { opacity: 0.9; transform: translateY(-1px); }
-        button:disabled {
-            opacity: 0.3;
-            cursor: not-allowed;
-            transform: none !important;
-        }
+        button:disabled { opacity: 0.3; cursor: not-allowed; }
 
         .btn-add { background-color: var(--success); }
         .btn-update { background-color: var(--warning); }
@@ -83,7 +78,6 @@
         .btn-sort { background-color: var(--primary); }
         .btn-dl { background-color: var(--secondary); }
         .btn-reset { background-color: var(--danger); }
-        .btn-print { background-color: #334155; }
         .btn-view { background-color: white; color: var(--secondary); border: 1px solid #d1d5db; }
         .btn-view.active { background-color: var(--primary); color: white; border-color: var(--primary); }
         .btn-cloud { background-color: var(--cloud); }
@@ -101,6 +95,26 @@
             height: 38px;
         }
 
+        /* --- Cloud Banner --- */
+        .cloud-banner {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #f0f9ff;
+            border: 1px solid #bae6fd;
+            padding: 15px 20px;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            font-size: 0.85rem;
+            color: #0369a1;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        .cloud-id { font-family: monospace; font-weight: bold; background: white; padding: 2px 8px; border-radius: 4px; border: 1px solid #bae6fd; color: #0284c7; cursor: pointer; }
+        .cloud-id:hover { background: #e0f2fe; }
+        .id-input-group { display: flex; gap: 5px; align-items: center; }
+        .id-input { width: 180px !important; padding: 6px 10px !important; font-size: 0.8rem !important; }
+
         /* --- Views Container --- */
         .view-container { 
             background: white; 
@@ -111,7 +125,6 @@
             position: relative;
         }
 
-        /* --- TABLE VIEW --- */
         table { width: 100%; border-collapse: collapse; display: none; table-layout: fixed; }
         table.show { display: table; }
         th, td { padding: 12px; text-align: left; border-bottom: 1px solid #e5e7eb; vertical-align: top; }
@@ -135,13 +148,10 @@
         tr.draggable { cursor: grab; }
         tr.dragging { background-color: var(--drag-bg); opacity: 0.8; }
         tr.drag-over { border-bottom: 2px solid var(--primary); }
-        .drag-handle { cursor: grab; color: #cbd5e1; font-size: 1.2rem; }
 
-        .move-btn { background: none; border: none; cursor: pointer; color: var(--secondary); padding: 2px 5px; font-size: 1rem; }
         .action-btn { background: none; border: none; cursor: pointer; font-size: 1.1rem; padding: 5px; color: var(--secondary); }
         .del-btn { color: var(--danger); }
 
-        /* --- VISUAL VIEW --- */
         #visualArea { 
             display: none; 
             overflow-x: auto;
@@ -215,24 +225,7 @@
         .h-val-text { font-size: 0.75rem; color: var(--primary); margin-bottom: 8px; margin-top: 4px; font-weight: bold; text-transform: uppercase; border-bottom: 1px solid #e2e8f0; padding-bottom: 4px; }
 
         .card-del { position: absolute; top: 2px; right: 5px; font-size: 1rem; color: var(--danger); cursor: pointer; opacity: 0.4; }
-        .card-del:hover { opacity: 1; }
 
-        /* --- CLOUD SECTION --- */
-        .cloud-banner {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: #eff6ff;
-            border: 1px solid #bfdbfe;
-            padding: 10px 20px;
-            border-radius: 12px;
-            margin-bottom: 15px;
-            font-size: 0.85rem;
-            color: #1e40af;
-        }
-        .cloud-id { font-family: monospace; font-weight: bold; background: white; padding: 2px 6px; border-radius: 4px; border: 1px solid #bfdbfe; }
-
-        /* --- MODAL --- */
         .modal-overlay {
             display: none;
             position: fixed;
@@ -255,13 +248,12 @@
             .panel, .view-toggles, #toast, .drag-hint, .btn-view, .tz-picker-compact, .cloud-banner { display: none !important; }
             body { background: white; }
             table { display: table !important; width: 100%; }
-            th:nth-child(1), td:nth-child(1), th:nth-child(5), td:nth-child(5) { display: none; }
         }
 
         @media (max-width: 768px) {
             .controls { grid-template-columns: 1fr; }
-            .tz-picker-compact { width: 100%; margin-top: 5px; }
-            .file-tools { flex-direction: column; align-items: stretch; }
+            .cloud-banner { flex-direction: column; text-align: center; gap: 15px; }
+            .id-input-group { justify-content: center; }
         }
     </style>
 </head>
@@ -270,19 +262,25 @@
     <h2 style="text-align:center; color:#333;">Non-Linear Timeline Manager</h2>
     <h4 style="text-align:center; color:#333; margin-top: -10px; font-weight: normal; font-size: 0.9rem;">Visualize story beats in chronological order or in chapter sequence.</h4>
 
-    <!-- Cloud Status Banner -->
     <div class="cloud-banner" id="cloudBanner">
         <div>
-            ☁️ <strong>Cloud Account Sync:</strong> <span id="syncStatus">Connecting...</span>
-            <span id="userIdDisplay" style="margin-left: 10px; display: none;">ID: <span class="cloud-id" id="userIdText"></span></span>
+            ☁️ <strong>Cloud Sync Status:</strong> <span id="syncStatus">Connecting...</span><br>
+            <span id="userIdDisplay" style="display: none; margin-top: 5px; font-size: 0.75rem;">
+                Your Unique ID: <span class="cloud-id" id="userIdText" title="Click to copy this ID" onclick="copyId()"></span>
+            </span>
         </div>
+        
+        <div class="id-input-group">
+            <input type="text" id="manualIdIn" class="id-input" placeholder="Paste ID from another device">
+            <button class="btn-cloud" onclick="linkExistingId()" style="padding: 6px 12px; font-size: 0.75rem;">Link</button>
+        </div>
+
         <div class="btn-row" style="margin-top:0;">
-            <button class="btn-cloud" onclick="syncToCloud()">Backup to Account</button>
-            <button class="btn-cloud" onclick="restoreFromCloud()" style="background-color: #3b82f6;">Restore from Account</button>
+            <button class="btn-cloud" onclick="syncToCloud()" id="btnBackup" disabled title="Upload local timeline to cloud">Backup</button>
+            <button class="btn-cloud" onclick="restoreFromCloud()" id="btnRestore" disabled style="background-color: #3b82f6;" title="Download timeline from cloud">Restore</button>
         </div>
     </div>
 
-    <!-- Controls -->
     <div class="panel">
         <div class="controls">
             <div class="input-group">
@@ -295,7 +293,7 @@
             </div>
             <div class="input-group">
                 <label>Input Event Timezone</label>
-                <select id="inputTzSelect" title="Select the timezone where the event is occurring">
+                <select id="inputTzSelect">
                     <option value="Asia/Manila">Manila, Philippines</option>
                     <option value="Europe/Berlin">Berlin / Frankfurt, Germany</option>
                     <option value="Europe/Brussels">Brussels, Belgium</option>
@@ -306,7 +304,7 @@
             </div>
             <div class="input-group" style="grid-column: 1 / -1;">
                 <label>Details</label>
-                <textarea id="detailIn" rows="3" maxlength="500" placeholder="What happened in this beat?"></textarea>
+                <textarea id="detailIn" rows="3" maxlength="1000" placeholder="What happened in this beat?"></textarea>
             </div>
         </div>
 
@@ -319,7 +317,7 @@
             <button class="btn-sort" onclick="sortData('number')">Sort Chapter</button>
             <span style="flex-grow:1"></span>
             
-            <select id="tzSelect" class="tz-picker-compact" onchange="updateTzPreference()" title="Compare with another location">
+            <select id="tzSelect" class="tz-picker-compact" onchange="updateTzPreference()">
                 <option value="">Compare Timezone: Off</option>
                 <option value="UTC">UTC (Universal Time)</option>
                 <option value="Europe/Paris">Paris, France</option>
@@ -337,7 +335,6 @@
         </div>
     </div>
 
-    <!-- Display Area -->
     <div class="view-container">
         <div id="visualArea" class="show"></div>
         <table id="tableArea">
@@ -355,7 +352,6 @@
         <p id="emptyMsg" style="text-align:center; color:#94a3b8; margin-top:2rem;">No story beats yet.</p>
     </div>
 
-    <!-- File Tools -->
     <div class="panel" style="margin-top: 20px;">
         <div class="file-tools" style="display:flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap:10px;">
             <div style="display:flex; gap:10px; flex-wrap:wrap;">
@@ -363,7 +359,7 @@
                 <button class="btn-print" onclick="window.print()">Print / Save PDF</button>
                 <input type="file" id="fileIn" accept=".csv" onchange="uploadCSV(this)" style="max-width: 250px;">
             </div>
-            <button class="btn-reset" onclick="confirmReset()" disabled title="Resetting is currently disabled to prevent data loss">Reset</button>
+            <button class="btn-reset" onclick="confirmReset()" disabled>Reset</button>
         </div>
     </div>
 
@@ -382,16 +378,99 @@
     <script type="module">
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js';
         import { getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js';
-        import { getFirestore, doc, setDoc, getDoc, collection } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js';
+        import { getFirestore, doc, setDoc, getDoc } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js';
 
-        // --- FIREBASE INIT ---
+        // Get environment variables
         const firebaseConfig = JSON.parse(__firebase_config);
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'storylines-public';
+        
         let user = null;
+        let db = null;
+        let auth = null;
+        let activeSyncId = localStorage.getItem('storylines_active_id') || null;
+
+        // --- FIREBASE INITIALIZATION ---
+        const initFirebase = async () => {
+            try {
+                const app = initializeApp(firebaseConfig);
+                auth = getAuth(app);
+                db = getFirestore(app);
+
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+
+                onAuthStateChanged(auth, (u) => {
+                    user = u;
+                    if (user) {
+                        // If no manually linked ID yet, use the current anonymous UID
+                        activeSyncId = activeSyncId || user.uid;
+                        updateCloudUI();
+                    }
+                });
+            } catch (err) {
+                document.getElementById('syncStatus').innerText = "Offline Mode";
+            }
+        };
+
+        function updateCloudUI() {
+            document.getElementById('syncStatus').innerText = "Personal Cloud Active";
+            document.getElementById('userIdDisplay').style.display = "block";
+            document.getElementById('userIdText').innerText = activeSyncId;
+            document.getElementById('btnBackup').disabled = false;
+            document.getElementById('btnRestore').disabled = false;
+        }
+
+        window.copyId = () => {
+            const el = document.createElement('textarea');
+            el.value = activeSyncId;
+            document.body.appendChild(el);
+            el.select();
+            document.execCommand('copy');
+            document.body.removeChild(el);
+            showToast("ID Copied! Paste this on your other devices.");
+        }
+
+        window.linkExistingId = () => {
+            const id = document.getElementById('manualIdIn').value.trim();
+            if(!id) return showToast("Enter a valid ID");
+            activeSyncId = id;
+            localStorage.setItem('storylines_active_id', id);
+            updateCloudUI();
+            showToast("Device Linked! You can now Restore from this ID.");
+        }
+
+        window.syncToCloud = async () => {
+            if (!user || !db) return;
+            try {
+                const docRef = doc(db, 'artifacts', appId, 'users', activeSyncId, 'data', 'main_record');
+                await setDoc(docRef, { beats: events, lastUpdated: Date.now() });
+                showToast("✅ Successfully backed up to Cloud");
+            } catch (err) { 
+                console.error(err);
+                showToast("Sync failed: Check connectivity"); 
+            }
+        };
+
+        window.restoreFromCloud = async () => {
+            if (!user || !db) return;
+            try {
+                const docRef = doc(db, 'artifacts', appId, 'users', activeSyncId, 'data', 'main_record');
+                const docSnap = await getDoc(docRef);
+                if (docSnap.exists()) {
+                    events = docSnap.data().beats || [];
+                    saveLocalData(); render();
+                    showToast("🔄 Data restored successfully");
+                } else { showToast("No cloud data found for this ID."); }
+            } catch (err) { 
+                console.error(err);
+                showToast("Restore failed."); 
+            }
+        };
+
+        // --- APP CORE LOGIC ---
         let events = [];
         let editIndex = -1; 
         let deleteTargetIndex = null;
@@ -399,70 +478,13 @@
         let currentTz = localStorage.getItem('storylines_tz') || '';
         const STORAGE_KEY = 'storylines_persist';
 
-        // --- AUTH & STARTUP ---
-        const initAuth = async () => {
-            try {
-                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                    await signInWithCustomToken(auth, __initial_auth_token);
-                } else {
-                    await signInAnonymously(auth);
-                }
-            } catch (error) {
-                console.error("Auth failed:", error);
-                document.getElementById('syncStatus').innerText = "Sync unavailable (Offline)";
-            }
-        };
-
         window.onload = function() {
             document.getElementById('tzSelect').value = currentTz;
             detectUserNearestZone();
             loadLocalData();
-            initAuth();
+            initFirebase();
         };
 
-        onAuthStateChanged(auth, (u) => {
-            user = u;
-            if (user) {
-                document.getElementById('syncStatus').innerText = "Online";
-                document.getElementById('userIdDisplay').style.display = "inline";
-                document.getElementById('userIdText').innerText = user.uid;
-            }
-        });
-
-        // --- CLOUD SYNC LOGIC ---
-        window.syncToCloud = async () => {
-            if (!user) return showToast("Authenticating...");
-            try {
-                // Use strict path RULE 1: /artifacts/{appId}/users/{userId}/{collectionName}
-                const docRef = doc(db, 'artifacts', appId, 'users', user.uid, 'settings', 'main_data');
-                await setDoc(docRef, { beats: events, lastUpdated: Date.now() });
-                showToast("✅ Successfully backed up to Cloud Account");
-            } catch (err) {
-                console.error(err);
-                showToast("Cloud sync error. Please try again.");
-            }
-        };
-
-        window.restoreFromCloud = async () => {
-            if (!user) return showToast("Authenticating...");
-            try {
-                const docRef = doc(db, 'artifacts', appId, 'users', user.uid, 'settings', 'main_data');
-                const docSnap = await getDoc(docRef);
-                if (docSnap.exists()) {
-                    events = docSnap.data().beats || [];
-                    saveLocalData();
-                    render();
-                    showToast("🔄 Data restored from Cloud Account");
-                } else {
-                    showToast("No cloud data found for this account.");
-                }
-            } catch (err) {
-                console.error(err);
-                showToast("Cloud restore error.");
-            }
-        };
-
-        // --- LOCAL PERSISTENCE ---
         function saveLocalData() { localStorage.setItem(STORAGE_KEY, JSON.stringify(events)); }
         function loadLocalData() {
             const data = localStorage.getItem(STORAGE_KEY);
@@ -475,14 +497,11 @@
             }
         }
 
-        // --- TIMEZONE ENGINE ---
         function detectUserNearestZone() {
             const browserTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
             const inputTzSelect = document.getElementById('inputTzSelect');
-            const options = Array.from(inputTzSelect.options);
-            const found = options.find(opt => opt.value === browserTz);
-            if (found) inputTzSelect.value = browserTz;
-            else inputTzSelect.value = "Europe/Berlin";
+            const found = Array.from(inputTzSelect.options).find(opt => opt.value === browserTz);
+            inputTzSelect.value = found ? browserTz : "Europe/Berlin";
         }
 
         function convertToLocal(inputDateValue, sourceTz) {
@@ -514,14 +533,13 @@
             if (!targetTz || !dateStr) return null;
             try {
                 const d = new Date(dateStr);
-                const timeFormatter = new Intl.DateTimeFormat('en-GB', { timeZone: targetTz, hour: '2-digit', minute: '2-digit', hour12: false });
-                const dayFormatter = new Intl.DateTimeFormat('en-GB', { timeZone: targetTz, day: 'numeric', month: 'short' });
-                const weekdayFormatter = new Intl.DateTimeFormat('en-US', { timeZone: targetTz, weekday: 'long' });
-                return { time: timeFormatter.format(d), day: dayFormatter.format(d), weekday: weekdayFormatter.format(d), zone: targetTz.split('/').pop().replace('_', ' ') };
+                const timeF = new Intl.DateTimeFormat('en-GB', { timeZone: targetTz, hour: '2-digit', minute: '2-digit', hour12: false });
+                const dayF = new Intl.DateTimeFormat('en-GB', { timeZone: targetTz, day: 'numeric', month: 'short' });
+                const weekF = new Intl.DateTimeFormat('en-US', { timeZone: targetTz, weekday: 'long' });
+                return { time: timeF.format(d), day: dayF.format(d), weekday: weekF.format(d), zone: targetTz.split('/').pop().replace('_', ' ') };
             } catch(e) { return null; }
         }
 
-        // --- UI UTILS ---
         const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
         function getFormattedDate(dateStr) {
             if (!dateStr) return '';
@@ -581,7 +599,6 @@
                 const localTime = dateParts[1] || '00:00';
                 const dayName = new Date(evt.date).toLocaleDateString('en-US', { weekday: 'long' });
                 const conv = convertTime(evt.date, currentTz);
-                
                 const tzHtml = conv ? `<div class="tz-display">✈ ${conv.zone}: ${conv.day}, ${conv.time}<br><span style="font-weight: normal;">${conv.weekday}</span></div>` : '';
 
                 body.innerHTML += `
@@ -603,7 +620,7 @@
                             <div class="h-day">${dayName}</div>
                             <div class="h-time">
                                 ${localTime}
-                                ${conv ? `<br><span style="color:var(--info); font-size: 0.75rem; font-weight: bold; display: block; margin-top: 6px; line-height:1.4;">✈ ${conv.zone}: ${conv.day}, ${conv.time}<br><span style="font-weight: normal;">${conv.weekday}</span></span>` : ''}
+                                ${conv ? `<br><span style="color:var(--info); font-size: 0.75rem; font-weight: bold; display: block; margin-top: 4px; line-height:1.4;">✈ ${conv.zone}: ${conv.day}, ${conv.time}<br><span style="font-weight: normal;">${conv.weekday}</span></span>` : ''}
                             </div>
                         </div>
                         <div class="h-dot" onclick="editEvent(${i})"></div>
@@ -702,4 +719,3 @@
     </script>
 </body>
 </html>
-
