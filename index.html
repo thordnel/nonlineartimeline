@@ -264,7 +264,7 @@
 
     <div class="cloud-banner" id="cloudBanner">
         <div>
-            ☁️ <strong>Cloud Sync Status:</strong> <span id="syncStatus">Connecting...</span><br>
+            ☁️ <strong>Cloud Sync Status:</strong> <span id="syncStatus">Initializing...</span><br>
             <span id="userIdDisplay" style="display: none; margin-top: 5px; font-size: 0.75rem;">
                 Your Unique ID: <span class="cloud-id" id="userIdText" title="Click to copy this ID" onclick="copyId()"></span>
             </span>
@@ -380,8 +380,29 @@
         import { getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js';
         import { getFirestore, doc, setDoc, getDoc } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js';
 
-        // Get environment variables
-        const firebaseConfig = JSON.parse(__firebase_config);
+        // --- FIREBASE CONFIGURATION ---
+        let firebaseConfig = null;
+        try {
+            // Internal variable check
+            if (typeof __firebase_config !== 'undefined') {
+                firebaseConfig = JSON.parse(__firebase_config);
+            }
+        } catch (e) { console.warn("Internal config missing."); }
+
+        /* MANUAL SETUP FOR GITHUB PAGES:
+           If you see "Setup Required" in the banner, paste your 
+           Firebase Web Config object here (from the Firebase Console):
+
+           firebaseConfig = {
+             apiKey: "YOUR_API_KEY",
+             authDomain: "your-project.firebaseapp.com",
+             projectId: "your-project-id",
+             storageBucket: "your-project.appspot.com",
+             messagingSenderId: "...",
+             appId: "..."
+           };
+        */
+
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'storylines-public';
         
         let user = null;
@@ -389,13 +410,17 @@
         let auth = null;
         let activeSyncId = localStorage.getItem('storylines_active_id') || null;
 
-        // --- FIREBASE INITIALIZATION ---
         const initFirebase = async () => {
+            if (!firebaseConfig) {
+                document.getElementById('syncStatus').innerText = "Setup Required (Check Code)";
+                return;
+            }
             try {
                 const app = initializeApp(firebaseConfig);
                 auth = getAuth(app);
                 db = getFirestore(app);
 
+                // Authenticate
                 if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
                     await signInWithCustomToken(auth, __initial_auth_token);
                 } else {
@@ -405,13 +430,13 @@
                 onAuthStateChanged(auth, (u) => {
                     user = u;
                     if (user) {
-                        // If no manually linked ID yet, use the current anonymous UID
                         activeSyncId = activeSyncId || user.uid;
                         updateCloudUI();
                     }
                 });
             } catch (err) {
-                document.getElementById('syncStatus').innerText = "Offline Mode";
+                console.error(err);
+                document.getElementById('syncStatus').innerText = "Connection Failed";
             }
         };
 
