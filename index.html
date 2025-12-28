@@ -383,27 +383,25 @@
         // --- FIREBASE CONFIGURATION ---
         let firebaseConfig = null;
         try {
-            // Internal variable check
+            // Check for internal env var first
             if (typeof __firebase_config !== 'undefined') {
                 firebaseConfig = JSON.parse(__firebase_config);
             }
-        } catch (e) { console.warn("Internal config missing."); }
+        } catch (e) {}
 
-        /* MANUAL SETUP FOR GITHUB PAGES:
-           If you see "Setup Required" in the banner, paste your 
-           Firebase Web Config object here (from the Firebase Console):
+        // Fallback to manual setup for GitHub Pages
+        if (!firebaseConfig) {
+            firebaseConfig = {
+                apiKey: "AIzaSyBb7WRsC6G_tUEzbA5W22m1zmYeQFqYXL4",
+                authDomain: "storylines-2c573.firebaseapp.com",
+                projectId: "storylines-2c573",
+                storageBucket: "storylines-2c573.firebasestorage.app",
+                messagingSenderId: "1001705274556",
+                appId: "1:1001705274556:web:29b134ef9dfa57f55224b9"
+            };
+        }
 
-           firebaseConfig = {
-             apiKey: "YOUR_API_KEY",
-             authDomain: "your-project.firebaseapp.com",
-             projectId: "your-project-id",
-             storageBucket: "your-project.appspot.com",
-             messagingSenderId: "...",
-             appId: "..."
-           };
-        */
-
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'storylines-public';
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'storylines-';
         
         let user = null;
         let db = null;
@@ -411,16 +409,16 @@
         let activeSyncId = localStorage.getItem('storylines_active_id') || null;
 
         const initFirebase = async () => {
-            if (!firebaseConfig) {
-                document.getElementById('syncStatus').innerText = "Setup Required (Check Code)";
+            if (!firebaseConfig || !firebaseConfig.apiKey) {
+                document.getElementById('syncStatus').innerText = "Setup Required";
                 return;
             }
+
             try {
                 const app = initializeApp(firebaseConfig);
                 auth = getAuth(app);
                 db = getFirestore(app);
 
-                // Authenticate
                 if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
                     await signInWithCustomToken(auth, __initial_auth_token);
                 } else {
@@ -435,8 +433,8 @@
                     }
                 });
             } catch (err) {
-                console.error(err);
                 document.getElementById('syncStatus').innerText = "Connection Failed";
+                console.error("Firebase Error:", err);
             }
         };
 
@@ -449,13 +447,14 @@
         }
 
         window.copyId = () => {
+            const val = activeSyncId;
             const el = document.createElement('textarea');
-            el.value = activeSyncId;
+            el.value = val;
             document.body.appendChild(el);
             el.select();
             document.execCommand('copy');
             document.body.removeChild(el);
-            showToast("ID Copied! Paste this on your other devices.");
+            showToast("ID Copied! Use this to link your other devices.");
         }
 
         window.linkExistingId = () => {
@@ -468,19 +467,19 @@
         }
 
         window.syncToCloud = async () => {
-            if (!user || !db) return;
+            if (!user || !db) return showToast("Please check setup.");
             try {
                 const docRef = doc(db, 'artifacts', appId, 'users', activeSyncId, 'data', 'main_record');
                 await setDoc(docRef, { beats: events, lastUpdated: Date.now() });
                 showToast("✅ Successfully backed up to Cloud");
             } catch (err) { 
                 console.error(err);
-                showToast("Sync failed: Check connectivity"); 
+                showToast("Backup failed. Check permissions."); 
             }
         };
 
         window.restoreFromCloud = async () => {
-            if (!user || !db) return;
+            if (!user || !db) return showToast("Please check setup.");
             try {
                 const docRef = doc(db, 'artifacts', appId, 'users', activeSyncId, 'data', 'main_record');
                 const docSnap = await getDoc(docRef);
