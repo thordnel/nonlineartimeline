@@ -14,6 +14,7 @@
             --info: #0ea5e9;
             --bg: #f3f4f6;
             --drag-bg: #e0e7ff;
+            --cloud: #3b82f6;
         }
 
         body { 
@@ -24,7 +25,7 @@
             background-color: var(--bg);
         }
 
-        /* --- Input Panel --- */
+        /* --- Panels --- */
         .panel {
             background: white;
             padding: 20px;
@@ -55,7 +56,7 @@
 
         textarea { resize: vertical; min-height: 100px; }
 
-        /* --- Buttons & Tools --- */
+        /* --- Buttons --- */
         .btn-row { margin-top: 15px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
         
         button {
@@ -79,14 +80,13 @@
         .btn-add { background-color: var(--success); }
         .btn-update { background-color: var(--warning); }
         .btn-cancel { background-color: var(--secondary); display: none; }
-        
         .btn-sort { background-color: var(--primary); }
         .btn-dl { background-color: var(--secondary); }
         .btn-reset { background-color: var(--danger); }
         .btn-print { background-color: #334155; }
-        
         .btn-view { background-color: white; color: var(--secondary); border: 1px solid #d1d5db; }
         .btn-view.active { background-color: var(--primary); color: white; border-color: var(--primary); }
+        .btn-cloud { background-color: var(--cloud); }
 
         .tz-picker-compact {
             padding: 7px 10px;
@@ -101,21 +101,6 @@
             height: 38px;
         }
 
-        /* --- Footer Tool Alignment --- */
-        .file-tools {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 15px;
-            flex-wrap: wrap;
-        }
-        .file-tools-left {
-            display: flex;
-            gap: 12px;
-            align-items: center;
-            flex-wrap: wrap;
-        }
-
         /* --- Views Container --- */
         .view-container { 
             background: white; 
@@ -126,7 +111,7 @@
             position: relative;
         }
 
-        /* --- 1. TABLE VIEW --- */
+        /* --- TABLE VIEW --- */
         table { width: 100%; border-collapse: collapse; display: none; table-layout: fixed; }
         table.show { display: table; }
         th, td { padding: 12px; text-align: left; border-bottom: 1px solid #e5e7eb; vertical-align: top; }
@@ -156,7 +141,7 @@
         .action-btn { background: none; border: none; cursor: pointer; font-size: 1.1rem; padding: 5px; color: var(--secondary); }
         .del-btn { color: var(--danger); }
 
-        /* --- 2. HORIZONTAL TIMELINE VIEW --- */
+        /* --- VISUAL VIEW --- */
         #visualArea { 
             display: none; 
             overflow-x: auto;
@@ -232,6 +217,21 @@
         .card-del { position: absolute; top: 2px; right: 5px; font-size: 1rem; color: var(--danger); cursor: pointer; opacity: 0.4; }
         .card-del:hover { opacity: 1; }
 
+        /* --- CLOUD SECTION --- */
+        .cloud-banner {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #eff6ff;
+            border: 1px solid #bfdbfe;
+            padding: 10px 20px;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            font-size: 0.85rem;
+            color: #1e40af;
+        }
+        .cloud-id { font-family: monospace; font-weight: bold; background: white; padding: 2px 6px; border-radius: 4px; border: 1px solid #bfdbfe; }
+
         /* --- MODAL --- */
         .modal-overlay {
             display: none;
@@ -252,7 +252,7 @@
         #toast.show { visibility: visible; opacity: 1; bottom: 50px; }
 
         @media print {
-            .panel, .view-toggles, #toast, .drag-hint, .btn-view, .tz-picker-compact { display: none !important; }
+            .panel, .view-toggles, #toast, .drag-hint, .btn-view, .tz-picker-compact, .cloud-banner { display: none !important; }
             body { background: white; }
             table { display: table !important; width: 100%; }
             th:nth-child(1), td:nth-child(1), th:nth-child(5), td:nth-child(5) { display: none; }
@@ -262,15 +262,25 @@
             .controls { grid-template-columns: 1fr; }
             .tz-picker-compact { width: 100%; margin-top: 5px; }
             .file-tools { flex-direction: column; align-items: stretch; }
-            .file-tools-left { flex-direction: column; align-items: stretch; }
-            .btn-reset { width: 100%; }
         }
     </style>
 </head>
 <body>
 
     <h2 style="text-align:center; color:#333;">Non-Linear Timeline Manager</h2>
-    <h4 style="text-align:center; color:#333; margin-top: -10px; font-weight: normal; font-size: 0.9rem;">Visualize story beats in chronological order or in chapter sequence (linear or non-linear timeline).</h4>
+    <h4 style="text-align:center; color:#333; margin-top: -10px; font-weight: normal; font-size: 0.9rem;">Visualize story beats in chronological order or in chapter sequence.</h4>
+
+    <!-- Cloud Status Banner -->
+    <div class="cloud-banner" id="cloudBanner">
+        <div>
+            ☁️ <strong>Cloud Account Sync:</strong> <span id="syncStatus">Connecting...</span>
+            <span id="userIdDisplay" style="margin-left: 10px; display: none;">ID: <span class="cloud-id" id="userIdText"></span></span>
+        </div>
+        <div class="btn-row" style="margin-top:0;">
+            <button class="btn-cloud" onclick="syncToCloud()">Backup to Account</button>
+            <button class="btn-cloud" onclick="restoreFromCloud()" style="background-color: #3b82f6;">Restore from Account</button>
+        </div>
+    </div>
 
     <!-- Controls -->
     <div class="panel">
@@ -304,12 +314,9 @@
             <button id="btnAdd" class="btn-add" onclick="handleAdd()">+ Add Event</button>
             <button id="btnSaveNew" style="display:none; background-color: #10b981;" onclick="saveAsNew()">+ Save as New</button>
             <button id="btnCancel" class="btn-cancel" onclick="cancelEdit()">Cancel</button>
-            
             <span style="width: 20px;"></span>
-            
             <button class="btn-sort" onclick="sortData('date')">Sort Date</button>
             <button class="btn-sort" onclick="sortData('number')">Sort Chapter</button>
-            
             <span style="flex-grow:1"></span>
             
             <select id="tzSelect" class="tz-picker-compact" onchange="updateTzPreference()" title="Compare with another location">
@@ -350,18 +357,16 @@
 
     <!-- File Tools -->
     <div class="panel" style="margin-top: 20px;">
-        <div class="file-tools">
-            <div class="file-tools-left">
+        <div class="file-tools" style="display:flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap:10px;">
+            <div style="display:flex; gap:10px; flex-wrap:wrap;">
                 <button class="btn-dl" onclick="downloadCSV()">Save CSV</button>
                 <button class="btn-print" onclick="window.print()">Print / Save PDF</button>
                 <input type="file" id="fileIn" accept=".csv" onchange="uploadCSV(this)" style="max-width: 250px;">
             </div>
-            <!-- Reset button disabled to avoid accidental deletion -->
             <button class="btn-reset" onclick="confirmReset()" disabled title="Resetting is currently disabled to prevent data loss">Reset</button>
         </div>
     </div>
 
-    <!-- Modals -->
     <div id="deleteModal" class="modal-overlay">
         <div class="modal-content">
             <h3>Delete Event?</h3>
@@ -374,7 +379,19 @@
 
     <div id="toast"></div>
 
-    <script>
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js';
+        import { getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js';
+        import { getFirestore, doc, setDoc, getDoc, collection } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js';
+
+        // --- FIREBASE INIT ---
+        const firebaseConfig = JSON.parse(__firebase_config);
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+
+        let user = null;
         let events = [];
         let editIndex = -1; 
         let deleteTargetIndex = null;
@@ -382,27 +399,72 @@
         let currentTz = localStorage.getItem('storylines_tz') || '';
         const STORAGE_KEY = 'storylines_persist';
 
+        // --- AUTH & STARTUP ---
+        const initAuth = async () => {
+            try {
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+            } catch (error) {
+                console.error("Auth failed:", error);
+                document.getElementById('syncStatus').innerText = "Sync unavailable (Offline)";
+            }
+        };
+
         window.onload = function() {
             document.getElementById('tzSelect').value = currentTz;
             detectUserNearestZone();
-            loadData();
+            loadLocalData();
+            initAuth();
         };
 
-        function detectUserNearestZone() {
-            const browserTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-            const inputTzSelect = document.getElementById('inputTzSelect');
-            const options = Array.from(inputTzSelect.options);
-            const found = options.find(opt => opt.value === browserTz);
-            if (found) {
-                inputTzSelect.value = browserTz;
-            } else {
-                inputTzSelect.value = "Europe/Berlin"; 
+        onAuthStateChanged(auth, (u) => {
+            user = u;
+            if (user) {
+                document.getElementById('syncStatus').innerText = "Online";
+                document.getElementById('userIdDisplay').style.display = "inline";
+                document.getElementById('userIdText').innerText = user.uid;
             }
-        }
+        });
 
-        function saveData() { localStorage.setItem(STORAGE_KEY, JSON.stringify(events)); }
+        // --- CLOUD SYNC LOGIC ---
+        window.syncToCloud = async () => {
+            if (!user) return showToast("Authenticating...");
+            try {
+                // Use strict path RULE 1: /artifacts/{appId}/users/{userId}/{collectionName}
+                const docRef = doc(db, 'artifacts', appId, 'users', user.uid, 'settings', 'main_data');
+                await setDoc(docRef, { beats: events, lastUpdated: Date.now() });
+                showToast("✅ Successfully backed up to Cloud Account");
+            } catch (err) {
+                console.error(err);
+                showToast("Cloud sync error. Please try again.");
+            }
+        };
 
-        function loadData() {
+        window.restoreFromCloud = async () => {
+            if (!user) return showToast("Authenticating...");
+            try {
+                const docRef = doc(db, 'artifacts', appId, 'users', user.uid, 'settings', 'main_data');
+                const docSnap = await getDoc(docRef);
+                if (docSnap.exists()) {
+                    events = docSnap.data().beats || [];
+                    saveLocalData();
+                    render();
+                    showToast("🔄 Data restored from Cloud Account");
+                } else {
+                    showToast("No cloud data found for this account.");
+                }
+            } catch (err) {
+                console.error(err);
+                showToast("Cloud restore error.");
+            }
+        };
+
+        // --- LOCAL PERSISTENCE ---
+        function saveLocalData() { localStorage.setItem(STORAGE_KEY, JSON.stringify(events)); }
+        function loadLocalData() {
             const data = localStorage.getItem(STORAGE_KEY);
             if(data) {
                 try {
@@ -413,124 +475,88 @@
             }
         }
 
-        function updateTzPreference() {
-            currentTz = document.getElementById('tzSelect').value;
-            localStorage.setItem('storylines_tz', currentTz);
-            render();
+        // --- TIMEZONE ENGINE ---
+        function detectUserNearestZone() {
+            const browserTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+            const inputTzSelect = document.getElementById('inputTzSelect');
+            const options = Array.from(inputTzSelect.options);
+            const found = options.find(opt => opt.value === browserTz);
+            if (found) inputTzSelect.value = browserTz;
+            else inputTzSelect.value = "Europe/Berlin";
         }
 
-        /**
-         * ROBUST CONVERSION ENGINE
-         * Takes a naive local string (YYYY-MM-DDTHH:MM) and a source timezone.
-         * Returns the corresponding YYYY-MM-DDTHH:MM string in the USER'S DEVICE timezone.
-         */
         function convertToLocal(inputDateValue, sourceTz) {
             if (!inputDateValue) return null;
-            
             const [datePart, timePart] = inputDateValue.split('T');
             const [y, m, d] = datePart.split('-').map(Number);
             const [hh, mm] = timePart.split(':').map(Number);
-
             const formatter = new Intl.DateTimeFormat('en-US', {
-                timeZone: sourceTz,
-                year: 'numeric', month: 'numeric', day: 'numeric',
-                hour: 'numeric', minute: 'numeric', second: 'numeric',
-                hour12: false
+                timeZone: sourceTz, year: 'numeric', month: 'numeric', day: 'numeric',
+                hour: 'numeric', minute: 'numeric', second: 'numeric', hour12: false
             });
-
             let testDate = new Date(Date.UTC(y, m - 1, d, hh, mm));
             const parts = formatter.formatToParts(testDate);
             const getP = t => parseInt(parts.find(p => p.type === t).value);
-            
             const sourceWallClock = Date.UTC(getP('year'), getP('month') - 1, getP('day'), getP('hour') % 24, getP('minute'));
             const diff = testDate.getTime() - sourceWallClock;
             const actualUtc = new Date(testDate.getTime() + diff);
-
             const pad = (n) => n.toString().padStart(2, '0');
             return `${actualUtc.getFullYear()}-${pad(actualUtc.getMonth()+1)}-${pad(actualUtc.getDate())}T${pad(actualUtc.getHours())}:${pad(actualUtc.getMinutes())}`;
+        }
+
+        window.updateTzPreference = () => {
+            currentTz = document.getElementById('tzSelect').value;
+            localStorage.setItem('storylines_tz', currentTz);
+            render();
         }
 
         function convertTime(dateStr, targetTz) {
             if (!targetTz || !dateStr) return null;
             try {
                 const d = new Date(dateStr);
-                const timeFormatter = new Intl.DateTimeFormat('en-GB', {
-                    timeZone: targetTz,
-                    hour: '2-digit', minute: '2-digit', hour12: false
-                });
-                const dayFormatter = new Intl.DateTimeFormat('en-GB', {
-                    timeZone: targetTz,
-                    day: 'numeric', month: 'short'
-                });
-                const weekdayFormatter = new Intl.DateTimeFormat('en-US', {
-                    timeZone: targetTz,
-                    weekday: 'long'
-                });
-                return {
-                    time: timeFormatter.format(d),
-                    day: dayFormatter.format(d),
-                    weekday: weekdayFormatter.format(d),
-                    zone: targetTz.split('/').pop().replace('_', ' ')
-                };
+                const timeFormatter = new Intl.DateTimeFormat('en-GB', { timeZone: targetTz, hour: '2-digit', minute: '2-digit', hour12: false });
+                const dayFormatter = new Intl.DateTimeFormat('en-GB', { timeZone: targetTz, day: 'numeric', month: 'short' });
+                const weekdayFormatter = new Intl.DateTimeFormat('en-US', { timeZone: targetTz, weekday: 'long' });
+                return { time: timeFormatter.format(d), day: dayFormatter.format(d), weekday: weekdayFormatter.format(d), zone: targetTz.split('/').pop().replace('_', ' ') };
             } catch(e) { return null; }
         }
 
+        // --- UI UTILS ---
         const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-
         function getFormattedDate(dateStr) {
             if (!dateStr) return '';
             const [y, m, d] = dateStr.split('T')[0].split('-');
             return `${parseInt(d)} ${MONTHS[parseInt(m)-1]} ${y}`;
         }
 
-        // --- CORE LOGIC ---
-
-        function handleAdd() {
+        window.handleAdd = () => {
             const rawDate = document.getElementById('dateIn').value;
             const sourceTz = document.getElementById('inputTzSelect').value;
             const num = document.getElementById('numIn').value;
             const details = document.getElementById('detailIn').value;
-
             if (!rawDate || num === '' || !details) { showToast("Fill all fields"); return; }
-
-            // Convert Input Wall-Clock time to Device time before saving
             const date = convertToLocal(rawDate, sourceTz);
-
-            // FIXED: Do NOT strip commas here anymore. Commas are fine in memory/LocalStorage.
             const beat = { date, number: parseFloat(num), details: details };
-            
-            if (editIndex > -1) { 
-                events[editIndex] = beat; 
-                cancelEdit(); 
-            } 
-            else { 
-                events.push(beat); 
-                sortData(currentSortMethod); 
-                clearInputs(); 
-            }
-            saveData(); 
-            render();
+            if (editIndex > -1) { events[editIndex] = beat; cancelEdit(); } 
+            else { events.push(beat); sortData(currentSortMethod); clearInputs(); }
+            saveLocalData(); render();
         }
 
-        function editEvent(i) {
+        window.editEvent = (i) => {
             editIndex = i;
             const e = events[i];
-            
             document.getElementById('dateIn').value = e.date;
             document.getElementById('numIn').value = e.number;
             document.getElementById('detailIn').value = e.details;
-            
             detectUserNearestZone();
-
             document.getElementById('btnAdd').innerText = "Update Event";
             document.getElementById('btnAdd').className = "btn-update";
             document.getElementById('btnCancel').style.display = "inline-block";
             document.getElementById('btnSaveNew').style.display = "inline-block";
         }
 
-        function cancelEdit() {
-            editIndex = -1; 
-            clearInputs();
+        window.cancelEdit = () => {
+            editIndex = -1; clearInputs();
             detectUserNearestZone();
             document.getElementById('btnAdd').innerText = "+ Add Event";
             document.getElementById('btnAdd').className = "btn-add";
@@ -538,7 +564,7 @@
             document.getElementById('btnSaveNew').style.display = "none";
         }
 
-        function saveAsNew() { editIndex = -1; handleAdd(); cancelEdit(); }
+        window.saveAsNew = () => { editIndex = -1; handleAdd(); cancelEdit(); }
 
         function render() {
             const vis = document.getElementById('visualArea');
@@ -577,7 +603,7 @@
                             <div class="h-day">${dayName}</div>
                             <div class="h-time">
                                 ${localTime}
-                                ${conv ? `<br><span style="color:var(--info); font-size: 0.75rem; font-weight: bold; display: block; margin-top: 4px; line-height:1.4;">✈ ${conv.zone}: ${conv.day}, ${conv.time}<br><span style="font-weight: normal;">${conv.weekday}</span></span>` : ''}
+                                ${conv ? `<br><span style="color:var(--info); font-size: 0.75rem; font-weight: bold; display: block; margin-top: 6px; line-height:1.4;">✈ ${conv.zone}: ${conv.day}, ${conv.time}<br><span style="font-weight: normal;">${conv.weekday}</span></span>` : ''}
                             </div>
                         </div>
                         <div class="h-dot" onclick="editEvent(${i})"></div>
@@ -591,14 +617,14 @@
             setupDragAndDrop();
         }
 
-        function sortData(type) {
+        window.sortData = (type) => {
             currentSortMethod = type;
             if (type === 'number') events.sort((a, b) => a.number - b.number);
             else events.sort((a, b) => new Date(a.date) - new Date(b.date));
             render();
         }
 
-        function toggleView(v) {
+        window.toggleView = (v) => {
             document.getElementById('btnVis').classList.toggle('active', v === 'visual');
             document.getElementById('btnTab').classList.toggle('active', v === 'table');
             document.getElementById('visualArea').style.display = v === 'visual' ? 'flex' : 'none';
@@ -616,25 +642,22 @@
             setTimeout(() => t.className = "", 3000);
         }
 
-        function askDelete(i) { deleteTargetIndex = i; document.getElementById('deleteModal').style.display = 'flex'; }
-        function executeDelete() { events.splice(deleteTargetIndex, 1); saveData(); render(); closeModal(); }
-        function closeModal() { document.querySelectorAll('.modal-overlay').forEach(m => m.style.display = 'none'); }
+        window.askDelete = (i) => { deleteTargetIndex = i; document.getElementById('deleteModal').style.display = 'flex'; }
+        window.executeDelete = () => { events.splice(deleteTargetIndex, 1); saveLocalData(); render(); closeModal(); }
+        window.closeModal = () => { document.querySelectorAll('.modal-overlay').forEach(m => m.style.display = 'none'); }
 
-        function downloadCSV() {
+        window.downloadCSV = () => {
             if (events.length === 0) return showToast("No data to save.");
             let csv = "Date,Chapter,Details\n";
             events.forEach(e => {
-                // Properly escape details for CSV
-                const safeDetails = e.details
-                    .replace(/\n/g, '{nl}')   // Escape newlines
-                    .replace(/,/g, '{com}');  // Escape commas (NEW FIX)
+                const safeDetails = e.details.replace(/\n/g, '{nl}').replace(/,/g, '{com}');
                 csv += `${e.date},${e.number},${safeDetails}\n`;
             });
             const blob = new Blob([csv], { type: 'text/csv' });
             const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'storylines.csv'; a.click();
         }
 
-        function uploadCSV(input) {
+        window.uploadCSV = (input) => {
             if (!input.files[0]) return;
             const reader = new FileReader();
             reader.onload = (e) => {
@@ -648,17 +671,11 @@
                         const d = p[0];
                         const n = parseFloat(p[1]);
                         let det = p.slice(2).join(',');
-                        // RESTORE logic:
                         det = det.replace(/{nl}/g, '\n').replace(/{com}/g, ',');
                         if(d && !isNaN(n)) newEvents.push({ date: d, number: n, details: det });
                     }
                 }
-                if(newEvents.length > 0) {
-                    events = newEvents;
-                    saveData();
-                    render();
-                    showToast("Data imported successfully");
-                }
+                if(newEvents.length > 0) { events = newEvents; saveLocalData(); render(); showToast("Data imported successfully"); }
             };
             reader.readAsText(input.files[0]);
         }
@@ -678,10 +695,11 @@
                     const intPart = Math.floor(item.number);
                     const group = events.filter(ev => Math.floor(ev.number) === intPart);
                     group.forEach((ev, k) => ev.number = intPart + (group.length > 9 ? (k+1)*0.01 : (k+1)*0.1));
-                    saveData(); render();
+                    saveLocalData(); render();
                 };
             });
         }
     </script>
 </body>
 </html>
+
