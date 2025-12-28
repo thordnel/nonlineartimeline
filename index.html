@@ -401,7 +401,8 @@
             };
         }
 
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'storylines-';
+        // FIXED: Reverted to 'storylines-public' to match standard Security Rules
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'storylines-public';
         
         let user = null;
         let db = null;
@@ -473,8 +474,13 @@
                 await setDoc(docRef, { beats: events, lastUpdated: Date.now() });
                 showToast("✅ Successfully backed up to Cloud");
             } catch (err) { 
-                console.error(err);
-                showToast("Backup failed. Check permissions."); 
+                console.error("Sync Error:", err);
+                // If permission-denied, it usually means the Rules don't match the path above
+                if (err.code === 'permission-denied') {
+                    showToast("Backup failed: Permission Denied (Check Console)");
+                } else {
+                    showToast("Backup failed. Check connectivity."); 
+                }
             }
         };
 
@@ -489,8 +495,8 @@
                     showToast("🔄 Data restored successfully");
                 } else { showToast("No cloud data found for this ID."); }
             } catch (err) { 
-                console.error(err);
-                showToast("Restore failed."); 
+                console.error("Restore Error:", err);
+                showToast("Restore failed. Check permissions."); 
             }
         };
 
