@@ -11,6 +11,7 @@ Data is stored in browser localStorage so your timeline persists between session
 
 Live demo: https://thordnel.github.io/nonlineartimeline/
 
+> **Warning:** This demo uses a shared Firebase Storage instance—**do not upload sensitive data or private information**. The `index.html` file contains a sample configuration; please clone the repo and replace it with your own credentials for production use.
 ---
 
 ## Overview
