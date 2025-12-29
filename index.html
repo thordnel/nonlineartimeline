@@ -22,7 +22,7 @@
             max-width: 1000px; 
             margin: 0 auto; 
             padding: 20px; 
-            padding-bottom: 80px; /* Space for footer */
+            padding-bottom: 80px;
             background-color: var(--bg);
         }
 
@@ -37,8 +37,9 @@
 
         .controls {
             display: grid;
+            /* Layout: Row 1 (3 cols), Row 2 (2 cols), Row 3 (1 col) */
             grid-template-columns: 1.4fr 0.8fr 1.2fr;
-            gap: 25px;
+            gap: 20px;
             align-items: start;
         }
 
@@ -133,7 +134,7 @@
         
         th:nth-child(1) { width: 40px; } 
         th:nth-child(2) { width: 180px; } 
-        th:nth-child(3) { width: 90px; }  
+        th:nth-child(3) { width: 160px; } /* Chapter column widened for titles */
         th:nth-child(5) { width: 100px; } 
         
         td:nth-child(4) { 
@@ -223,7 +224,11 @@
         }
         
         .h-detail-text { font-size: 0.85rem; font-weight: 500; color: #1e293b; line-height: 1.4; white-space: pre-wrap; text-align: left; }
-        .h-val-text { font-size: 0.75rem; color: var(--primary); margin-bottom: 8px; margin-top: 4px; font-weight: bold; text-transform: uppercase; border-bottom: 1px solid #e2e8f0; padding-bottom: 4px; }
+        
+        .h-val-text { font-size: 0.75rem; color: var(--primary); margin-top: 4px; font-weight: bold; text-transform: uppercase; }
+        .h-chap-title { font-size: 0.85rem; font-weight: 700; color: #1e293b; margin-top: 2px; line-height: 1.2; }
+        .h-sub-title { font-size: 0.75rem; font-style: italic; color: var(--secondary); margin-bottom: 8px; line-height: 1.2; }
+        .h-divider { border-bottom: 1px solid #e2e8f0; margin-bottom: 8px; }
 
         .card-del { position: absolute; top: 2px; right: 5px; font-size: 1rem; color: var(--danger); cursor: pointer; opacity: 0.4; }
 
@@ -279,7 +284,6 @@
             margin-left: auto;
             margin-right: auto;
         }
-        /* Markdown Styles */
         #readmeContainer h1, #readmeContainer h2, #readmeContainer h3 { color: #1e293b; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px; margin-top: 25px; }
         #readmeContainer h1 { font-size: 1.8rem; border: none; text-align: center; }
         #readmeContainer ul { padding-left: 20px; }
@@ -293,6 +297,7 @@
             .panel, .view-toggles, #toast, .drag-hint, .btn-view, .tz-picker-compact, .cloud-banner, .readme-footer { display: none !important; }
             body { background: white; }
             table { display: table !important; width: 100%; }
+            th:nth-child(1), td:nth-child(1), th:nth-child(5), td:nth-child(5) { display: none; }
         }
 
         @media (max-width: 768px) {
@@ -330,12 +335,13 @@
 
     <div class="panel">
         <div class="controls">
+            <!-- Row 1 -->
             <div class="input-group">
                 <label>Date & Time</label>
                 <input type="datetime-local" id="dateIn">
             </div>
             <div class="input-group">
-                <label>Chapter</label>
+                <label>Chapter No.</label>
                 <input type="number" id="numIn" placeholder="e.g. 1.1" step="0.01">
             </div>
             <div class="input-group">
@@ -349,6 +355,18 @@
                     <option value="Europe/Riga">Riga, Latvia</option>
                 </select>
             </div>
+            
+            <!-- Row 2 -->
+            <div class="input-group" style="grid-column: span 2;">
+                <label>Chapter Title</label>
+                <input type="text" id="chapTitleIn" placeholder="e.g. The Beginning">
+            </div>
+            <div class="input-group">
+                <label>SubChapter Title</label>
+                <input type="text" id="subChapTitleIn" placeholder="e.g. The Arrival">
+            </div>
+
+            <!-- Row 3 -->
             <div class="input-group" style="grid-column: 1 / -1;">
                 <label>Details</label>
                 <textarea id="detailIn" rows="3" maxlength="1000" placeholder="What happened in this beat?"></textarea>
@@ -437,7 +455,6 @@
         </div>
     </div>
 
-    <!-- Smart Backup Modal -->
     <div id="backupModal" class="modal-overlay">
         <div class="modal-content" style="max-width: 400px;">
             <h3 style="color:var(--cloud);">Confirm Cloud Backup</h3>
@@ -449,7 +466,6 @@
         </div>
     </div>
 
-    <!-- Restore Modal -->
     <div id="restoreModal" class="modal-overlay">
         <div class="modal-content">
             <h3 style="color:var(--cloud);">Confirm Restore</h3>
@@ -471,13 +487,11 @@
         // --- FIREBASE CONFIGURATION ---
         let firebaseConfig = null;
         try {
-            // Check for internal env var first
             if (typeof __firebase_config !== 'undefined') {
                 firebaseConfig = JSON.parse(__firebase_config);
             }
         } catch (e) {}
 
-        /* MANUAL SETUP FOR GITHUB PAGES: */
         if (!firebaseConfig) {
             firebaseConfig = {
                 apiKey: "AIzaSyBb7WRsC6G_tUEzbA5W22m1zmYeQFqYXL4",
@@ -564,7 +578,6 @@
             }
         }
 
-        // --- SMART BACKUP LOGIC ---
         function timeAgo(date) {
             const seconds = Math.floor((new Date() - date) / 1000);
             let interval = seconds / 31536000;
@@ -743,10 +756,12 @@
             const rawDate = document.getElementById('dateIn').value;
             const sourceTz = document.getElementById('inputTzSelect').value;
             const num = document.getElementById('numIn').value;
+            const chapTitle = document.getElementById('chapTitleIn').value;
+            const subTitle = document.getElementById('subChapTitleIn').value;
             const details = document.getElementById('detailIn').value;
-            if (!rawDate || num === '' || !details) { showToast("Fill all fields"); return; }
+            if (!rawDate || num === '' || !details) { showToast("Fill all fields (except titles)"); return; }
             const date = convertToLocal(rawDate, sourceTz);
-            const beat = { date, number: parseFloat(num), details: details };
+            const beat = { date, number: parseFloat(num), chapterTitle: chapTitle, subChapterTitle: subTitle, details: details };
             if (editIndex > -1) { events[editIndex] = beat; cancelEdit(); } 
             else { events.push(beat); sortData(currentSortMethod); clearInputs(); }
             saveLocalData(); render();
@@ -757,6 +772,8 @@
             const e = events[i];
             document.getElementById('dateIn').value = e.date;
             document.getElementById('numIn').value = e.number;
+            document.getElementById('chapTitleIn').value = e.chapterTitle || '';
+            document.getElementById('subChapTitleIn').value = e.subChapterTitle || '';
             document.getElementById('detailIn').value = e.details;
             detectUserNearestZone();
             document.getElementById('btnAdd').innerText = "Update Event";
@@ -797,7 +814,7 @@
                     <tr class="${currentSortMethod === 'number' ? 'draggable' : ''}" data-index="${i}" draggable="${currentSortMethod === 'number'}">
                         <td>${currentSortMethod === 'number' ? '☰' : ''}</td>
                         <td style="white-space: nowrap;">${friendlyDate} ${localTime}<br><small>${dayName}</small>${tzHtml}</td>
-                        <td><b>${evt.number}</b></td>
+                        <td><b>${evt.number}</b><br><span style="font-weight:700; font-size:0.85rem;">${evt.chapterTitle || ''}</span><br><span style="font-style:italic; font-size:0.75rem; color:#64748b;">${evt.subChapterTitle || ''}</span></td>
                         <td>${evt.details}</td>
                         <td>
                             <button class="action-btn" onclick="editEvent(${i})">✎</button>
@@ -819,6 +836,9 @@
                         <div class="h-card">
                             <span class="card-del" onclick="event.stopPropagation(); askDelete(${i})">×</span>
                             <div class="h-val-text">Chapter ${evt.number}</div>
+                            ${evt.chapterTitle ? `<div class="h-chap-title">${evt.chapterTitle}</div>` : ''}
+                            ${evt.subChapterTitle ? `<div class="h-sub-title">${evt.subChapterTitle}</div>` : ''}
+                            <div class="h-divider"></div>
                             <div class="h-detail-text">${evt.details}</div>
                         </div>
                     </div>`;
@@ -843,6 +863,8 @@
         function clearInputs() {
             document.getElementById('dateIn').value = '';
             document.getElementById('numIn').value = '';
+            document.getElementById('chapTitleIn').value = '';
+            document.getElementById('subChapTitleIn').value = '';
             document.getElementById('detailIn').value = '';
         }
 
@@ -857,10 +879,13 @@
 
         window.downloadCSV = () => {
             if (events.length === 0) return showToast("No data to save.");
-            let csv = "Date,Chapter,Details\n";
+            let csv = "Date,Chapter,ChapterTitle,SubChapterTitle,Details\n";
             events.forEach(e => {
+                // Ensure text fields are safe for CSV
+                const safeTitle = (e.chapterTitle || '').replace(/,/g, '{com}');
+                const safeSub = (e.subChapterTitle || '').replace(/,/g, '{com}');
                 const safeDetails = e.details.replace(/\n/g, '{nl}').replace(/,/g, '{com}');
-                csv += `${e.date},${e.number},${safeDetails}\n`;
+                csv += `${e.date},${e.number},${safeTitle},${safeSub},${safeDetails}\n`;
             });
             const blob = new Blob([csv], { type: 'text/csv' });
             const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'storylines.csv'; a.click();
@@ -876,12 +901,31 @@
                     const line = lines[i].trim();
                     if(!line) continue;
                     const p = line.split(',');
+                    // Handle old format (length 3) vs new format (length 5)
                     if(p.length >= 3) {
                         const d = p[0];
                         const n = parseFloat(p[1]);
-                        let det = p.slice(2).join(',');
-                        det = det.replace(/{nl}/g, '\n').replace(/{com}/g, ',');
-                        if(d && !isNaN(n)) newEvents.push({ date: d, number: n, details: det });
+                        let title = '', sub = '', det = '';
+
+                        if (p.length >= 5) {
+                            // New format: Date, Num, Title, Sub, Details
+                            title = p[2].replace(/{com}/g, ',');
+                            sub = p[3].replace(/{com}/g, ',');
+                            det = p.slice(4).join(',').replace(/{nl}/g, '\n').replace(/{com}/g, ',');
+                        } else {
+                            // Old format: Date, Num, Details
+                            det = p.slice(2).join(',').replace(/{nl}/g, '\n').replace(/{com}/g, ',');
+                        }
+
+                        if(d && !isNaN(n)) {
+                            newEvents.push({ 
+                                date: d, 
+                                number: n, 
+                                chapterTitle: title, 
+                                subChapterTitle: sub, 
+                                details: det 
+                            });
+                        }
                     }
                 }
                 if(newEvents.length > 0) { events = newEvents; saveLocalData(); render(); showToast("Data imported successfully"); }
@@ -934,36 +978,23 @@
                 }
             }
             container.style.display = 'block';
-            // Scroll to the readme section for better UX
             container.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
 
         function parseMarkdown(md) {
-            // Simple Markdown Parser
             let html = md
-                // Headers
                 .replace(/^# (.*$)/gim, '<h1>$1</h1>')
                 .replace(/^## (.*$)/gim, '<h2>$1</h2>')
                 .replace(/^### (.*$)/gim, '<h3>$1</h3>')
-                // Bold
                 .replace(/\*\*(.*)\*\*/gim, '<b>$1</b>')
-                // Links
                 .replace(/\[(.*?)\]\((.*?)\)/gim, "<a href='$2' target='_blank'>$1</a>")
-                // Lists
                 .replace(/^\s*-\s+(.*)/gim, '<ul><li>$1</li></ul>')
-                // Fix nested ul (regex hack to merge adjacent ul tags)
                 .replace(/<\/ul>\s*<ul>/gim, '')
-                // Blockquotes
                 .replace(/^> (.*$)/gim, '<blockquote>$1</blockquote>')
-                // Code blocks (inline)
                 .replace(/`(.*?)`/gim, '<code>$1</code>')
-                // Horizontal Rules
                 .replace(/^---/gim, '<hr>')
-                // Paragraphs (double newline)
                 .replace(/\n\n/gim, '<br><br>')
-                // Line breaks (single newline)
                 .replace(/\n/gim, '<br>');
-            
             return html;
         }
 
