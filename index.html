@@ -532,6 +532,7 @@
         window.confirmBackup = async () => {
             if (!user || !db) return showToast("Please check setup.");
             const btn = document.getElementById('btnBackup');
+            const originalText = btn.innerText;
             btn.innerText = "Checking...";
             btn.disabled = true;
 
@@ -565,7 +566,7 @@
                 console.error(e);
                 showToast("Could not verify cloud status.");
             } finally {
-                btn.innerText = "Backup";
+                btn.innerText = originalText;
                 btn.disabled = false;
             }
         }
