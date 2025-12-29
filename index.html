@@ -22,6 +22,7 @@
             max-width: 1000px; 
             margin: 0 auto; 
             padding: 20px; 
+            padding-bottom: 80px; /* Space for footer */
             background-color: var(--bg);
         }
 
@@ -244,8 +245,52 @@
         }
         #toast.show { visibility: visible; opacity: 1; bottom: 50px; }
 
+        /* --- Collapsible README Footer --- */
+        .readme-footer {
+            margin-top: 40px;
+            border-top: 2px solid #e2e8f0;
+            padding-top: 20px;
+            text-align: center;
+        }
+        .readme-toggle-btn {
+            background: none;
+            border: 2px solid #cbd5e1;
+            color: #64748b;
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+        .readme-toggle-btn:hover { border-color: var(--primary); color: var(--primary); background: #eff6ff; }
+        
+        #readmeContainer {
+            display: none;
+            margin-top: 20px;
+            text-align: left;
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+            line-height: 1.6;
+            color: #334155;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        /* Markdown Styles */
+        #readmeContainer h1, #readmeContainer h2, #readmeContainer h3 { color: #1e293b; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px; margin-top: 25px; }
+        #readmeContainer h1 { font-size: 1.8rem; border: none; text-align: center; }
+        #readmeContainer ul { padding-left: 20px; }
+        #readmeContainer li { margin-bottom: 5px; }
+        #readmeContainer code { background: #f1f5f9; padding: 2px 4px; border-radius: 4px; font-family: monospace; font-size: 0.9em; color: #d946ef; }
+        #readmeContainer a { color: var(--primary); text-decoration: none; }
+        #readmeContainer a:hover { text-decoration: underline; }
+        #readmeContainer blockquote { border-left: 4px solid #cbd5e1; margin: 0; padding-left: 15px; color: #64748b; font-style: italic; }
+
         @media print {
-            .panel, .view-toggles, #toast, .drag-hint, .btn-view, .tz-picker-compact, .cloud-banner { display: none !important; }
+            .panel, .view-toggles, #toast, .drag-hint, .btn-view, .tz-picker-compact, .cloud-banner, .readme-footer { display: none !important; }
             body { background: white; }
             table { display: table !important; width: 100%; }
         }
@@ -254,6 +299,7 @@
             .controls { grid-template-columns: 1fr; }
             .cloud-banner { flex-direction: column; text-align: center; gap: 15px; }
             .id-input-group { justify-content: center; }
+            .readme-footer { padding-bottom: 40px; }
         }
     </style>
 </head>
@@ -362,6 +408,12 @@
             </div>
             <button class="btn-reset" onclick="confirmReset()" disabled>Reset</button>
         </div>
+    </div>
+
+    <!-- Collapsible Documentation Footer -->
+    <div class="readme-footer">
+        <button class="readme-toggle-btn" onclick="toggleReadme()">📖 Read Documentation / README</button>
+        <div id="readmeContainer"></div>
     </div>
 
     <!-- Modals -->
@@ -513,7 +565,6 @@
         }
 
         // --- SMART BACKUP LOGIC ---
-        
         function timeAgo(date) {
             const seconds = Math.floor((new Date() - date) / 1000);
             let interval = seconds / 31536000;
@@ -548,7 +599,6 @@
                         const dateObj = new Date(data.lastUpdated);
                         const dateStr = dateObj.toLocaleString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true });
                         const rel = timeAgo(dateObj);
-                        // Show first 6 chars of the actual device UID that made the write
                         const deviceStr = data.lastDevice ? data.lastDevice.substring(0, 6) + "..." : "Unknown";
                         
                         infoHtml = `
@@ -578,7 +628,7 @@
                 await setDoc(docRef, { 
                     beats: events, 
                     lastUpdated: Date.now(),
-                    lastDevice: user.uid // Record the actual device ID
+                    lastDevice: user.uid 
                 });
                 showToast("✅ Successfully backed up to Cloud");
             } catch (err) { 
@@ -858,6 +908,65 @@
                 };
             });
         }
+
+        // --- MARKDOWN & README LOGIC ---
+        const README_URL = 'https://thordnel.github.io/nonlineartimeline/README.md';
+
+        window.toggleReadme = async () => {
+            const container = document.getElementById('readmeContainer');
+            if (container.style.display === 'block') {
+                container.style.display = 'none';
+                return;
+            }
+
+            if (!container.innerHTML) {
+                container.innerHTML = '<div style="text-align:center; padding:20px; color:#64748b;">Loading documentation...</div>';
+                try {
+                    const response = await fetch(README_URL);
+                    if (!response.ok) throw new Error("Could not load README");
+                    const text = await response.text();
+                    container.innerHTML = parseMarkdown(text);
+                } catch (e) {
+                    container.innerHTML = `<div style="text-align:center; color:#ef4444;">
+                        Failed to load documentation.<br>
+                        <a href="${README_URL}" target="_blank">Click here to view README on GitHub</a>
+                    </div>`;
+                }
+            }
+            container.style.display = 'block';
+            // Scroll to the readme section for better UX
+            container.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        function parseMarkdown(md) {
+            // Simple Markdown Parser
+            let html = md
+                // Headers
+                .replace(/^# (.*$)/gim, '<h1>$1</h1>')
+                .replace(/^## (.*$)/gim, '<h2>$1</h2>')
+                .replace(/^### (.*$)/gim, '<h3>$1</h3>')
+                // Bold
+                .replace(/\*\*(.*)\*\*/gim, '<b>$1</b>')
+                // Links
+                .replace(/\[(.*?)\]\((.*?)\)/gim, "<a href='$2' target='_blank'>$1</a>")
+                // Lists
+                .replace(/^\s*-\s+(.*)/gim, '<ul><li>$1</li></ul>')
+                // Fix nested ul (regex hack to merge adjacent ul tags)
+                .replace(/<\/ul>\s*<ul>/gim, '')
+                // Blockquotes
+                .replace(/^> (.*$)/gim, '<blockquote>$1</blockquote>')
+                // Code blocks (inline)
+                .replace(/`(.*?)`/gim, '<code>$1</code>')
+                // Horizontal Rules
+                .replace(/^---/gim, '<hr>')
+                // Paragraphs (double newline)
+                .replace(/\n\n/gim, '<br><br>')
+                // Line breaks (single newline)
+                .replace(/\n/gim, '<br>');
+            
+            return html;
+        }
+
     </script>
 </body>
 </html>
