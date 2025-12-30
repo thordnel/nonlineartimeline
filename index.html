@@ -4,6 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Storylines - Non-Linear Manager</title>
+    <!-- Add Merriweather Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@300;400;700;900&display=swap" rel="stylesheet">
+    
     <style>
         :root {
             /* Parchment Palette */
@@ -25,7 +30,8 @@
             --cloud: #5d7a8c;     /* Muted Blue for Cloud */
             --drag-bg: #e6e2d8;   /* Darker parchment for drag state */
             
-            --font-main: 'Georgia', 'Times New Roman', serif;
+            /* Font Settings */
+            --font-main: 'Merriweather', 'Times New Roman', serif;
             --font-ui: system-ui, -apple-system, sans-serif;
             
             --shadow-card: 0 2px 4px rgba(44, 36, 32, 0.05), 0 1px 2px rgba(44, 36, 32, 0.1);
@@ -35,6 +41,7 @@
 
         body { 
             font-family: var(--font-main); 
+            font-weight: 300; /* Merriweather Light */
             max-width: 1000px; 
             margin: 0 auto; 
             padding: 20px; 
@@ -59,6 +66,10 @@
             gap: 20px;
             align-items: start;
         }
+        
+        /* Desktop Grid Helpers */
+        .col-span-2 { grid-column: span 2; }
+        .col-span-full { grid-column: 1 / -1; }
 
         .input-group { display: flex; flex-direction: column; }
         label { 
@@ -471,9 +482,17 @@
             .id-input-group { width: 100%; justify-content: center; }
             .id-input { width: 100% !important; }
             
-            /* Full-width Backup/Restore buttons */
-            .cloud-banner .btn-row { width: 100%; display: flex; flex-direction: column; }
-            .cloud-banner .btn-row button { width: 100%; }
+            /* Backup/Restore buttons in single line (row) */
+            .cloud-banner .btn-row { 
+                width: 100%; 
+                display: flex; 
+                flex-direction: row; /* Force single line */
+                gap: 10px;
+            }
+            .cloud-banner .btn-row button { 
+                flex: 1; /* Stretch equally */
+                width: auto; 
+            }
 
             /* Adjust Visual Area padding */
             #visualArea { padding: 20px 0; }
@@ -535,7 +554,8 @@
             </div>
             
             <!-- Row 2 -->
-            <div class="input-group" style="grid-column: span 2;">
+            <!-- Use responsive classes -->
+            <div class="input-group col-span-2">
                 <label>Chapter Title</label>
                 <input type="text" id="chapTitleIn" placeholder="e.g. The Beginning">
             </div>
@@ -545,7 +565,7 @@
             </div>
 
             <!-- Row 3 -->
-            <div class="input-group" style="grid-column: 1 / -1;">
+            <div class="input-group col-span-full">
                 <label>Details</label>
                 <textarea id="detailIn" rows="3" maxlength="1000" placeholder="Write your story beat here..."></textarea>
             </div>
