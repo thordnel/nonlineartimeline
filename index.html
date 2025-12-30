@@ -248,14 +248,14 @@
         .action-btn:hover { color: var(--primary); }
         .del-btn:hover { color: var(--danger); }
 
-        /* --- 2. HORIZONTAL TIMELINE VIEW --- */
+        /* --- 2. HORIZONTAL TIMELINE VIEW (Top Scrollbar) --- */
         #visualArea { 
             display: none; 
             overflow-x: auto;
             padding: 40px 0; 
             white-space: nowrap;
             scroll-behavior: smooth;
-            transform: rotateX(180deg); 
+            transform: rotateX(180deg); /* Move scrollbar to top */
             align-items: flex-end; 
             
             /* Custom Scrollbar for parchment feel */
@@ -272,9 +272,14 @@
             min-width: 220px; /* More breathing room */
             padding: 0 20px;
             vertical-align: top;
-            transform: rotateX(180deg); 
+            transform: rotateX(180deg); /* Flip content back up */
         }
 
+        /* Line Position Calculation:
+           Date Wrap Min Height: 80px
+           Date Wrap Margin Bottom: 10px
+           Dot Height: 20px (half is 10px)
+           Total Top Offset = 80 + 10 + 10 = 100px */
         .h-item::after {
             content: '';
             position: absolute;
@@ -289,7 +294,7 @@
 
         .h-date-wrap {
             text-align: center;
-            margin-bottom: 15px;
+            margin-bottom: 10px;
             min-height: 80px; 
             display: flex;
             flex-direction: column;
@@ -762,7 +767,7 @@
                         
                         infoHtml = `
                             <strong>Last Backup:</strong> ${dateStr} <br>
-                            <span style="color:var(--primary);">(${rel})</span><br><br>
+                            <span style="color:var(--secondary);">(${rel})</span><br><br>
                             <strong>By Device ID:</strong> <span style="font-family:monospace; background:#e6e2d8; padding:2px 4px; border-radius:3px;">${deviceStr}</span>
                         `;
                     }
@@ -1131,20 +1136,35 @@
         }
 
         function parseMarkdown(md) {
-            let html = md
-                .replace(/\n\s*---\s*\n/g, '<hr>')
-                .replace(/^---$/gim, '<hr>') 
-                .replace(/^# (.*$)/gim, '<h1>$1</h1>')
-                .replace(/^## (.*$)/gim, '<h2>$1</h2>')
-                .replace(/^### (.*$)/gim, '<h3>$1</h3>')
-                .replace(/\*\*(.*)\*\*/gim, '<b>$1</b>')
-                .replace(/\[(.*?)\]\((.*?)\)/gim, "<a href='$2' target='_blank'>$1</a>")
-                .replace(/^\s*-\s+(.*)/gim, '<ul><li>$1</li></ul>')
-                .replace(/<\/ul>\s*<ul>/gim, '')
-                .replace(/^> (.*$)/gim, '<blockquote>$1</blockquote>')
+            let html = md.replace(/\r\n/g, '\n'); // Normalize line endings
+
+            html = html
+                // Headers - Top down to prevent # matching ##
+                .replace(/^###\s+(.*$)/gim, '<h3>$1</h3>')
+                .replace(/^##\s+(.*$)/gim, '<h2>$1</h2>')
+                .replace(/^#\s+(.*$)/gim, '<h1>$1</h1>')
+                
+                // HR
+                .replace(/^\s*---\s*$/gim, '<hr>') 
+                
+                // Formatting
+                .replace(/\*\*(.*?)\*\*/gim, '<b>$1</b>')
                 .replace(/`(.*?)`/gim, '<code>$1</code>')
-                .replace(/^---/gim, '<hr>')
-                .replace(/\n\n/gim, '<br><br>');
+                .replace(/\[(.*?)\]\((.*?)\)/gim, "<a href='$2' target='_blank'>$1</a>")
+                
+                // Lists
+                .replace(/^\s*-\s+(.*$)/gim, '<ul><li>$1</li></ul>')
+                .replace(/<\/ul>\s*<ul>/gim, '')
+                
+                // Blockquotes
+                .replace(/^>\s+(.*$)/gim, '<blockquote>$1</blockquote>')
+                
+                // Spacing cleanup
+                .replace(/\n\n/gim, '<br><br>')
+                // Remove extra breaks after headers to prevent huge gaps
+                .replace(/(<\/h[1-3]>)\s*<br><br>/gim, '$1')
+                .replace(/(<hr>)\s*<br><br>/gim, '$1');
+
             return html;
         }
 
