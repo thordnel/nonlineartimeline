@@ -17,6 +17,8 @@
             --cloud: #3b82f6;
         }
 
+        * { box-sizing: border-box; }
+
         body { 
             font-family: system-ui, -apple-system, sans-serif; 
             max-width: 1000px; 
@@ -37,7 +39,6 @@
 
         .controls {
             display: grid;
-            /* Layout: Row 1 (3 cols), Row 2 (2 cols), Row 3 (1 col) */
             grid-template-columns: 1.4fr 0.8fr 1.2fr;
             gap: 20px;
             align-items: start;
@@ -53,7 +54,6 @@
             font-size: 1rem; 
             font-family: inherit;
             width: 100%;
-            box-sizing: border-box;
         }
 
         textarea { resize: vertical; min-height: 100px; }
@@ -134,7 +134,7 @@
         
         th:nth-child(1) { width: 40px; } 
         th:nth-child(2) { width: 180px; } 
-        th:nth-child(3) { width: 160px; } /* Chapter column widened for titles */
+        th:nth-child(3) { width: 160px; }
         th:nth-child(5) { width: 100px; } 
         
         td:nth-child(4) { 
@@ -154,30 +154,33 @@
         .action-btn { background: none; border: none; cursor: pointer; font-size: 1.1rem; padding: 5px; color: var(--secondary); }
         .del-btn { color: var(--danger); }
 
+        /* --- 2. HORIZONTAL TIMELINE VIEW (Top Scrollbar) --- */
         #visualArea { 
             display: none; 
             overflow-x: auto;
             padding: 40px 0; 
             white-space: nowrap;
-            align-items: flex-start; 
             scroll-behavior: smooth;
+            transform: rotateX(180deg); /* Move scrollbar to top */
+            align-items: flex-end; 
         }
         #visualArea.show { display: flex; }
 
         .h-item {
             display: inline-flex;
-            flex-direction: column;
+            flex-direction: column; 
             align-items: center;
             position: relative;
             min-width: 200px;
             padding: 0 15px;
             vertical-align: top;
+            transform: rotateX(180deg); /* Flip content back up */
         }
 
         .h-item::after {
             content: '';
             position: absolute;
-            top: 113px; 
+            top: 100px; /* Aligned behind the dot */
             left: 50%; 
             width: 100%; 
             height: 4px;
@@ -188,8 +191,8 @@
 
         .h-date-wrap {
             text-align: center;
-            margin-bottom: 8px;
-            min-height: 95px; 
+            margin-bottom: 10px;
+            min-height: 80px; 
             display: flex;
             flex-direction: column;
             justify-content: flex-end;
@@ -208,6 +211,7 @@
             box-shadow: 0 0 0 2px #e2e8f0;
             cursor: pointer;
             transition: transform 0.2s;
+            flex-shrink: 0;
         }
         .h-dot:hover { transform: scale(1.3); background: var(--warning); border-color: #fff; }
 
@@ -455,6 +459,7 @@
         </div>
     </div>
 
+    <!-- Smart Backup Modal -->
     <div id="backupModal" class="modal-overlay">
         <div class="modal-content" style="max-width: 400px;">
             <h3 style="color:var(--cloud);">Confirm Cloud Backup</h3>
@@ -466,6 +471,7 @@
         </div>
     </div>
 
+    <!-- Restore Modal -->
     <div id="restoreModal" class="modal-overlay">
         <div class="modal-content">
             <h3 style="color:var(--cloud);">Confirm Restore</h3>
@@ -881,7 +887,6 @@
             if (events.length === 0) return showToast("No data to save.");
             let csv = "Date,Chapter,ChapterTitle,SubChapterTitle,Details\n";
             events.forEach(e => {
-                // Ensure text fields are safe for CSV
                 const safeTitle = (e.chapterTitle || '').replace(/,/g, '{com}');
                 const safeSub = (e.subChapterTitle || '').replace(/,/g, '{com}');
                 const safeDetails = e.details.replace(/\n/g, '{nl}').replace(/,/g, '{com}');
@@ -908,12 +913,10 @@
                         let title = '', sub = '', det = '';
 
                         if (p.length >= 5) {
-                            // New format: Date, Num, Title, Sub, Details
                             title = p[2].replace(/{com}/g, ',');
                             sub = p[3].replace(/{com}/g, ',');
                             det = p.slice(4).join(',').replace(/{nl}/g, '\n').replace(/{com}/g, ',');
                         } else {
-                            // Old format: Date, Num, Details
                             det = p.slice(2).join(',').replace(/{nl}/g, '\n').replace(/{com}/g, ',');
                         }
 
@@ -982,19 +985,35 @@
         }
 
         function parseMarkdown(md) {
-            let html = md
-                .replace(/^# (.*$)/gim, '<h1>$1</h1>')
-                .replace(/^## (.*$)/gim, '<h2>$1</h2>')
-                .replace(/^### (.*$)/gim, '<h3>$1</h3>')
-                .replace(/\*\*(.*)\*\*/gim, '<b>$1</b>')
-                .replace(/\[(.*?)\]\((.*?)\)/gim, "<a href='$2' target='_blank'>$1</a>")
-                .replace(/^\s*-\s+(.*)/gim, '<ul><li>$1</li></ul>')
-                .replace(/<\/ul>\s*<ul>/gim, '')
-                .replace(/^> (.*$)/gim, '<blockquote>$1</blockquote>')
+            let html = md.replace(/\r\n/g, '\n'); // Normalize line endings
+
+            html = html
+                // Headers - Top down to prevent # matching ##
+                .replace(/^###\s+(.*$)/gim, '<h3>$1</h3>')
+                .replace(/^##\s+(.*$)/gim, '<h2>$1</h2>')
+                .replace(/^#\s+(.*$)/gim, '<h1>$1</h1>')
+                
+                // HR
+                .replace(/^\s*---\s*$/gim, '<hr>') 
+                
+                // Formatting
+                .replace(/\*\*(.*?)\*\*/gim, '<b>$1</b>')
                 .replace(/`(.*?)`/gim, '<code>$1</code>')
-                .replace(/^---/gim, '<hr>')
+                .replace(/\[(.*?)\]\((.*?)\)/gim, "<a href='$2' target='_blank'>$1</a>")
+                
+                // Lists
+                .replace(/^\s*-\s+(.*$)/gim, '<ul><li>$1</li></ul>')
+                .replace(/<\/ul>\s*<ul>/gim, '')
+                
+                // Blockquotes
+                .replace(/^>\s+(.*$)/gim, '<blockquote>$1</blockquote>')
+                
+                // Spacing cleanup
                 .replace(/\n\n/gim, '<br><br>')
-                .replace(/\n/gim, '<br>');
+                // Remove extra breaks after headers to prevent huge gaps
+                .replace(/(<\/h[1-3]>)\s*<br><br>/gim, '$1')
+                .replace(/(<hr>)\s*<br><br>/gim, '$1');
+
             return html;
         }
 
