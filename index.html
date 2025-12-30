@@ -88,6 +88,8 @@
             border-radius: 3px; 
             font-size: 1rem; 
             font-family: var(--font-main);
+            /* EXPLICITLY SET LIGHT WEIGHT FOR INPUTS */
+            font-weight: 300; 
             background-color: #fff;
             color: var(--text-main);
             width: 100%;
@@ -153,7 +155,7 @@
             padding: 8px 12px;
             font-size: 0.85rem;
             border-radius: 3px;
-            border: 1px solid #d4cdc3;
+            border: 1px solid #d1d5db;
             background: white;
             color: var(--text-main);
             font-weight: 600;
@@ -251,6 +253,7 @@
         
         td:nth-child(4) { 
             font-size: 0.95rem; 
+            font-weight: 300; /* Enforce Merriweather Light */
             line-height: 1.6;
             white-space: pre-wrap; 
             word-wrap: break-word;
@@ -275,6 +278,7 @@
             scroll-behavior: smooth;
             transform: rotateX(180deg); 
             align-items: flex-end; 
+            
             scrollbar-color: var(--secondary) transparent;
             scrollbar-width: thin;
         }
@@ -339,6 +343,7 @@
             box-shadow: 0 0 0 4px var(--bg); 
             cursor: pointer;
             transition: all 0.2s;
+            position: relative;
         }
         .h-dot:hover { background: var(--primary); transform: scale(1.2); }
 
@@ -362,6 +367,7 @@
         
         .h-detail-text { 
             font-size: 0.9rem; 
+            font-weight: 300; /* Enforce Merriweather Light */
             color: var(--text-main); 
             line-height: 1.5; 
             white-space: pre-wrap; 
@@ -610,7 +616,7 @@
 
     <div class="view-container">
         <!-- Header Label -->
-        <div id="viewHeaderLabel" class="view-header-label">UNSORTED</div>
+        <div id="viewHeaderLabel" class="view-header-label">CHRONOLOGICAL</div>
         
         <div id="visualArea" class="show"></div>
         <table id="tableArea">
