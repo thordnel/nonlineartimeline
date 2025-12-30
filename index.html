@@ -60,11 +60,7 @@
             align-items: start;
         }
 
-        /* Grid Spans for Desktop */
-        .col-span-2 { grid-column: span 2; }
-        .col-span-full { grid-column: 1 / -1; }
-
-        .input-group { display: flex; flex-direction: column; width: 100%; }
+        .input-group { display: flex; flex-direction: column; }
         label { 
             font-family: var(--font-ui);
             font-size: 0.75rem; 
@@ -76,7 +72,7 @@
         }
         
         input, textarea, select { 
-            padding: 12px; /* Larger touch target */
+            padding: 10px; 
             border: 1px solid #d4cdc3; 
             border-radius: 3px; 
             font-size: 1rem; 
@@ -92,17 +88,23 @@
             box-shadow: 0 0 0 2px rgba(140, 107, 93, 0.1);
         }
 
-        textarea { resize: vertical; min-height: 120px; line-height: 1.5; }
+        /* Auto-resize logic handled by JS, min-height increased */
+        textarea { 
+            resize: vertical; 
+            min-height: 150px; 
+            line-height: 1.5; 
+            overflow: hidden; /* Hide scrollbar when auto-expanding */
+        }
 
         .btn-row { margin-top: 20px; display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
         
         button {
-            padding: 12px 18px; /* Larger touch target */
+            padding: 10px 18px;
             border: none;
             border-radius: 3px;
             font-family: var(--font-ui);
             font-weight: 600;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             cursor: pointer;
             color: white;
             transition: all 0.2s;
@@ -137,8 +139,8 @@
         .btn-print { background-color: #4a5568; }
 
         .tz-picker-compact {
-            padding: 10px 12px;
-            font-size: 0.9rem;
+            padding: 8px 12px;
+            font-size: 0.85rem;
             border-radius: 3px;
             border: 1px solid #d4cdc3;
             background: white;
@@ -146,7 +148,7 @@
             font-weight: 600;
             width: auto;
             min-width: 220px;
-            height: 42px;
+            height: 38px;
             font-family: var(--font-ui);
         }
 
@@ -158,7 +160,7 @@
             background: #fff;
             border: 1px solid #e0e7ff;
             border-left: 4px solid var(--cloud);
-            padding: 15px 20px;
+            padding: 15px 25px;
             border-radius: 4px;
             margin-bottom: 25px;
             font-size: 0.9rem;
@@ -171,15 +173,14 @@
             font-family: 'Courier New', monospace; 
             font-weight: bold; 
             background: #f8fafc; 
-            padding: 4px 8px; 
+            padding: 3px 8px; 
             border-radius: 3px; 
             border: 1px solid #e2e8f0; 
             color: var(--cloud); 
             cursor: pointer; 
-            word-break: break-all;
         }
         .cloud-id:hover { background: #e0f2fe; }
-        .id-input-group { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+        .id-input-group { display: flex; gap: 8px; align-items: center; }
         .id-input { width: 180px !important; padding: 8px 10px !important; font-size: 0.8rem !important; }
 
         /* --- Views Container --- */
@@ -193,6 +194,7 @@
             border: 1px solid #e6e0d4;
         }
 
+        /* New Header Label Style */
         .view-header-label {
             text-align: center;
             font-family: var(--font-ui);
@@ -261,6 +263,7 @@
             scroll-behavior: smooth;
             transform: rotateX(180deg); 
             align-items: flex-end; 
+            
             scrollbar-color: var(--secondary) transparent;
             scrollbar-width: thin;
         }
@@ -277,6 +280,11 @@
             transform: rotateX(180deg); 
         }
 
+        /* Line Position Calculation:
+           Date Wrap Min Height: 80px
+           Date Wrap Margin Bottom: 10px
+           Dot Height: 20px (half is 10px)
+           Total Top Offset = 80 + 10 + 10 = 100px */
         .h-item::after {
             content: '';
             position: absolute;
@@ -308,7 +316,7 @@
             border: 3px solid var(--primary);
             border-radius: 50%;
             z-index: 1;
-            box-shadow: 0 0 0 4px var(--bg);
+            box-shadow: 0 0 0 4px var(--bg); 
             cursor: pointer;
             transition: all 0.2s;
             flex-shrink: 0;
@@ -319,7 +327,7 @@
             margin-top: 20px;
             background: #fff;
             border: 1px solid #e6e0d4;
-            border-top: 3px solid var(--primary);
+            border-top: 3px solid var(--primary); 
             border-radius: 2px;
             padding: 15px;
             width: 200px;
@@ -459,10 +467,14 @@
             .btn-row > * { flex-grow: 1; width: 100%; }
             
             /* Cloud Banner Stack */
-            .cloud-banner { flex-direction: column; text-align: center; gap: 15px; border-radius: 0; margin-left: -10px; margin-right: -10px; }
+            .cloud-banner { flex-direction: column; text-align: center; gap: 15px; border-radius: 0; margin-left: -10px; margin-right: -10px; border-left: none; border-right: none; }
             .id-input-group { width: 100%; justify-content: center; }
             .id-input { width: 100% !important; }
             
+            /* Full-width Backup/Restore buttons */
+            .cloud-banner .btn-row { width: 100%; display: flex; flex-direction: column; }
+            .cloud-banner .btn-row button { width: 100%; }
+
             /* Adjust Visual Area padding */
             #visualArea { padding: 20px 0; }
             
@@ -523,7 +535,7 @@
             </div>
             
             <!-- Row 2 -->
-            <div class="input-group col-span-2">
+            <div class="input-group" style="grid-column: span 2;">
                 <label>Chapter Title</label>
                 <input type="text" id="chapTitleIn" placeholder="e.g. The Beginning">
             </div>
@@ -533,7 +545,7 @@
             </div>
 
             <!-- Row 3 -->
-            <div class="input-group col-span-full">
+            <div class="input-group" style="grid-column: 1 / -1;">
                 <label>Details</label>
                 <textarea id="detailIn" rows="3" maxlength="1000" placeholder="Write your story beat here..."></textarea>
             </div>
@@ -859,6 +871,13 @@
             detectUserNearestZone();
             loadLocalData();
             initFirebase();
+            
+            // Setup Auto-Resize for Textarea
+            const tx = document.getElementById('detailIn');
+            tx.addEventListener('input', function() {
+                this.style.height = 'auto';
+                this.style.height = (this.scrollHeight) + 'px';
+            });
         };
 
         function saveLocalData() { localStorage.setItem(STORAGE_KEY, JSON.stringify(events)); }
@@ -1043,6 +1062,8 @@
             document.getElementById('chapTitleIn').value = '';
             document.getElementById('subChapTitleIn').value = '';
             document.getElementById('detailIn').value = '';
+            // Reset textarea height
+            document.getElementById('detailIn').style.height = 'auto';
         }
 
         function showToast(m) {
@@ -1156,32 +1177,21 @@
         }
 
         function parseMarkdown(md) {
-            let html = md.replace(/\r\n/g, '\n'); // Normalize line endings
+            let html = md.replace(/\r\n/g, '\n'); 
 
             html = html
-                // Headers - Top down to prevent # matching ##
                 .replace(/^###\s+(.*$)/gim, '<h3>$1</h3>')
                 .replace(/^##\s+(.*$)/gim, '<h2>$1</h2>')
                 .replace(/^#\s+(.*$)/gim, '<h1>$1</h1>')
-                
-                // HR
-                .replace(/^\s*---\s*$/gim, '<hr>') 
-                
-                // Formatting
                 .replace(/\*\*(.*?)\*\*/gim, '<b>$1</b>')
-                .replace(/`(.*?)`/gim, '<code>$1</code>')
                 .replace(/\[(.*?)\]\((.*?)\)/gim, "<a href='$2' target='_blank'>$1</a>")
-                
-                // Lists
                 .replace(/^\s*-\s+(.*$)/gim, '<ul><li>$1</li></ul>')
                 .replace(/<\/ul>\s*<ul>/gim, '')
-                
-                // Blockquotes
                 .replace(/^>\s+(.*$)/gim, '<blockquote>$1</blockquote>')
-                
-                // Spacing cleanup
+                .replace(/`(.*?)`/gim, '<code>$1</code>')
+                .replace(/^\s*---\s*$/gim, '<hr>') 
                 .replace(/\n\n/gim, '<br><br>')
-                // Remove extra breaks after headers to prevent huge gaps
+                // Clean up spacing
                 .replace(/(<\/h[1-3]>)\s*<br><br>/gim, '$1')
                 .replace(/(<hr>)\s*<br><br>/gim, '$1');
 
