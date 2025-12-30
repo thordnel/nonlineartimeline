@@ -275,7 +275,6 @@
             scroll-behavior: smooth;
             transform: rotateX(180deg); 
             align-items: flex-end; 
-            
             scrollbar-color: var(--secondary) transparent;
             scrollbar-width: thin;
         }
@@ -287,43 +286,44 @@
             align-items: center;
             position: relative;
             min-width: 220px; 
-            padding: 0 20px;
+            padding: 0; /* Remove padding to allow line to span full width */
             vertical-align: top;
             transform: rotateX(180deg); 
         }
 
-        /* Container for the line and dot to move together */
-        .h-line-container {
+        /* New Dot Container logic to force perfect alignment */
+        .h-dot-container {
             width: 100%;
-            height: 20px; /* height of dot */
+            height: 30px; /* Specific height area for line/dot */
             position: relative;
             display: flex;
-            justify-content: center;
             align-items: center;
+            justify-content: center;
             flex-shrink: 0;
-            margin-bottom: 0; /* Tight with card */
+            z-index: 0;
         }
 
         .h-line {
             position: absolute;
             top: 50%;
-            left: 0;
-            width: 100%;
+            left: 50%;
+            width: 100%; /* Spans to the center of next item */
             height: 2px;
             background: #d4cdc3;
             transform: translateY(-50%);
-            z-index: 0;
+            z-index: -1;
         }
-
+        
         .h-item:last-child .h-line { display: none; }
 
         .h-date-wrap {
             text-align: center;
-            margin-bottom: 10px;
+            margin-bottom: 5px;
             min-height: 80px; 
             display: flex;
             flex-direction: column;
             justify-content: flex-end;
+            padding: 0 10px;
         }
         .h-date { font-family: var(--font-ui); font-size: 0.85rem; font-weight: 800; color: var(--text-main); line-height: 1.2; }
         .h-day { font-family: var(--font-ui); font-size: 0.75rem; color: var(--primary); font-weight: 600; margin: 4px 0; letter-spacing: 1px; text-transform: uppercase; }
@@ -339,18 +339,19 @@
             box-shadow: 0 0 0 4px var(--bg); 
             cursor: pointer;
             transition: all 0.2s;
-            position: relative;
         }
         .h-dot:hover { background: var(--primary); transform: scale(1.2); }
 
         .h-card {
-            margin-top: 20px;
+            margin-top: 15px;
             background: #fff;
             border: 1px solid #e6e0d4;
             border-top: 3px solid var(--primary); 
             border-radius: 2px;
             padding: 15px;
-            width: 200px;
+            width: 190px;
+            margin-left: 15px; /* Visual spacing */
+            margin-right: 15px;
             white-space: normal;
             text-align: left;
             position: relative;
