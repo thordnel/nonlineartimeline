@@ -295,11 +295,12 @@
            Date Wrap Min Height: 80px
            Date Wrap Margin Bottom: 10px
            Dot Height: 20px (half is 10px)
-           Total Top Offset = 80 + 10 + 10 = 100px */
+           Total Top Offset = 80 + 10 + 10 = 100px.
+           Adjusted to 97px to perfectly center with dot. */
         .h-item::after {
             content: '';
             position: absolute;
-            top: 100px; 
+            top: 97px; 
             left: 50%; 
             width: 100%; 
             height: 2px;
@@ -600,7 +601,7 @@
 
     <div class="view-container">
         <!-- Header Label -->
-        <div id="viewHeaderLabel" class="view-header-label">CHRONOLOGICAL</div>
+        <div id="viewHeaderLabel" class="view-header-label">UNSORTED</div>
         
         <div id="visualArea" class="show"></div>
         <table id="tableArea">
