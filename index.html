@@ -189,6 +189,7 @@
             border: 1px solid #e2e8f0; 
             color: var(--cloud); 
             cursor: pointer; 
+            word-break: break-all;
         }
         .cloud-id:hover { background: #e0f2fe; }
         .id-input-group { display: flex; gap: 8px; align-items: center; }
@@ -291,23 +292,30 @@
             transform: rotateX(180deg); 
         }
 
-        /* Line Position Calculation:
-           Date Wrap Min Height: 80px
-           Date Wrap Margin Bottom: 10px
-           Dot Height: 20px (half is 10px)
-           Total Top Offset = 80 + 10 + 10 = 100px.
-           Adjusted to 97px to perfectly center with dot. */
-        .h-item::after {
-            content: '';
+        /* Container for the line and dot to move together */
+        .h-line-container {
+            width: 100%;
+            height: 20px; /* height of dot */
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-shrink: 0;
+            margin-bottom: 0; /* Tight with card */
+        }
+
+        .h-line {
             position: absolute;
-            top: 97px; 
-            left: 50%; 
-            width: 100%; 
+            top: 50%;
+            left: 0;
+            width: 100%;
             height: 2px;
-            background: #d4cdc3; 
+            background: #d4cdc3;
+            transform: translateY(-50%);
             z-index: 0;
         }
-        .h-item:last-child::after { display: none; }
+
+        .h-item:last-child .h-line { display: none; }
 
         .h-date-wrap {
             text-align: center;
@@ -331,7 +339,7 @@
             box-shadow: 0 0 0 4px var(--bg); 
             cursor: pointer;
             transition: all 0.2s;
-            flex-shrink: 0;
+            position: relative;
         }
         .h-dot:hover { background: var(--primary); transform: scale(1.2); }
 
@@ -1043,7 +1051,10 @@
                                 ${conv ? `<br><span style="color:var(--info); font-size: 0.7rem; font-weight: bold; display: block; margin-top: 4px; line-height:1.4;">✈ ${conv.zone}: ${conv.day}, ${conv.time}<br><span style="font-weight: normal;">${conv.weekday}</span></span>` : ''}
                             </div>
                         </div>
-                        <div class="h-dot" onclick="editEvent(${i})"></div>
+                        <div class="h-dot-container">
+                            <div class="h-line"></div>
+                            <div class="h-dot" onclick="editEvent(${i})"></div>
+                        </div>
                         <div class="h-card">
                             <span class="card-del" onclick="event.stopPropagation(); askDelete(${i})">×</span>
                             <div class="h-val-text">Chapter ${evt.number}</div>
