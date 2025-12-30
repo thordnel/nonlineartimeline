@@ -60,6 +60,10 @@
             align-items: start;
         }
 
+        /* Grid Spans for Desktop */
+        .col-span-2 { grid-column: span 2; }
+        .col-span-full { grid-column: 1 / -1; }
+
         .input-group { display: flex; flex-direction: column; width: 100%; }
         label { 
             font-family: var(--font-ui);
@@ -447,6 +451,9 @@
             .panel { padding: 15px; border-radius: 0; margin-left: -10px; margin-right: -10px; border-left: none; border-right: none; }
             .controls { grid-template-columns: 1fr; gap: 15px; }
             
+            /* Reset grid spans for mobile stack */
+            .col-span-2, .col-span-full { grid-column: auto; }
+            
             /* Full width buttons */
             .btn-row { gap: 10px; justify-content: stretch; }
             .btn-row > * { flex-grow: 1; width: 100%; }
@@ -516,7 +523,7 @@
             </div>
             
             <!-- Row 2 -->
-            <div class="input-group" style="grid-column: span 2;">
+            <div class="input-group col-span-2">
                 <label>Chapter Title</label>
                 <input type="text" id="chapTitleIn" placeholder="e.g. The Beginning">
             </div>
@@ -526,7 +533,7 @@
             </div>
 
             <!-- Row 3 -->
-            <div class="input-group" style="grid-column: 1 / -1;">
+            <div class="input-group col-span-full">
                 <label>Details</label>
                 <textarea id="detailIn" rows="3" maxlength="1000" placeholder="Write your story beat here..."></textarea>
             </div>
