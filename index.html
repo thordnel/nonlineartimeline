@@ -47,7 +47,7 @@
         .panel {
             background: var(--panel);
             padding: 25px;
-            border-radius: 4px; /* Sharper corners for paper look */
+            border-radius: 4px;
             box-shadow: var(--shadow-card);
             margin-bottom: 25px;
             border: 1px solid #e6e0d4;
@@ -56,11 +56,11 @@
         .controls {
             display: grid;
             grid-template-columns: 1.4fr 0.8fr 1.2fr;
-            gap: 25px;
+            gap: 20px;
             align-items: start;
         }
 
-        .input-group { display: flex; flex-direction: column; }
+        .input-group { display: flex; flex-direction: column; width: 100%; }
         label { 
             font-family: var(--font-ui);
             font-size: 0.75rem; 
@@ -72,7 +72,7 @@
         }
         
         input, textarea, select { 
-            padding: 10px; 
+            padding: 12px; /* Larger touch target */
             border: 1px solid #d4cdc3; 
             border-radius: 3px; 
             font-size: 1rem; 
@@ -88,17 +88,17 @@
             box-shadow: 0 0 0 2px rgba(140, 107, 93, 0.1);
         }
 
-        textarea { resize: vertical; min-height: 100px; line-height: 1.5; }
+        textarea { resize: vertical; min-height: 120px; line-height: 1.5; }
 
         .btn-row { margin-top: 20px; display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
         
         button {
-            padding: 10px 18px;
+            padding: 12px 18px; /* Larger touch target */
             border: none;
             border-radius: 3px;
             font-family: var(--font-ui);
             font-weight: 600;
-            font-size: 0.85rem;
+            font-size: 0.9rem;
             cursor: pointer;
             color: white;
             transition: all 0.2s;
@@ -133,8 +133,8 @@
         .btn-print { background-color: #4a5568; }
 
         .tz-picker-compact {
-            padding: 8px 12px;
-            font-size: 0.85rem;
+            padding: 10px 12px;
+            font-size: 0.9rem;
             border-radius: 3px;
             border: 1px solid #d4cdc3;
             background: white;
@@ -142,7 +142,7 @@
             font-weight: 600;
             width: auto;
             min-width: 220px;
-            height: 38px;
+            height: 42px;
             font-family: var(--font-ui);
         }
 
@@ -152,9 +152,9 @@
             justify-content: space-between;
             align-items: center;
             background: #fff;
-            border: 1px solid #e0e7ff; /* Subtle blue tint */
+            border: 1px solid #e0e7ff;
             border-left: 4px solid var(--cloud);
-            padding: 15px 25px;
+            padding: 15px 20px;
             border-radius: 4px;
             margin-bottom: 25px;
             font-size: 0.9rem;
@@ -167,14 +167,15 @@
             font-family: 'Courier New', monospace; 
             font-weight: bold; 
             background: #f8fafc; 
-            padding: 3px 8px; 
+            padding: 4px 8px; 
             border-radius: 3px; 
             border: 1px solid #e2e8f0; 
             color: var(--cloud); 
             cursor: pointer; 
+            word-break: break-all;
         }
         .cloud-id:hover { background: #e0f2fe; }
-        .id-input-group { display: flex; gap: 8px; align-items: center; }
+        .id-input-group { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
         .id-input { width: 180px !important; padding: 8px 10px !important; font-size: 0.8rem !important; }
 
         /* --- Views Container --- */
@@ -188,7 +189,6 @@
             border: 1px solid #e6e0d4;
         }
 
-        /* New Header Label Style */
         .view-header-label {
             text-align: center;
             font-family: var(--font-ui);
@@ -232,7 +232,7 @@
         th:nth-child(5) { width: 100px; } 
         
         td:nth-child(4) { 
-            font-size: 0.95rem; /* Larger font for readability */
+            font-size: 0.95rem; 
             line-height: 1.6;
             white-space: pre-wrap; 
             word-wrap: break-word;
@@ -255,10 +255,8 @@
             padding: 40px 0; 
             white-space: nowrap;
             scroll-behavior: smooth;
-            transform: rotateX(180deg); /* Move scrollbar to top */
+            transform: rotateX(180deg); 
             align-items: flex-end; 
-            
-            /* Custom Scrollbar for parchment feel */
             scrollbar-color: var(--secondary) transparent;
             scrollbar-width: thin;
         }
@@ -269,17 +267,12 @@
             flex-direction: column; 
             align-items: center;
             position: relative;
-            min-width: 220px; /* More breathing room */
+            min-width: 220px; 
             padding: 0 20px;
             vertical-align: top;
-            transform: rotateX(180deg); /* Flip content back up */
+            transform: rotateX(180deg); 
         }
 
-        /* Line Position Calculation:
-           Date Wrap Min Height: 80px
-           Date Wrap Margin Bottom: 10px
-           Dot Height: 20px (half is 10px)
-           Total Top Offset = 80 + 10 + 10 = 100px */
         .h-item::after {
             content: '';
             position: absolute;
@@ -287,7 +280,7 @@
             left: 50%; 
             width: 100%; 
             height: 2px;
-            background: #d4cdc3; /* Lighter line */
+            background: #d4cdc3; 
             z-index: 0;
         }
         .h-item:last-child::after { display: none; }
@@ -307,11 +300,11 @@
         .h-dot {
             width: 16px;
             height: 16px;
-            background: var(--bg); /* Hollow dot look */
+            background: var(--bg); 
             border: 3px solid var(--primary);
             border-radius: 50%;
             z-index: 1;
-            box-shadow: 0 0 0 4px var(--bg); /* Fake padding */
+            box-shadow: 0 0 0 4px var(--bg);
             cursor: pointer;
             transition: all 0.2s;
             flex-shrink: 0;
@@ -322,7 +315,7 @@
             margin-top: 20px;
             background: #fff;
             border: 1px solid #e6e0d4;
-            border-top: 3px solid var(--primary); /* Accent top border */
+            border-top: 3px solid var(--primary);
             border-radius: 2px;
             padding: 15px;
             width: 200px;
@@ -376,7 +369,7 @@
             position: fixed;
             top: 0; left: 0;
             width: 100%; height: 100%;
-            background: rgba(44, 36, 32, 0.6); /* Dark brown overlay */
+            background: rgba(44, 36, 32, 0.6); 
             z-index: 1000;
             align-items: center; justify-content: center;
         }
@@ -446,11 +439,31 @@
             th:nth-child(1), td:nth-child(1), th:nth-child(5), td:nth-child(5) { display: none; }
         }
 
+        /* --- MOBILE OPTIMIZATIONS --- */
         @media (max-width: 768px) {
-            .controls { grid-template-columns: 1fr; }
-            .cloud-banner { flex-direction: column; text-align: center; gap: 15px; }
-            .id-input-group { justify-content: center; }
-            .readme-footer { padding-bottom: 40px; }
+            body { padding: 10px; padding-bottom: 100px; }
+            
+            /* Edge-to-Edge Inputs */
+            .panel { padding: 15px; border-radius: 0; margin-left: -10px; margin-right: -10px; border-left: none; border-right: none; }
+            .controls { grid-template-columns: 1fr; gap: 15px; }
+            
+            /* Full width buttons */
+            .btn-row { gap: 10px; justify-content: stretch; }
+            .btn-row > * { flex-grow: 1; width: 100%; }
+            
+            /* Cloud Banner Stack */
+            .cloud-banner { flex-direction: column; text-align: center; gap: 15px; border-radius: 0; margin-left: -10px; margin-right: -10px; }
+            .id-input-group { width: 100%; justify-content: center; }
+            .id-input { width: 100% !important; }
+            
+            /* Adjust Visual Area padding */
+            #visualArea { padding: 20px 0; }
+            
+            .view-container { padding: 15px; border-radius: 0; margin-left: -10px; margin-right: -10px; border-left: none; border-right: none;}
+            
+            /* Hide non-essential table columns on mobile */
+            th:nth-child(2), td:nth-child(2) { font-size: 0.8rem; }
+            .tz-picker-compact { width: 100%; }
         }
     </style>
 </head>
@@ -523,10 +536,10 @@
             <button id="btnAdd" class="btn-add" onclick="handleAdd()">+ Add Beat</button>
             <button id="btnSaveNew" style="display:none; background-color: var(--success);" onclick="saveAsNew()">+ Save as New</button>
             <button id="btnCancel" class="btn-cancel" onclick="cancelEdit()">Cancel</button>
-            <span style="width: 20px;"></span>
+            <span class="desktop-only" style="width: 20px;"></span>
             <button class="btn-sort" onclick="sortData('date')">Sort Date</button>
             <button class="btn-sort" onclick="sortData('number')">Sort Chapter</button>
-            <span style="flex-grow:1"></span>
+            <span class="desktop-only" style="flex-grow:1"></span>
             
             <select id="tzSelect" class="tz-picker-compact" onchange="updateTzPreference()">
                 <option value="">Compare Time: Off</option>
@@ -568,7 +581,7 @@
 
     <div class="panel" style="margin-top: 20px;">
         <div class="file-tools" style="display:flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap:10px;">
-            <div style="display:flex; gap:10px; flex-wrap:wrap;">
+            <div class="file-tools-left" style="display:flex; gap:10px; flex-wrap:wrap;">
                 <button class="btn-dl" onclick="downloadCSV()">Save CSV</button>
                 <button class="btn-print" onclick="window.print()">Print / Save PDF</button>
                 <input type="file" id="fileIn" accept=".csv" onchange="uploadCSV(this)" style="max-width: 250px;">
@@ -768,7 +781,7 @@
                         infoHtml = `
                             <strong>Last Backup:</strong> ${dateStr} <br>
                             <span style="color:var(--secondary);">(${rel})</span><br><br>
-                            <strong>By Device ID:</strong> <span style="font-family:monospace; background:#e6e2d8; padding:2px 4px; border-radius:3px;">${deviceStr}</span>
+                            <strong>By Device ID:</strong> <span style="font-family:monospace; background:#eee; padding:2px 4px; border-radius:3px;">${deviceStr}</span>
                         `;
                     }
                 }
