@@ -1,7 +1,7 @@
 {
   "name": "Storylines Manager",
   "short_name": "Storylines",
-  "start_url": "./timeline_fixed.html",
+  "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#f4f1ea",
   "theme_color": "#8c6b5d",
