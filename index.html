@@ -296,7 +296,7 @@
             align-items: center;
             position: relative;
             min-width: 220px; 
-            padding: 0 20px;
+            padding: 0; /* Remove padding to ensure lines bridge the gap */
             vertical-align: top;
             transform: rotateX(180deg); 
         }
@@ -610,6 +610,7 @@
     </div>
 
     <div class="view-container">
+        <!-- Header Label updated to default to UNSORTED -->
         <div id="viewHeaderLabel" class="view-header-label">UNSORTED</div>
         
         <div id="visualArea" class="show"></div>
