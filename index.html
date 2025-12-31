@@ -50,7 +50,7 @@
             color: var(--text-main);
         }
 
-        /* --- Panels --- */
+        /* --- UI Components --- */
         .panel {
             background: var(--panel);
             padding: 25px;
@@ -59,84 +59,6 @@
             margin-bottom: 25px;
             border: 1px solid #e6e0d4;
             position: relative;
-        }
-
-        /* Section Headers */
-        .section-label {
-            position: absolute;
-            top: -12px;
-            left: 20px;
-            background: var(--bg);
-            padding: 0 10px;
-            font-family: var(--font-ui);
-            font-size: 0.75rem;
-            font-weight: 700;
-            color: var(--primary);
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            border: 1px solid #e6e0d4;
-            border-radius: 12px;
-        }
-
-        /* --- Continuity Space Specifics --- */
-        .continuity-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            cursor: pointer;
-            user-select: none;
-        }
-        .continuity-content {
-            display: none; /* Collapsed by default */
-            margin-top: 20px;
-            border-top: 1px dashed #d4cdc3;
-            padding-top: 20px;
-        }
-        .continuity-list {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            margin-top: 15px;
-        }
-        .c-item-tag {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            padding: 4px 8px;
-            background: #fff;
-            border: 1px solid #d4cdc3;
-            border-radius: 4px;
-            font-size: 0.8rem;
-            font-family: var(--font-ui);
-            color: var(--text-main);
-        }
-        .c-item-tag.inactive { opacity: 0.5; filter: grayscale(100%); }
-        
-        .c-dot {
-            width: 10px; height: 10px; border-radius: 50%; display: inline-block;
-        }
-
-        /* Badge on Cards */
-        .c-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            padding: 2px 6px;
-            background: #fdfbf7;
-            border: 1px solid #e6e0d4;
-            border-radius: 12px;
-            font-size: 0.7rem;
-            font-family: var(--font-ui);
-            margin-right: 4px;
-            margin-bottom: 4px;
-            color: var(--text-muted);
-        }
-        .c-badges-container {
-            margin-top: 8px;
-            padding-top: 8px;
-            border-top: 1px dashed #e6e0d4;
-            display: flex;
-            flex-wrap: wrap;
         }
 
         .controls {
@@ -299,6 +221,84 @@
             border-bottom: 2px solid #e6e0d4;
             margin-bottom: 20px;
             width: 100%;
+        }
+
+        /* --- Section Headers --- */
+        .section-label {
+            position: absolute;
+            top: -12px;
+            left: 20px;
+            background: var(--bg);
+            padding: 0 10px;
+            font-family: var(--font-ui);
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--primary);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border: 1px solid #e6e0d4;
+            border-radius: 12px;
+        }
+
+        /* --- Continuity Space Specifics --- */
+        .continuity-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            user-select: none;
+        }
+        .continuity-content {
+            display: none; /* Collapsed by default */
+            margin-top: 20px;
+            border-top: 1px dashed #d4cdc3;
+            padding-top: 20px;
+        }
+        .continuity-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        .c-item-tag {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 4px 10px;
+            background: #fff;
+            border: 1px solid #d4cdc3;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-family: var(--font-ui);
+            color: var(--text-main);
+        }
+        .c-item-tag.inactive { opacity: 0.5; filter: grayscale(100%); }
+        
+        .c-dot {
+            width: 10px; height: 10px; border-radius: 50%; display: inline-block;
+        }
+
+        /* Badge on Cards */
+        .c-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 2px 6px;
+            background: #fdfbf7;
+            border: 1px solid #e6e0d4;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-family: var(--font-ui);
+            margin-right: 4px;
+            margin-bottom: 4px;
+            color: var(--text-muted);
+        }
+        .c-badges-container {
+            margin-top: 8px;
+            padding-top: 8px;
+            border-top: 1px dashed #e6e0d4;
+            display: flex;
+            flex-wrap: wrap;
         }
 
         /* --- TABLE VIEW --- */
@@ -683,6 +683,7 @@
                 </select>
             </div>
             
+            <!-- Row 2 -->
             <div class="input-group col-span-2">
                 <label>Chapter Title</label>
                 <input type="text" id="chapTitleIn" placeholder="e.g. The Beginning">
@@ -692,11 +693,13 @@
                 <input type="text" id="subChapTitleIn" placeholder="e.g. The Arrival">
             </div>
 
+            <!-- Row 3 -->
             <div class="input-group col-span-full">
                 <label>Details</label>
                 <textarea id="detailIn" rows="3" maxlength="1000" placeholder="Write your story beat here..."></textarea>
             </div>
             
+            <!-- Row 4 (Remarks) -->
             <div class="input-group col-span-full">
                 <label>Remarks</label>
                 <textarea id="remarksIn" rows="2" maxlength="500" placeholder="Notes, themes, or internal comments..." style="min-height:80px;"></textarea>
@@ -765,8 +768,9 @@
                     <label>End Date (Optional)</label>
                     <input type="datetime-local" id="cEndIn">
                 </div>
-                <div class="input-group" style="justify-content: flex-end;">
-                    <button class="btn-add" onclick="addContinuityItem()" style="padding:12px;">+</button>
+                <div class="input-group" style="justify-content: flex-end; flex-direction: row; gap: 5px;">
+                    <button id="btnCAdd" class="btn-add" onclick="addContinuityItem()" style="padding:12px;">+</button>
+                    <button id="btnCCancel" class="btn-cancel" onclick="cancelContinuityEdit()" style="padding:12px; display:none;">×</button>
                 </div>
             </div>
 
@@ -1086,6 +1090,7 @@
         let deleteTargetIndex = null;
         let currentSortMethod = 'unsorted'; 
         let currentTz = localStorage.getItem('storylines_tz') || '';
+        let editingContinuityId = null;
         const STORAGE_KEY = 'storylines_persist';
 
         window.onload = function() {
@@ -1146,21 +1151,77 @@
 
             if(!name || !start) return showToast("Name and Start Date required");
 
-            const item = {
-                id: Date.now().toString(),
-                name, icon, start, end,
-                visible: true
-            };
-            continuityItems.push(item);
+            if (editingContinuityId) {
+                // Update Existing
+                const idx = continuityItems.findIndex(i => i.id === editingContinuityId);
+                if (idx > -1) {
+                    // Preserve visibility state
+                    const oldVisible = continuityItems[idx].visible;
+                    continuityItems[idx] = { 
+                        id: editingContinuityId, 
+                        name, icon, start, end, 
+                        visible: oldVisible 
+                    };
+                    showToast("Tracking item updated");
+                }
+                window.cancelContinuityEdit();
+            } else {
+                // Create New
+                const item = {
+                    id: Date.now().toString(),
+                    name, icon, start, end,
+                    visible: true
+                };
+                continuityItems.push(item);
+            }
+            
             saveLocalData();
             renderContinuityList();
             render(); // Re-render beats to show badges
             
-            // Clear inputs
+            // Clear inputs if not cancelling (already done in cancel)
+            if (!editingContinuityId) {
+                document.getElementById('cNameIn').value = '';
+                document.getElementById('cIconIn').value = '';
+                document.getElementById('cStartIn').value = '';
+                document.getElementById('cEndIn').value = '';
+            }
+        }
+
+        window.editContinuityItem = (id) => {
+            const item = continuityItems.find(i => i.id === id);
+            if (!item) return;
+            
+            editingContinuityId = id;
+            document.getElementById('cNameIn').value = item.name;
+            document.getElementById('cIconIn').value = item.icon;
+            document.getElementById('cStartIn').value = item.start;
+            document.getElementById('cEndIn').value = item.end || '';
+            
+            // Change UI to Edit Mode
+            const btn = document.getElementById('btnCAdd');
+            btn.innerText = "✓"; // Checkmark
+            btn.className = "btn-update";
+            document.getElementById('btnCCancel').style.display = 'inline-block';
+            
+            // Open panel if closed
+            const content = document.getElementById('continuityContent');
+            if (content.style.display !== 'block') {
+                 window.toggleContinuityPanel();
+            }
+        }
+
+        window.cancelContinuityEdit = () => {
+            editingContinuityId = null;
             document.getElementById('cNameIn').value = '';
             document.getElementById('cIconIn').value = '';
             document.getElementById('cStartIn').value = '';
             document.getElementById('cEndIn').value = '';
+            
+            const btn = document.getElementById('btnCAdd');
+            btn.innerText = "+";
+            btn.className = "btn-add";
+            document.getElementById('btnCCancel').style.display = 'none';
         }
 
         window.toggleContinuityVisibility = (id) => {
@@ -1176,6 +1237,9 @@
         window.deleteContinuityItem = (id) => {
             if(confirm("Remove this tracking item?")) {
                 continuityItems = continuityItems.filter(i => i.id !== id);
+                // If deleting the item currently being edited, cancel edit
+                if (editingContinuityId === id) window.cancelContinuityEdit();
+                
                 saveLocalData();
                 renderContinuityList();
                 render();
@@ -1189,8 +1253,13 @@
                 const el = document.createElement('div');
                 el.className = `c-item-tag ${!item.visible ? 'inactive' : ''}`;
                 el.innerHTML = `
-                    <span onclick="toggleContinuityVisibility('${item.id}')" style="cursor:pointer" title="Toggle visibility in beats">${item.icon} ${item.name}</span>
-                    <span onclick="deleteContinuityItem('${item.id}')" style="cursor:pointer; color:var(--danger); font-weight:bold; margin-left:5px;">×</span>
+                    <span onclick="toggleContinuityVisibility('${item.id}')" style="cursor:pointer; margin-right:5px; opacity:0.6;" title="Toggle Visibility">
+                        ${item.visible ? '👁️' : '🔒'} 
+                    </span>
+                    <span onclick="editContinuityItem('${item.id}')" style="cursor:pointer; font-weight:bold;" title="Edit Item">
+                        ${item.icon} ${item.name}
+                    </span>
+                    <span onclick="deleteContinuityItem('${item.id}')" style="cursor:pointer; color:var(--danger); font-weight:bold; margin-left:8px;">×</span>
                 `;
                 container.appendChild(el);
             });
@@ -1465,23 +1534,52 @@
         }
 
         function setupDragAndDrop() {
-            if (currentSortMethod !== 'number') return;
-            const rows = document.querySelectorAll('tr.draggable');
-            rows.forEach(row => {
-                row.ondragstart = (e) => { e.dataTransfer.setData('idx', row.dataset.index); row.classList.add('dragging'); };
-                row.ondragover = (e) => { e.preventDefault(); row.classList.add('drag-over'); };
-                row.ondragleave = () => row.classList.remove('drag-over');
-                row.ondrop = (e) => {
-                    const from = e.dataTransfer.getData('idx');
-                    const to = row.dataset.index;
-                    const item = events.splice(from, 1)[0];
-                    events.splice(to, 0, item);
-                    const intPart = Math.floor(item.number);
-                    const group = events.filter(ev => Math.floor(ev.number) === intPart);
-                    group.forEach((ev, k) => ev.number = intPart + (group.length > 9 ? (k+1)*0.01 : (k+1)*0.1));
-                    saveLocalData(); render();
-                };
-            });
+            // Helper for attaching events
+            const attachEvents = (elements) => {
+                elements.forEach(el => {
+                    el.ondragstart = (e) => { 
+                        e.dataTransfer.setData('idx', el.dataset.index); 
+                        el.classList.add('dragging'); 
+                    };
+                    el.ondragover = (e) => { 
+                        e.preventDefault(); 
+                        const target = e.currentTarget; 
+                        target.classList.add('drag-over'); 
+                    };
+                    el.ondragleave = (e) => {
+                         e.currentTarget.classList.remove('drag-over');
+                    };
+                    el.ondrop = (e) => {
+                        e.preventDefault();
+                        e.currentTarget.classList.remove('drag-over');
+                        const from = e.dataTransfer.getData('idx');
+                        const to = el.dataset.index;
+                        
+                        if (from === to) return;
+                        
+                        const draggedItem = events[from];
+                        const targetItem = events[to];
+                        
+                        if (Math.floor(draggedItem.number) !== Math.floor(targetItem.number)) {
+                            showToast("Cannot move between chapters.");
+                            return;
+                        }
+                        
+                        const item = events.splice(from, 1)[0];
+                        events.splice(to, 0, item);
+                        
+                        const intPart = Math.floor(item.number);
+                        const group = events.filter(ev => Math.floor(ev.number) === intPart);
+                        group.forEach((ev, k) => ev.number = intPart + (group.length > 9 ? (k+1)*0.01 : (k+1)*0.1));
+                        
+                        saveLocalData(); 
+                        render();
+                    };
+                });
+            };
+
+            attachEvents(document.querySelectorAll('tr.draggable'));
+            attachEvents(document.querySelectorAll('.h-item.draggable'));
         }
 
         const README_URL = 'https://thordnel.github.io/nonlineartimeline/README.md';
