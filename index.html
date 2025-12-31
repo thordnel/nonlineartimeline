@@ -110,6 +110,12 @@
 
         .btn-row { margin-top: 20px; display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
         
+        /* Button Groups for Layout Control */
+        .btn-group-mobile {
+            display: flex;
+            gap: 10px;
+        }
+
         button {
             padding: 10px 18px;
             border: none;
@@ -149,12 +155,6 @@
         
         .btn-cloud { background-color: var(--cloud); }
         .btn-print { background-color: #4a5568; }
-
-        /* Helper for grouped buttons (Sort & View) */
-        .btn-group-mobile {
-            display: flex;
-            gap: 8px;
-        }
 
         .tz-picker-compact {
             padding: 8px 12px;
@@ -311,7 +311,7 @@
             transform: rotateX(180deg); 
         }
 
-        /* New Dot Container logic to force perfect alignment */
+        /* Dot Container logic to force perfect alignment */
         .h-dot-container {
             width: 100%;
             height: 30px; /* Specific height area for line/dot */
@@ -518,27 +518,31 @@
             /* Reset grid spans for mobile stack */
             .col-span-2, .col-span-full { grid-column: auto; }
             
-            /* Full width buttons */
-            .btn-row { gap: 10px; justify-content: stretch; }
-            .btn-row > * { flex-grow: 1; width: 100%; }
+            /* Clean up Button Rows */
+            .btn-row { 
+                gap: 10px; 
+                flex-wrap: wrap; 
+                justify-content: stretch; 
+            }
+            .btn-row > * { 
+                flex-grow: 1; 
+            }
             
+            /* Specific groupings for side-by-side */
+            .btn-group-mobile {
+                display: flex;
+                gap: 10px;
+                width: 100%;
+            }
+            .btn-group-mobile > button {
+                flex: 1; /* Stretch evenly */
+            }
+
             /* Cloud Banner Stack */
             .cloud-banner { flex-direction: column; text-align: center; gap: 15px; border-radius: 0; margin-left: -10px; margin-right: -10px; border-left: none; border-right: none; }
             .id-input-group { width: 100%; justify-content: center; }
             .id-input { width: 100% !important; }
             
-            /* Backup/Restore buttons in single line (row) */
-            .cloud-banner .btn-row { 
-                width: 100%; 
-                display: flex; 
-                flex-direction: row; /* Force single line */
-                gap: 10px;
-            }
-            .cloud-banner .btn-row button { 
-                flex: 1; /* Stretch equally */
-                width: auto; 
-            }
-
             /* Adjust Visual Area padding */
             #visualArea { padding: 20px 0; }
             
@@ -547,17 +551,7 @@
             /* Hide non-essential table columns on mobile */
             th:nth-child(2), td:nth-child(2) { font-size: 0.8rem; }
             .tz-picker-compact { width: 100%; }
-
-            /* Side-by-side buttons for Sort & View */
-            .btn-group-mobile {
-                display: flex;
-                gap: 10px;
-                width: 100%;
-            }
-            .btn-group-mobile > button {
-                flex: 1;
-                width: auto;
-            }
+            .desktop-only { display: none; }
         }
     </style>
 </head>
@@ -580,7 +574,7 @@
             <button class="btn-reset" onclick="resetToOriginalId()" style="padding: 6px 12px; font-size: 0.75rem; border-color:#991b1b; color:#991b1b;">Unlink</button>
         </div>
 
-        <div class="btn-row" style="margin-top:0;">
+        <div class="btn-row btn-group-mobile">
             <button class="btn-cloud" onclick="confirmBackup()" id="btnBackup" disabled>Backup</button>
             <button class="btn-cloud" onclick="confirmRestore()" id="btnRestore" disabled style="background-color: var(--primary);">Restore</button>
         </div>
@@ -610,6 +604,7 @@
             </div>
             
             <!-- Row 2 -->
+            <!-- Use responsive classes -->
             <div class="input-group col-span-2">
                 <label>Chapter Title</label>
                 <input type="text" id="chapTitleIn" placeholder="e.g. The Beginning">
@@ -633,17 +628,21 @@
         </div>
 
         <div class="btn-row">
-            <button id="btnAdd" class="btn-add" onclick="handleAdd()">+ Add Beat</button>
-            <button id="btnSaveNew" style="display:none; background-color: var(--success);" onclick="saveAsNew()">+ Save as New</button>
-            <button id="btnCancel" class="btn-cancel" onclick="cancelEdit()">Cancel</button>
-            
+            <!-- Action Group -->
+            <div class="btn-group-mobile action-group">
+                <button id="btnAdd" class="btn-add" onclick="handleAdd()">+ Add Beat</button>
+                <button id="btnSaveNew" style="display:none; background-color: var(--success);" onclick="saveAsNew()">+ Save as New</button>
+                <button id="btnCancel" class="btn-cancel" onclick="cancelEdit()">Cancel</button>
+            </div>
+
             <span class="desktop-only" style="width: 20px;"></span>
             
+            <!-- Sort Group -->
             <div class="btn-group-mobile">
                 <button class="btn-sort" onclick="sortData('date')">Sort Date</button>
                 <button class="btn-sort" onclick="sortData('number')">Sort Chapter</button>
             </div>
-            
+
             <span class="desktop-only" style="flex-grow:1"></span>
             
             <select id="tzSelect" class="tz-picker-compact" onchange="updateTzPreference()">
@@ -659,6 +658,7 @@
                 <option value="Asia/Kathmandu">Kathmandu, Nepal (+5:45)</option>
             </select>
 
+            <!-- View Group -->
             <div class="btn-group-mobile">
                 <button class="btn-view active" id="btnVis" onclick="toggleView('visual')">Visual</button>
                 <button class="btn-view" id="btnTab" onclick="toggleView('table')">List</button>
@@ -667,7 +667,7 @@
     </div>
 
     <div class="view-container">
-        <!-- Header Label -->
+        <!-- Header Label updated to default to UNSORTED -->
         <div id="viewHeaderLabel" class="view-header-label">UNSORTED</div>
         
         <div id="visualArea" class="show"></div>
