@@ -100,12 +100,12 @@
             box-shadow: 0 0 0 2px rgba(140, 107, 93, 0.1);
         }
 
+        /* Auto-resize logic handled by JS, min-height increased */
         textarea { 
             resize: vertical; 
             min-height: 150px; 
             line-height: 1.5; 
-            overflow: hidden; 
-            font-weight: 300; /* Merriweather Light */
+            overflow: hidden; /* Hide scrollbar when auto-expanding */
         }
 
         .btn-row { margin-top: 20px; display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
@@ -127,6 +127,7 @@
         button:active { transform: translateY(0); }
         button:disabled { opacity: 0.5; cursor: not-allowed; transform: none !important; box-shadow: none; }
 
+        /* Button Variants */
         .btn-add { background-color: var(--success); }
         .btn-update { background-color: var(--warning); color: #3e2e1e; }
         .btn-cancel { background-color: var(--secondary); display: none; }
@@ -206,6 +207,7 @@
             border: 1px solid #e6e0d4;
         }
 
+        /* New Header Label Style */
         .view-header-label {
             text-align: center;
             font-family: var(--font-ui);
@@ -245,8 +247,8 @@
         
         th:nth-child(1) { width: 40px; } 
         th:nth-child(2) { width: 180px; } 
-        th:nth-child(3) { width: 160px; } /* Chapter */
-        th:nth-child(5) { width: 100px; } /* Action */
+        th:nth-child(3) { width: 160px; }
+        th:nth-child(5) { width: 100px; } 
         
         td:nth-child(4) { 
             font-size: 0.95rem; 
@@ -285,6 +287,7 @@
             scroll-behavior: smooth;
             transform: rotateX(180deg); 
             align-items: flex-end; 
+            
             scrollbar-color: var(--secondary) transparent;
             scrollbar-width: thin;
         }
@@ -301,6 +304,16 @@
             transform: rotateX(180deg); 
         }
 
+        /* Drag Styles for Visual View */
+        .h-item.draggable .h-card { cursor: grab; }
+        .h-item.dragging { opacity: 0.5; }
+        .h-item.drag-over .h-card { 
+            border: 2px dashed var(--primary); 
+            background: var(--drag-bg); 
+            transform: translateY(-5px);
+        }
+
+        /* Dot Container logic to force perfect alignment */
         .h-dot-container {
             width: 100%;
             height: 30px; 
@@ -542,6 +555,7 @@
 
     <div class="panel">
         <div class="controls">
+            <!-- Row 1 -->
             <div class="input-group">
                 <label>Date & Time</label>
                 <input type="datetime-local" id="dateIn">
@@ -681,7 +695,7 @@
 
     <!-- Restore Modal -->
     <div id="restoreModal" class="modal-overlay">
-        <div class="modal-content" style="max-width: 400px;">
+        <div class="modal-content">
             <h3 style="color:var(--cloud);">Confirm Restore</h3>
             <p>This will overwrite your current local timeline with the version from the cloud.</p>
             <p id="restoreInfo" style="text-align: left; background: #fdfbf7; padding: 15px; border-radius: 4px; border: 1px solid #e6e0d4; font-size:0.9rem; margin-top: 15px;">Loading cloud info...</p>
@@ -699,8 +713,13 @@
         import { getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js';
         import { getFirestore, doc, setDoc, getDoc } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js';
 
+        // --- FIREBASE CONFIGURATION ---
         let firebaseConfig = null;
-        try { if (typeof __firebase_config !== 'undefined') { firebaseConfig = JSON.parse(__firebase_config); } } catch (e) {}
+        try {
+            if (typeof __firebase_config !== 'undefined') {
+                firebaseConfig = JSON.parse(__firebase_config);
+            }
+        } catch (e) {}
 
         if (!firebaseConfig) {
             firebaseConfig = {
@@ -714,18 +733,40 @@
         }
 
         const appId = 'storylines-public';
-        let user = null, db = null, auth = null;
+        
+        let user = null;
+        let db = null;
+        let auth = null;
         let activeSyncId = localStorage.getItem('storylines_active_id') || null;
 
         const initFirebase = async () => {
-            if (!firebaseConfig || !firebaseConfig.apiKey) { document.getElementById('syncStatus').innerText = "Setup Required"; return; }
+            if (!firebaseConfig || !firebaseConfig.apiKey) {
+                document.getElementById('syncStatus').innerText = "Setup Required";
+                return;
+            }
+
             try {
                 const app = initializeApp(firebaseConfig);
                 auth = getAuth(app);
                 db = getFirestore(app);
-                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) { await signInWithCustomToken(auth, __initial_auth_token); } else { await signInAnonymously(auth); }
-                onAuthStateChanged(auth, (u) => { user = u; if (user) { activeSyncId = activeSyncId || user.uid; updateCloudUI(); } });
-            } catch (err) { document.getElementById('syncStatus').innerText = "Connection Failed"; console.error("Firebase Error:", err); }
+
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+
+                onAuthStateChanged(auth, (u) => {
+                    user = u;
+                    if (user) {
+                        activeSyncId = activeSyncId || user.uid;
+                        updateCloudUI();
+                    }
+                });
+            } catch (err) {
+                document.getElementById('syncStatus').innerText = "Connection Failed";
+                console.error("Firebase Error:", err);
+            }
         };
 
         function updateCloudUI() {
@@ -739,21 +780,31 @@
         window.copyId = () => {
             const val = activeSyncId;
             const el = document.createElement('textarea');
-            el.value = val; document.body.appendChild(el);
-            el.select(); document.execCommand('copy'); document.body.removeChild(el);
+            el.value = val;
+            document.body.appendChild(el);
+            el.select();
+            document.execCommand('copy');
+            document.body.removeChild(el);
             showToast("ID Copied! Use this to link your other devices.");
         }
 
         window.linkExistingId = () => {
             const id = document.getElementById('manualIdIn').value.trim();
             if(!id) return showToast("Enter a valid ID");
-            activeSyncId = id; localStorage.setItem('storylines_active_id', id);
-            updateCloudUI(); showToast("Device Linked! You can now Restore from this ID.");
+            activeSyncId = id;
+            localStorage.setItem('storylines_active_id', id);
+            updateCloudUI();
+            showToast("Device Linked! You can now Restore from this ID.");
         }
 
         window.resetToOriginalId = () => {
             localStorage.removeItem('storylines_active_id');
-            if (user) { activeSyncId = user.uid; updateCloudUI(); showToast("Unlinked: Back to Original Device ID"); document.getElementById('manualIdIn').value = ''; }
+            if (user) {
+                activeSyncId = user.uid;
+                updateCloudUI();
+                showToast("Unlinked: Back to Original Device ID");
+                document.getElementById('manualIdIn').value = '';
+            }
         }
 
         function timeAgo(date) {
@@ -775,12 +826,15 @@
             if (!user || !db) return showToast("Please check setup.");
             const btn = document.getElementById('btnBackup');
             const originalText = btn.innerText;
-            btn.innerText = "Checking..."; btn.disabled = true;
+            btn.innerText = "Checking...";
+            btn.disabled = true;
 
             try {
                 const docRef = doc(db, 'artifacts', appId, 'users', activeSyncId, 'data', 'main_record');
                 const docSnap = await getDoc(docRef);
+                
                 let infoHtml = "No existing backup found. <br>This will create a new cloud record.";
+                
                 if (docSnap.exists()) {
                     const data = docSnap.data();
                     if (data.lastUpdated) {
@@ -788,21 +842,45 @@
                         const dateStr = dateObj.toLocaleString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true });
                         const rel = timeAgo(dateObj);
                         const deviceStr = data.lastDevice ? data.lastDevice.substring(0, 6) + "..." : "Unknown";
-                        infoHtml = `<strong>Last Backup:</strong> ${dateStr} <br><span style="color:var(--secondary);">(${rel})</span><br><br><strong>By Device ID:</strong> <span style="font-family:monospace; background:#eee; padding:2px 4px; border-radius:3px;">${deviceStr}</span>`;
+                        
+                        infoHtml = `
+                            <strong>Last Backup:</strong> ${dateStr} <br>
+                            <span style="color:var(--secondary);">(${rel})</span><br><br>
+                            <strong>By Device ID:</strong> <span style="font-family:monospace; background:#eee; padding:2px 4px; border-radius:3px;">${deviceStr}</span>
+                        `;
                     }
                 }
+                
                 document.getElementById('backupInfo').innerHTML = infoHtml;
                 document.getElementById('backupModal').style.display = 'flex';
-            } catch(e) { console.error(e); showToast("Could not verify cloud status."); } finally { btn.innerText = originalText; btn.disabled = false; }
+                
+            } catch(e) {
+                console.error(e);
+                showToast("Could not verify cloud status.");
+            } finally {
+                btn.innerText = originalText;
+                btn.disabled = false;
+            }
         }
 
         window.executeBackup = async () => {
             window.closeModal();
             try {
                 const docRef = doc(db, 'artifacts', appId, 'users', activeSyncId, 'data', 'main_record');
-                await setDoc(docRef, { beats: events, lastUpdated: Date.now(), lastDevice: user.uid });
+                await setDoc(docRef, { 
+                    beats: events, 
+                    lastUpdated: Date.now(),
+                    lastDevice: user.uid 
+                });
                 showToast("✅ Successfully backed up to Cloud");
-            } catch (err) { console.error("Sync Error:", err); if (err.code === 'permission-denied') { alert("Backup Failed: Permission Denied."); } else { showToast("Backup failed."); } }
+            } catch (err) { 
+                console.error("Sync Error:", err);
+                if (err.code === 'permission-denied') {
+                    alert("Backup Failed: Permission Denied. Check Rules.");
+                } else {
+                    showToast("Backup failed. Check connectivity."); 
+                }
+            }
         };
 
         window.confirmRestore = async () => {
@@ -856,6 +934,8 @@
             detectUserNearestZone();
             loadLocalData();
             initFirebase();
+            
+            // Setup Auto-Resize for Textarea
             const txDetail = document.getElementById('detailIn');
             txDetail.addEventListener('input', function() { this.style.height = 'auto'; this.style.height = (this.scrollHeight) + 'px'; });
             const txRemark = document.getElementById('remarksIn');
@@ -965,8 +1045,12 @@
                 const conv = convertTime(evt.date, currentTz);
                 let detailsHtml = evt.details;
                 if(evt.remarks) { detailsHtml += `<div class="td-remarks">📝 ${evt.remarks}</div>`; }
+                
+                const dragAttr = currentSortMethod === 'number' ? 'draggable="true"' : '';
+                const dragClass = currentSortMethod === 'number' ? 'draggable' : '';
+
                 body.innerHTML += `
-                    <tr class="${currentSortMethod === 'number' ? 'draggable' : ''}" data-index="${i}" draggable="${currentSortMethod === 'number'}">
+                    <tr class="${dragClass}" data-index="${i}" ${dragAttr}>
                         <td>${currentSortMethod === 'number' ? '☰' : ''}</td>
                         <td style="white-space: nowrap;">${friendlyDate} ${localTime}<br><small>${dayName}</small>${conv ? `<div class="tz-display">✈ ${conv.zone}: ${conv.day}, ${conv.time}<br><span style="font-weight: normal;">${conv.weekday}</span></div>` : ''}</td>
                         <td><b>${evt.number}</b><br><span style="font-weight:700; font-size:0.85rem;">${evt.chapterTitle || ''}</span><br><span style="font-style:italic; font-size:0.75rem; color:var(--text-muted);">${evt.subChapterTitle || ''}</span></td>
@@ -975,7 +1059,7 @@
                     </tr>`;
 
                 vis.innerHTML += `
-                    <div class="h-item">
+                    <div class="h-item ${dragClass}" data-index="${i}" ${dragAttr}>
                         <div class="h-date-wrap">
                             <div class="h-date">${friendlyDate}</div>
                             <div class="h-day">${dayName}</div>
@@ -993,7 +1077,10 @@
                         </div>
                     </div>`;
             });
-            setupDragAndDrop();
+            
+            if (currentSortMethod === 'number') {
+                setupDragAndDrop();
+            }
         }
 
         window.sortData = (type) => {
@@ -1067,20 +1154,52 @@
         }
 
         function setupDragAndDrop() {
-            if (currentSortMethod !== 'number') return;
-            const rows = document.querySelectorAll('tr.draggable');
-            rows.forEach(row => {
-                row.ondragstart = (e) => { e.dataTransfer.setData('idx', row.dataset.index); row.classList.add('dragging'); };
-                row.ondragover = (e) => { e.preventDefault(); row.classList.add('drag-over'); };
-                row.ondragleave = () => row.classList.remove('drag-over');
-                row.ondrop = (e) => {
-                    const from = e.dataTransfer.getData('idx'), to = row.dataset.index;
-                    const item = events.splice(from, 1)[0]; events.splice(to, 0, item);
-                    const intPart = Math.floor(item.number), group = events.filter(ev => Math.floor(ev.number) === intPart);
-                    group.forEach((ev, k) => ev.number = intPart + (group.length > 9 ? (k+1)*0.01 : (k+1)*0.1));
-                    saveLocalData(); render();
-                };
-            });
+            // Helper for attaching events
+            const attachEvents = (elements) => {
+                elements.forEach(el => {
+                    el.ondragstart = (e) => { 
+                        e.dataTransfer.setData('idx', el.dataset.index); 
+                        el.classList.add('dragging'); 
+                    };
+                    el.ondragover = (e) => { 
+                        e.preventDefault(); 
+                        const target = e.currentTarget; 
+                        target.classList.add('drag-over'); 
+                    };
+                    el.ondragleave = (e) => {
+                         e.currentTarget.classList.remove('drag-over');
+                    };
+                    el.ondrop = (e) => {
+                        e.preventDefault();
+                        e.currentTarget.classList.remove('drag-over');
+                        const from = e.dataTransfer.getData('idx');
+                        const to = el.dataset.index;
+                        
+                        if (from === to) return;
+                        
+                        const draggedItem = events[from];
+                        const targetItem = events[to];
+                        
+                        if (Math.floor(draggedItem.number) !== Math.floor(targetItem.number)) {
+                            showToast("Cannot move between chapters.");
+                            return;
+                        }
+                        
+                        const item = events.splice(from, 1)[0];
+                        events.splice(to, 0, item);
+                        
+                        const intPart = Math.floor(item.number);
+                        const group = events.filter(ev => Math.floor(ev.number) === intPart);
+                        group.forEach((ev, k) => ev.number = intPart + (group.length > 9 ? (k+1)*0.01 : (k+1)*0.1));
+                        
+                        saveLocalData(); 
+                        render();
+                    };
+                });
+            };
+
+            attachEvents(document.querySelectorAll('tr.draggable'));
+            attachEvents(document.querySelectorAll('.h-item.draggable'));
         }
 
         const README_URL = 'https://thordnel.github.io/nonlineartimeline/README.md';
