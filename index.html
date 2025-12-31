@@ -1560,20 +1560,64 @@
 
         function setupDragAndDrop() {
             if (currentSortMethod !== 'number') return;
-            const rows = document.querySelectorAll('tr.draggable');
-            rows.forEach(row => {
-                row.ondragstart = (e) => { e.dataTransfer.setData('idx', row.dataset.index); row.classList.add('dragging'); };
-                row.ondragover = (e) => { e.preventDefault(); row.classList.add('drag-over'); };
-                row.ondragleave = () => row.classList.remove('drag-over');
-                row.ondrop = (e) => {
-                    const from = e.dataTransfer.getData('idx');
-                    const to = row.dataset.index;
+            
+            // Select ALL draggable items (Table rows AND Visual cards)
+            const draggables = document.querySelectorAll('.draggable');
+
+            draggables.forEach(el => {
+                el.ondragstart = (e) => { 
+                    // Store index
+                    e.dataTransfer.setData('idx', el.dataset.index); 
+                    el.classList.add('dragging'); 
+                };
+                
+                el.ondragover = (e) => { 
+                    e.preventDefault(); // Mandatory to allow dropping
+                    e.currentTarget.classList.add('drag-over'); 
+                };
+                
+                el.ondragleave = (e) => {
+                     e.currentTarget.classList.remove('drag-over');
+                };
+                
+                el.ondrop = (e) => {
+                    e.preventDefault();
+                    e.currentTarget.classList.remove('drag-over');
+                    
+                    const from = parseInt(e.dataTransfer.getData('idx'));
+                    const to = parseInt(el.dataset.index);
+                    
+                    if (isNaN(from) || from === to) return;
+                    
+                    const draggedItem = events[from];
+                    const targetItem = events[to];
+                    
+                    // Logic: Prevent dragging across different integer chapters (e.g. 12.x to 15.x)
+                    if (Math.floor(draggedItem.number) !== Math.floor(targetItem.number)) {
+                        showToast("Cannot move between different chapters.");
+                        return;
+                    }
+                    
+                    // Reorder Array
                     const item = events.splice(from, 1)[0];
                     events.splice(to, 0, item);
+                    
+                    // Auto-renumber decimals in this chapter group
                     const intPart = Math.floor(item.number);
-                    const group = events.filter(ev => Math.floor(ev.number) === intPart);
-                    group.forEach((ev, k) => ev.number = intPart + (group.length > 9 ? (k+1)*0.01 : (k+1)*0.1));
-                    saveLocalData(); render();
+                    const groupIndices = [];
+                    events.forEach((ev, idx) => {
+                        if(Math.floor(ev.number) === intPart) groupIndices.push(idx);
+                    });
+                    
+                    // Apply new decimals (0.01 or 0.1 depending on count)
+                    const step = groupIndices.length > 9 ? 0.01 : 0.1;
+                    groupIndices.forEach((arrayIdx, k) => {
+                        // Fix floating point math with toFixed/parseFloat
+                        events[arrayIdx].number = parseFloat((intPart + (k + 1) * step).toFixed(2));
+                    });
+                    
+                    saveLocalData(); 
+                    render();
                 };
             });
         }
