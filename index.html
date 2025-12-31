@@ -50,7 +50,7 @@
             color: var(--text-main);
         }
 
-        /* --- UI Components --- */
+        /* --- Panels --- */
         .panel {
             background: var(--panel);
             padding: 25px;
@@ -58,6 +58,85 @@
             box-shadow: var(--shadow-card);
             margin-bottom: 25px;
             border: 1px solid #e6e0d4;
+            position: relative;
+        }
+
+        /* Section Headers */
+        .section-label {
+            position: absolute;
+            top: -12px;
+            left: 20px;
+            background: var(--bg);
+            padding: 0 10px;
+            font-family: var(--font-ui);
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--primary);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border: 1px solid #e6e0d4;
+            border-radius: 12px;
+        }
+
+        /* --- Continuity Space Specifics --- */
+        .continuity-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            user-select: none;
+        }
+        .continuity-content {
+            display: none; /* Collapsed by default */
+            margin-top: 20px;
+            border-top: 1px dashed #d4cdc3;
+            padding-top: 20px;
+        }
+        .continuity-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        .c-item-tag {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 8px;
+            background: #fff;
+            border: 1px solid #d4cdc3;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-family: var(--font-ui);
+            color: var(--text-main);
+        }
+        .c-item-tag.inactive { opacity: 0.5; filter: grayscale(100%); }
+        
+        .c-dot {
+            width: 10px; height: 10px; border-radius: 50%; display: inline-block;
+        }
+
+        /* Badge on Cards */
+        .c-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 2px 6px;
+            background: #fdfbf7;
+            border: 1px solid #e6e0d4;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-family: var(--font-ui);
+            margin-right: 4px;
+            margin-bottom: 4px;
+            color: var(--text-muted);
+        }
+        .c-badges-container {
+            margin-top: 8px;
+            padding-top: 8px;
+            border-top: 1px dashed #e6e0d4;
+            display: flex;
+            flex-wrap: wrap;
         }
 
         .controls {
@@ -110,12 +189,6 @@
 
         .btn-row { margin-top: 20px; display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
         
-        /* Button Groups for Layout Control */
-        .btn-group-mobile {
-            display: flex;
-            gap: 10px;
-        }
-
         button {
             padding: 10px 18px;
             border: none;
@@ -416,7 +489,6 @@
         }
         .h-divider { border-bottom: 1px solid #f0ebe4; margin-bottom: 12px; }
 
-        /* Remarks in Timeline */
         .h-remarks {
             margin-top: 12px;
             padding-top: 8px;
@@ -518,31 +590,27 @@
             /* Reset grid spans for mobile stack */
             .col-span-2, .col-span-full { grid-column: auto; }
             
-            /* Clean up Button Rows */
-            .btn-row { 
-                gap: 10px; 
-                flex-wrap: wrap; 
-                justify-content: stretch; 
-            }
-            .btn-row > * { 
-                flex-grow: 1; 
-            }
+            /* Full width buttons */
+            .btn-row { gap: 10px; justify-content: stretch; }
+            .btn-row > * { flex-grow: 1; width: 100%; }
             
-            /* Specific groupings for side-by-side */
-            .btn-group-mobile {
-                display: flex;
-                gap: 10px;
-                width: 100%;
-            }
-            .btn-group-mobile > button {
-                flex: 1; /* Stretch evenly */
-            }
-
             /* Cloud Banner Stack */
             .cloud-banner { flex-direction: column; text-align: center; gap: 15px; border-radius: 0; margin-left: -10px; margin-right: -10px; border-left: none; border-right: none; }
             .id-input-group { width: 100%; justify-content: center; }
             .id-input { width: 100% !important; }
             
+            /* Backup/Restore buttons in single line (row) */
+            .cloud-banner .btn-row { 
+                width: 100%; 
+                display: flex; 
+                flex-direction: row; /* Force single line */
+                gap: 10px;
+            }
+            .cloud-banner .btn-row button { 
+                flex: 1; /* Stretch equally */
+                width: auto; 
+            }
+
             /* Adjust Visual Area padding */
             #visualArea { padding: 20px 0; }
             
@@ -551,7 +619,17 @@
             /* Hide non-essential table columns on mobile */
             th:nth-child(2), td:nth-child(2) { font-size: 0.8rem; }
             .tz-picker-compact { width: 100%; }
-            .desktop-only { display: none; }
+
+            /* Side-by-side buttons for Sort & View */
+            .btn-group-mobile {
+                display: flex;
+                gap: 10px;
+                width: 100%;
+            }
+            .btn-group-mobile > button {
+                flex: 1;
+                width: auto;
+            }
         }
     </style>
 </head>
@@ -574,13 +652,15 @@
             <button class="btn-reset" onclick="resetToOriginalId()" style="padding: 6px 12px; font-size: 0.75rem; border-color:#991b1b; color:#991b1b;">Unlink</button>
         </div>
 
-        <div class="btn-row btn-group-mobile">
+        <div class="btn-row" style="margin-top:0;">
             <button class="btn-cloud" onclick="confirmBackup()" id="btnBackup" disabled>Backup</button>
             <button class="btn-cloud" onclick="confirmRestore()" id="btnRestore" disabled style="background-color: var(--primary);">Restore</button>
         </div>
     </div>
 
+    <!-- BEAT SPACE (Top) -->
     <div class="panel">
+        <div class="section-label">Beat Space</div>
         <div class="controls">
             <!-- Row 1 -->
             <div class="input-group">
@@ -603,8 +683,6 @@
                 </select>
             </div>
             
-            <!-- Row 2 -->
-            <!-- Use responsive classes -->
             <div class="input-group col-span-2">
                 <label>Chapter Title</label>
                 <input type="text" id="chapTitleIn" placeholder="e.g. The Beginning">
@@ -614,13 +692,11 @@
                 <input type="text" id="subChapTitleIn" placeholder="e.g. The Arrival">
             </div>
 
-            <!-- Row 3 -->
             <div class="input-group col-span-full">
                 <label>Details</label>
                 <textarea id="detailIn" rows="3" maxlength="1000" placeholder="Write your story beat here..."></textarea>
             </div>
             
-            <!-- Row 4 (Remarks) -->
             <div class="input-group col-span-full">
                 <label>Remarks</label>
                 <textarea id="remarksIn" rows="2" maxlength="500" placeholder="Notes, themes, or internal comments..." style="min-height:80px;"></textarea>
@@ -628,7 +704,6 @@
         </div>
 
         <div class="btn-row">
-            <!-- Action Group -->
             <div class="btn-group-mobile action-group">
                 <button id="btnAdd" class="btn-add" onclick="handleAdd()">+ Add Beat</button>
                 <button id="btnSaveNew" style="display:none; background-color: var(--success);" onclick="saveAsNew()">+ Save as New</button>
@@ -637,7 +712,6 @@
 
             <span class="desktop-only" style="width: 20px;"></span>
             
-            <!-- Sort Group -->
             <div class="btn-group-mobile">
                 <button class="btn-sort" onclick="sortData('date')">Sort Date</button>
                 <button class="btn-sort" onclick="sortData('number')">Sort Chapter</button>
@@ -658,7 +732,6 @@
                 <option value="Asia/Kathmandu">Kathmandu, Nepal (+5:45)</option>
             </select>
 
-            <!-- View Group -->
             <div class="btn-group-mobile">
                 <button class="btn-view active" id="btnVis" onclick="toggleView('visual')">Visual</button>
                 <button class="btn-view" id="btnTab" onclick="toggleView('table')">List</button>
@@ -666,8 +739,45 @@
         </div>
     </div>
 
+    <!-- CONTINUITY SPACE (New) -->
+    <div class="panel">
+        <div class="section-label">Continuity Space</div>
+        <div class="continuity-header" onclick="toggleContinuityPanel()">
+            <span style="font-weight:700; color:var(--text-main);">Manage Tracking Elements</span>
+            <span id="cPanelIcon" style="color:var(--secondary);">▼</span>
+        </div>
+        
+        <div id="continuityContent" class="continuity-content">
+            <div class="controls" style="grid-template-columns: 1fr 1fr 1fr 1fr 0.5fr;">
+                <div class="input-group">
+                    <label>Item Name</label>
+                    <input type="text" id="cNameIn" placeholder="e.g. Scar, Ring">
+                </div>
+                <div class="input-group">
+                    <label>Icon (Emoji)</label>
+                    <input type="text" id="cIconIn" placeholder="e.g. ⚡" style="text-align:center;">
+                </div>
+                <div class="input-group">
+                    <label>Start Date</label>
+                    <input type="datetime-local" id="cStartIn">
+                </div>
+                <div class="input-group">
+                    <label>End Date (Optional)</label>
+                    <input type="datetime-local" id="cEndIn">
+                </div>
+                <div class="input-group" style="justify-content: flex-end;">
+                    <button class="btn-add" onclick="addContinuityItem()" style="padding:12px;">+</button>
+                </div>
+            </div>
+
+            <div class="continuity-list" id="continuityListArea">
+                <!-- Items injected here -->
+            </div>
+        </div>
+    </div>
+
     <div class="view-container">
-        <!-- Header Label updated to default to UNSORTED -->
+        <!-- Header Label -->
         <div id="viewHeaderLabel" class="view-header-label">UNSORTED</div>
         
         <div id="visualArea" class="show"></div>
@@ -913,6 +1023,7 @@
                 const docRef = doc(db, 'artifacts', appId, 'users', activeSyncId, 'data', 'main_record');
                 await setDoc(docRef, { 
                     beats: events, 
+                    continuity: continuityItems, // Save continuity items
                     lastUpdated: Date.now(),
                     lastDevice: user.uid 
                 });
@@ -959,7 +1070,10 @@
                 const docSnap = await getDoc(docRef);
                 if (docSnap.exists()) {
                     events = docSnap.data().beats || [];
-                    saveLocalData(); render();
+                    continuityItems = docSnap.data().continuity || []; // Restore continuity
+                    saveLocalData(); 
+                    renderContinuityList();
+                    render();
                     showToast("🔄 Data restored successfully");
                 } else { showToast("No cloud data found."); }
             } catch (err) { console.error("Restore Error:", err); showToast("Restore failed."); }
@@ -967,6 +1081,7 @@
 
         // --- APP CORE LOGIC ---
         let events = [];
+        let continuityItems = [];
         let editIndex = -1; 
         let deleteTargetIndex = null;
         let currentSortMethod = 'unsorted'; 
@@ -979,18 +1094,118 @@
             loadLocalData();
             initFirebase();
             
-            // Setup Auto-Resize for Textarea
             const txDetail = document.getElementById('detailIn');
             txDetail.addEventListener('input', function() { this.style.height = 'auto'; this.style.height = (this.scrollHeight) + 'px'; });
             const txRemark = document.getElementById('remarksIn');
             txRemark.addEventListener('input', function() { this.style.height = 'auto'; this.style.height = (this.scrollHeight) + 'px'; });
         };
 
-        function saveLocalData() { localStorage.setItem(STORAGE_KEY, JSON.stringify(events)); }
+        function saveLocalData() { 
+            const payload = { events: events, continuity: continuityItems };
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(payload)); 
+        }
+
         function loadLocalData() {
             const data = localStorage.getItem(STORAGE_KEY);
-            if(data) { try { events = JSON.parse(data); events.forEach(e => e.number = parseFloat(e.number)); render(); } catch(e) { console.error(e); } }
+            if(data) {
+                try {
+                    const parsed = JSON.parse(data);
+                    // Handle migration from old format (array) to new format (object)
+                    if (Array.isArray(parsed)) {
+                        events = parsed;
+                        continuityItems = [];
+                    } else {
+                        events = parsed.events || [];
+                        continuityItems = parsed.continuity || [];
+                    }
+                    events.forEach(e => e.number = parseFloat(e.number));
+                    renderContinuityList();
+                    render();
+                } catch(e) { console.error(e); }
+            }
         }
+
+        // --- CONTINUITY LOGIC ---
+        window.toggleContinuityPanel = () => {
+            const content = document.getElementById('continuityContent');
+            const icon = document.getElementById('cPanelIcon');
+            if (content.style.display === 'block') {
+                content.style.display = 'none';
+                icon.innerText = '▼';
+            } else {
+                content.style.display = 'block';
+                icon.innerText = '▲';
+            }
+        }
+
+        window.addContinuityItem = () => {
+            const name = document.getElementById('cNameIn').value;
+            const icon = document.getElementById('cIconIn').value || '🔹';
+            const start = document.getElementById('cStartIn').value;
+            const end = document.getElementById('cEndIn').value;
+
+            if(!name || !start) return showToast("Name and Start Date required");
+
+            const item = {
+                id: Date.now().toString(),
+                name, icon, start, end,
+                visible: true
+            };
+            continuityItems.push(item);
+            saveLocalData();
+            renderContinuityList();
+            render(); // Re-render beats to show badges
+            
+            // Clear inputs
+            document.getElementById('cNameIn').value = '';
+            document.getElementById('cIconIn').value = '';
+            document.getElementById('cStartIn').value = '';
+            document.getElementById('cEndIn').value = '';
+        }
+
+        window.toggleContinuityVisibility = (id) => {
+            const item = continuityItems.find(i => i.id === id);
+            if(item) {
+                item.visible = !item.visible;
+                saveLocalData();
+                renderContinuityList();
+                render();
+            }
+        }
+
+        window.deleteContinuityItem = (id) => {
+            if(confirm("Remove this tracking item?")) {
+                continuityItems = continuityItems.filter(i => i.id !== id);
+                saveLocalData();
+                renderContinuityList();
+                render();
+            }
+        }
+
+        function renderContinuityList() {
+            const container = document.getElementById('continuityListArea');
+            container.innerHTML = '';
+            continuityItems.forEach(item => {
+                const el = document.createElement('div');
+                el.className = `c-item-tag ${!item.visible ? 'inactive' : ''}`;
+                el.innerHTML = `
+                    <span onclick="toggleContinuityVisibility('${item.id}')" style="cursor:pointer" title="Toggle visibility in beats">${item.icon} ${item.name}</span>
+                    <span onclick="deleteContinuityItem('${item.id}')" style="cursor:pointer; color:var(--danger); font-weight:bold; margin-left:5px;">×</span>
+                `;
+                container.appendChild(el);
+            });
+        }
+
+        function getActiveContinuity(beatDateStr) {
+            const beatDate = new Date(beatDateStr);
+            return continuityItems.filter(item => {
+                if(!item.visible) return false;
+                const start = new Date(item.start);
+                const end = item.end ? new Date(item.end) : null;
+                return beatDate >= start && (!end || beatDate <= end);
+            });
+        }
+
 
         function detectUserNearestZone() {
             const browserTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -1090,6 +1305,19 @@
                 let detailsHtml = evt.details;
                 if(evt.remarks) { detailsHtml += `<div class="td-remarks">📝 ${evt.remarks}</div>`; }
                 
+                // Continuity Calculation
+                const activeItems = getActiveContinuity(evt.date);
+                let continuityHtml = '';
+                if(activeItems.length > 0) {
+                    continuityHtml = '<div class="c-badges-container">';
+                    activeItems.forEach(ci => {
+                        continuityHtml += `<span class="c-badge" title="Active: ${ci.name}">${ci.icon} ${ci.name}</span>`;
+                    });
+                    continuityHtml += '</div>';
+                    // Append to List View Details
+                    detailsHtml += `<div style="margin-top:8px">${continuityHtml}</div>`; 
+                }
+
                 const dragAttr = currentSortMethod === 'number' ? 'draggable="true"' : '';
                 const dragClass = currentSortMethod === 'number' ? 'draggable' : '';
 
@@ -1118,6 +1346,7 @@
                             <div class="h-divider"></div>
                             <div class="h-detail-text">${evt.details}</div>
                             ${evt.remarks ? `<div class="h-remarks">${evt.remarks}</div>` : ''}
+                            ${continuityHtml} 
                         </div>
                     </div>`;
             });
@@ -1169,6 +1398,16 @@
                 const safeRemarks = (e.remarks || '').replace(/\n/g, '{nl}').replace(/,/g, '{com}');
                 csv += `${e.date},${e.number},${safeTitle},${safeSub},${safeDetails},${safeRemarks}\n`;
             });
+            // Append Continuity Data to CSV
+            if(continuityItems.length > 0) {
+                 csv += "\n[CONTINUITY_DATA_START]\n";
+                 csv += "ID,Name,Icon,Start,End,Visible\n";
+                 continuityItems.forEach(ci => {
+                     csv += `${ci.id},${ci.name},${ci.icon},${ci.start},${ci.end || ''},${ci.visible}\n`;
+                 });
+                 csv += "[CONTINUITY_DATA_END]\n";
+            }
+
             const blob = new Blob([csv], { type: 'text/csv' });
             const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'storylines.csv'; a.click();
         }
@@ -1177,7 +1416,13 @@
             if (!input.files[0]) return;
             const reader = new FileReader();
             reader.onload = (e) => {
-                const lines = e.target.result.split('\n');
+                const text = e.target.result;
+                // Split for continuity data
+                const continuitySplit = text.split('[CONTINUITY_DATA_START]');
+                const beatsData = continuitySplit[0].trim();
+                const continuityData = continuitySplit[1] ? continuitySplit[1].split('[CONTINUITY_DATA_END]')[0].trim() : null;
+
+                const lines = beatsData.split('\n');
                 let newEvents = [];
                 for(let i=1; i<lines.length; i++) {
                     const line = lines[i].trim();
@@ -1192,58 +1437,51 @@
                         if(d && !isNaN(n)) newEvents.push({ date: d, number: n, chapterTitle: title, subChapterTitle: sub, details: det, remarks: rem });
                     }
                 }
-                if(newEvents.length > 0) { events = newEvents; saveLocalData(); render(); showToast("Data imported successfully"); }
+
+                // Process Continuity
+                let newContinuity = [];
+                if(continuityData) {
+                    const cLines = continuityData.split('\n');
+                    for(let i=1; i<cLines.length; i++) {
+                        const c = cLines[i].trim().split(',');
+                        if(c.length >= 4) {
+                             newContinuity.push({
+                                 id: c[0], name: c[1], icon: c[2], start: c[3], end: c[4] || '', visible: c[5] === 'true'
+                             });
+                        }
+                    }
+                }
+
+                if(newEvents.length > 0) { 
+                    events = newEvents; 
+                    if(newContinuity.length > 0) continuityItems = newContinuity;
+                    saveLocalData(); 
+                    renderContinuityList();
+                    render(); 
+                    showToast("Data imported successfully"); 
+                }
             };
             reader.readAsText(input.files[0]);
         }
 
         function setupDragAndDrop() {
-            // Helper for attaching events
-            const attachEvents = (elements) => {
-                elements.forEach(el => {
-                    el.ondragstart = (e) => { 
-                        e.dataTransfer.setData('idx', el.dataset.index); 
-                        el.classList.add('dragging'); 
-                    };
-                    el.ondragover = (e) => { 
-                        e.preventDefault(); 
-                        const target = e.currentTarget; 
-                        target.classList.add('drag-over'); 
-                    };
-                    el.ondragleave = (e) => {
-                         e.currentTarget.classList.remove('drag-over');
-                    };
-                    el.ondrop = (e) => {
-                        e.preventDefault();
-                        e.currentTarget.classList.remove('drag-over');
-                        const from = e.dataTransfer.getData('idx');
-                        const to = el.dataset.index;
-                        
-                        if (from === to) return;
-                        
-                        const draggedItem = events[from];
-                        const targetItem = events[to];
-                        
-                        if (Math.floor(draggedItem.number) !== Math.floor(targetItem.number)) {
-                            showToast("Cannot move between chapters.");
-                            return;
-                        }
-                        
-                        const item = events.splice(from, 1)[0];
-                        events.splice(to, 0, item);
-                        
-                        const intPart = Math.floor(item.number);
-                        const group = events.filter(ev => Math.floor(ev.number) === intPart);
-                        group.forEach((ev, k) => ev.number = intPart + (group.length > 9 ? (k+1)*0.01 : (k+1)*0.1));
-                        
-                        saveLocalData(); 
-                        render();
-                    };
-                });
-            };
-
-            attachEvents(document.querySelectorAll('tr.draggable'));
-            attachEvents(document.querySelectorAll('.h-item.draggable'));
+            if (currentSortMethod !== 'number') return;
+            const rows = document.querySelectorAll('tr.draggable');
+            rows.forEach(row => {
+                row.ondragstart = (e) => { e.dataTransfer.setData('idx', row.dataset.index); row.classList.add('dragging'); };
+                row.ondragover = (e) => { e.preventDefault(); row.classList.add('drag-over'); };
+                row.ondragleave = () => row.classList.remove('drag-over');
+                row.ondrop = (e) => {
+                    const from = e.dataTransfer.getData('idx');
+                    const to = row.dataset.index;
+                    const item = events.splice(from, 1)[0];
+                    events.splice(to, 0, item);
+                    const intPart = Math.floor(item.number);
+                    const group = events.filter(ev => Math.floor(ev.number) === intPart);
+                    group.forEach((ev, k) => ev.number = intPart + (group.length > 9 ? (k+1)*0.01 : (k+1)*0.1));
+                    saveLocalData(); render();
+                };
+            });
         }
 
         const README_URL = 'https://thordnel.github.io/nonlineartimeline/README.md';
