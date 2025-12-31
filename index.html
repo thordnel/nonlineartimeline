@@ -192,6 +192,12 @@
             gap: 15px;
             box-shadow: var(--shadow-card);
         }
+        
+        /* Ensure buttons inside cloud banner are vertically aligned */
+        .cloud-banner .btn-row {
+            margin-top: 0;
+        }
+
         .cloud-id { 
             font-family: 'Courier New', monospace; 
             font-weight: bold; 
@@ -216,6 +222,8 @@
             box-shadow: var(--shadow-card);
             position: relative;
             border: 1px solid #e6e0d4;
+            /* Clipping at container level ensures the sliver artifact is gone without breaking internal lines */
+            clip-path: inset(0 0 0 0);
         }
 
         /* New Header Label Style */
@@ -388,15 +396,14 @@
             padding: 0; 
             vertical-align: top;
             transform: rotateX(180deg); 
+            /* Fix: Ensure items allow the line to reach out to the next dot */
             overflow: visible; 
-            /* Fix: Added clip-path to specifically hide the tiny line bleed artifact */
-            clip-path: inset(-500px 0 -500px 0);
         }
 
         /* Dot Container logic to force perfect alignment */
         .h-dot-container {
             width: 100%;
-            height: 30px; 
+            height: 30px; /* Specific height area for line/dot */
             position: relative;
             display: flex;
             align-items: center;
@@ -603,22 +610,30 @@
             
             /* Full width buttons */
             .btn-row { gap: 10px; justify-content: stretch; }
-            .btn-row > * { flex-grow: 1; width: 100%; }
+            .btn-row > * { flex-grow: 1; }
             
             /* Cloud Banner Stack */
             .cloud-banner { flex-direction: column; text-align: center; gap: 15px; border-radius: 0; margin-left: -10px; margin-right: -10px; border-left: none; border-right: none; }
-            .id-input-group { width: 100%; justify-content: center; }
-            .id-input { width: 100% !important; }
             
-            /* Backup/Restore buttons in single line (row) */
+            .id-input-group { 
+                width: 100%; 
+                display: flex;
+                flex-direction: row; 
+                gap: 8px;
+                padding: 0 15px; /* Alignment with other elements */
+            }
+            .id-input-group .id-input { flex-grow: 1; width: auto !important; }
+            
+            /* Backup/Restore buttons in single line row touching edge */
             .cloud-banner .btn-row { 
                 width: 100%; 
                 display: flex; 
-                flex-direction: row; /* Force single line */
+                flex-direction: row; 
                 gap: 10px;
+                padding: 0 15px;
             }
             .cloud-banner .btn-row button { 
-                flex: 1; /* Stretch equally */
+                flex: 1; 
                 width: auto; 
             }
 
@@ -675,10 +690,10 @@
         </div>
     </div>
 
+    <!-- BEAT SPACE -->
     <div class="panel">
         <div class="section-label">Beat Space</div>
         <div class="controls">
-            <!-- Row 1 -->
             <div class="input-group">
                 <label>Date & Time</label>
                 <input type="datetime-local" id="dateIn">
@@ -755,7 +770,7 @@
         </div>
     </div>
 
-    <!-- CONTINUITY SPACE (New) -->
+    <!-- CONTINUITY SPACE -->
     <div class="panel">
         <div class="section-label">Continuity Space</div>
         <div class="continuity-header" onclick="toggleContinuityPanel()">
@@ -797,7 +812,7 @@
         </div>
     </div>
 
-    <div class="view-container">
+    <div class="view-container" style="clip-path: inset(0 0 0 0);">
         <!-- Header Label -->
         <div id="viewHeaderLabel" class="view-header-label">UNSORTED</div>
         
@@ -1407,7 +1422,7 @@
                 // Continuity Calculation
                 const activeItems = getActiveContinuity(evt.date);
                 
-                // SORT FIX: Ensure items displayed on card are sorted by their Start Date
+                // SORT Ensure items displayed on card are sorted by their Start Date
                 activeItems.sort((a, b) => new Date(a.start) - new Date(b.start));
 
                 let continuityHtml = '';
