@@ -58,7 +58,6 @@
             box-shadow: var(--shadow-card);
             margin-bottom: 25px;
             border: 1px solid #e6e0d4;
-            position: relative;
         }
 
         .controls {
@@ -67,12 +66,28 @@
             gap: 20px;
             align-items: start;
         }
+
+        /* Custom Grids for Continuity Panel */
+        .c-row-70-30 {
+            display: grid;
+            grid-template-columns: 7fr 3fr;
+            gap: 20px;
+            width: 100%;
+        }
+
+        .c-row-50-50 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            width: 100%;
+            margin-top: 20px;
+        }
         
         /* Desktop Grid Helpers */
         .col-span-2 { grid-column: span 2; }
         .col-span-full { grid-column: 1 / -1; }
 
-        .input-group { display: flex; flex-direction: column; }
+        .input-group { display: flex; flex-direction: column; width: 100%; }
         label { 
             font-family: var(--font-ui);
             font-size: 0.75rem; 
@@ -274,10 +289,6 @@
         }
         .c-item-tag.inactive { opacity: 0.5; filter: grayscale(100%); }
         
-        .c-dot {
-            width: 10px; height: 10px; border-radius: 50%; display: inline-block;
-        }
-
         /* Badge on Cards */
         .c-badge {
             display: inline-flex;
@@ -630,6 +641,12 @@
                 flex: 1;
                 width: auto;
             }
+            
+            /* Continuity Grids - Mobile */
+            .c-row-70-30, .c-row-50-50 {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
         }
     </style>
 </head>
@@ -658,7 +675,6 @@
         </div>
     </div>
 
-    <!-- BEAT SPACE (Top) -->
     <div class="panel">
         <div class="section-label">Beat Space</div>
         <div class="controls">
@@ -683,7 +699,6 @@
                 </select>
             </div>
             
-            <!-- Row 2 -->
             <div class="input-group col-span-2">
                 <label>Chapter Title</label>
                 <input type="text" id="chapTitleIn" placeholder="e.g. The Beginning">
@@ -693,13 +708,11 @@
                 <input type="text" id="subChapTitleIn" placeholder="e.g. The Arrival">
             </div>
 
-            <!-- Row 3 -->
             <div class="input-group col-span-full">
                 <label>Details</label>
                 <textarea id="detailIn" rows="3" maxlength="1000" placeholder="Write your story beat here..."></textarea>
             </div>
             
-            <!-- Row 4 (Remarks) -->
             <div class="input-group col-span-full">
                 <label>Remarks</label>
                 <textarea id="remarksIn" rows="2" maxlength="500" placeholder="Notes, themes, or internal comments..." style="min-height:80px;"></textarea>
@@ -751,15 +764,18 @@
         </div>
         
         <div id="continuityContent" class="continuity-content">
-            <div class="controls" style="grid-template-columns: 1fr 1fr 1fr 1fr 0.5fr;">
+            <div class="c-row-70-30">
                 <div class="input-group">
                     <label>Item Name</label>
                     <input type="text" id="cNameIn" placeholder="e.g. Scar, Ring">
                 </div>
                 <div class="input-group">
-                    <label>Icon (Emoji)</label>
+                    <label>Icon</label>
                     <input type="text" id="cIconIn" placeholder="e.g. ⚡" style="text-align:center;">
                 </div>
+            </div>
+
+            <div class="c-row-50-50">
                 <div class="input-group">
                     <label>Start Date</label>
                     <input type="datetime-local" id="cStartIn">
@@ -768,10 +784,11 @@
                     <label>End Date (Optional)</label>
                     <input type="datetime-local" id="cEndIn">
                 </div>
-                <div class="input-group" style="justify-content: flex-end; flex-direction: row; gap: 5px;">
-                    <button id="btnCAdd" class="btn-add" onclick="addContinuityItem()" style="padding:12px;">+</button>
-                    <button id="btnCCancel" class="btn-cancel" onclick="cancelContinuityEdit()" style="padding:12px; display:none;">×</button>
-                </div>
+            </div>
+
+            <div class="btn-row">
+                <button id="btnCAdd" class="btn-add" onclick="addContinuityItem()">+ Add Item</button>
+                <button id="btnCCancel" class="btn-cancel" onclick="cancelContinuityEdit()">Cancel</button>
             </div>
 
             <div class="continuity-list" id="continuityListArea">
@@ -1200,7 +1217,7 @@
             
             // Change UI to Edit Mode
             const btn = document.getElementById('btnCAdd');
-            btn.innerText = "✓"; // Checkmark
+            btn.innerText = "Update Item"; // Text for clarity
             btn.className = "btn-update";
             document.getElementById('btnCCancel').style.display = 'inline-block';
             
@@ -1219,7 +1236,7 @@
             document.getElementById('cEndIn').value = '';
             
             const btn = document.getElementById('btnCAdd');
-            btn.innerText = "+";
+            btn.innerText = "+ Add Item";
             btn.className = "btn-add";
             document.getElementById('btnCCancel').style.display = 'none';
         }
@@ -1380,11 +1397,15 @@
                 
                 // Continuity Calculation
                 const activeItems = getActiveContinuity(evt.date);
+                
+                // SORT FIX: Ensure items displayed on card are sorted by their Start Date
+                activeItems.sort((a, b) => new Date(a.start) - new Date(b.start));
+
                 let continuityHtml = '';
                 if(activeItems.length > 0) {
                     continuityHtml = '<div class="c-badges-container">';
                     activeItems.forEach(ci => {
-                        continuityHtml += `<span class="c-badge" title="Active: ${ci.name}">${ci.icon} ${ci.name}</span>`;
+                        continuityHtml += `<span class="c-badge" title="Active: ${ci.name} (Since ${getFormattedDate(ci.start)})">${ci.icon} ${ci.name}</span>`;
                     });
                     continuityHtml += '</div>';
                     // Append to List View Details
