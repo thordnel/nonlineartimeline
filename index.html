@@ -1249,7 +1249,11 @@
         function renderContinuityList() {
             const container = document.getElementById('continuityListArea');
             container.innerHTML = '';
-            continuityItems.forEach(item => {
+            
+            // Sort by Start Date
+            const sortedItems = [...continuityItems].sort((a, b) => new Date(a.start) - new Date(b.start));
+
+            sortedItems.forEach(item => {
                 const el = document.createElement('div');
                 el.className = `c-item-tag ${!item.visible ? 'inactive' : ''}`;
                 el.innerHTML = `
@@ -1534,52 +1538,23 @@
         }
 
         function setupDragAndDrop() {
-            // Helper for attaching events
-            const attachEvents = (elements) => {
-                elements.forEach(el => {
-                    el.ondragstart = (e) => { 
-                        e.dataTransfer.setData('idx', el.dataset.index); 
-                        el.classList.add('dragging'); 
-                    };
-                    el.ondragover = (e) => { 
-                        e.preventDefault(); 
-                        const target = e.currentTarget; 
-                        target.classList.add('drag-over'); 
-                    };
-                    el.ondragleave = (e) => {
-                         e.currentTarget.classList.remove('drag-over');
-                    };
-                    el.ondrop = (e) => {
-                        e.preventDefault();
-                        e.currentTarget.classList.remove('drag-over');
-                        const from = e.dataTransfer.getData('idx');
-                        const to = el.dataset.index;
-                        
-                        if (from === to) return;
-                        
-                        const draggedItem = events[from];
-                        const targetItem = events[to];
-                        
-                        if (Math.floor(draggedItem.number) !== Math.floor(targetItem.number)) {
-                            showToast("Cannot move between chapters.");
-                            return;
-                        }
-                        
-                        const item = events.splice(from, 1)[0];
-                        events.splice(to, 0, item);
-                        
-                        const intPart = Math.floor(item.number);
-                        const group = events.filter(ev => Math.floor(ev.number) === intPart);
-                        group.forEach((ev, k) => ev.number = intPart + (group.length > 9 ? (k+1)*0.01 : (k+1)*0.1));
-                        
-                        saveLocalData(); 
-                        render();
-                    };
-                });
-            };
-
-            attachEvents(document.querySelectorAll('tr.draggable'));
-            attachEvents(document.querySelectorAll('.h-item.draggable'));
+            if (currentSortMethod !== 'number') return;
+            const rows = document.querySelectorAll('tr.draggable');
+            rows.forEach(row => {
+                row.ondragstart = (e) => { e.dataTransfer.setData('idx', row.dataset.index); row.classList.add('dragging'); };
+                row.ondragover = (e) => { e.preventDefault(); row.classList.add('drag-over'); };
+                row.ondragleave = () => row.classList.remove('drag-over');
+                row.ondrop = (e) => {
+                    const from = e.dataTransfer.getData('idx');
+                    const to = row.dataset.index;
+                    const item = events.splice(from, 1)[0];
+                    events.splice(to, 0, item);
+                    const intPart = Math.floor(item.number);
+                    const group = events.filter(ev => Math.floor(ev.number) === intPart);
+                    group.forEach((ev, k) => ev.number = intPart + (group.length > 9 ? (k+1)*0.01 : (k+1)*0.1));
+                    saveLocalData(); render();
+                };
+            });
         }
 
         const README_URL = 'https://thordnel.github.io/nonlineartimeline/README.md';
