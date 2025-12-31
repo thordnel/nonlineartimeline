@@ -150,6 +150,12 @@
         .btn-cloud { background-color: var(--cloud); }
         .btn-print { background-color: #4a5568; }
 
+        /* Helper for grouped buttons (Sort & View) */
+        .btn-group-mobile {
+            display: flex;
+            gap: 8px;
+        }
+
         .tz-picker-compact {
             padding: 8px 12px;
             font-size: 0.85rem;
@@ -247,8 +253,8 @@
         
         th:nth-child(1) { width: 40px; } 
         th:nth-child(2) { width: 180px; } 
-        th:nth-child(3) { width: 160px; }
-        th:nth-child(5) { width: 100px; } 
+        th:nth-child(3) { width: 160px; } /* Chapter */
+        th:nth-child(5) { width: 100px; } /* Action */
         
         td:nth-child(4) { 
             font-size: 0.95rem; 
@@ -258,6 +264,7 @@
             word-wrap: break-word;
         }
 
+        /* Remarks in Table */
         .td-remarks {
             font-size: 0.85rem;
             color: var(--text-muted);
@@ -304,19 +311,10 @@
             transform: rotateX(180deg); 
         }
 
-        /* Drag Styles for Visual View */
-        .h-item.draggable .h-card { cursor: grab; }
-        .h-item.dragging { opacity: 0.5; }
-        .h-item.drag-over .h-card { 
-            border: 2px dashed var(--primary); 
-            background: var(--drag-bg); 
-            transform: translateY(-5px);
-        }
-
-        /* Dot Container logic to force perfect alignment */
+        /* New Dot Container logic to force perfect alignment */
         .h-dot-container {
             width: 100%;
-            height: 30px; 
+            height: 30px; /* Specific height area for line/dot */
             position: relative;
             display: flex;
             align-items: center;
@@ -329,7 +327,7 @@
             position: absolute;
             top: 50%;
             left: 50%;
-            width: 100%; 
+            width: 100%; /* Spans to the center of next item */
             height: 2px;
             background: #d4cdc3; 
             transform: translateY(-50%);
@@ -418,6 +416,7 @@
         }
         .h-divider { border-bottom: 1px solid #f0ebe4; margin-bottom: 12px; }
 
+        /* Remarks in Timeline */
         .h-remarks {
             margin-top: 12px;
             padding-top: 8px;
@@ -511,20 +510,54 @@
         /* --- MOBILE OPTIMIZATIONS --- */
         @media (max-width: 768px) {
             body { padding: 10px; padding-bottom: 100px; }
+            
+            /* Edge-to-Edge Inputs */
             .panel { padding: 15px; border-radius: 0; margin-left: -10px; margin-right: -10px; border-left: none; border-right: none; }
             .controls { grid-template-columns: 1fr; gap: 15px; }
+            
+            /* Reset grid spans for mobile stack */
             .col-span-2, .col-span-full { grid-column: auto; }
+            
+            /* Full width buttons */
             .btn-row { gap: 10px; justify-content: stretch; }
             .btn-row > * { flex-grow: 1; width: 100%; }
+            
+            /* Cloud Banner Stack */
             .cloud-banner { flex-direction: column; text-align: center; gap: 15px; border-radius: 0; margin-left: -10px; margin-right: -10px; border-left: none; border-right: none; }
             .id-input-group { width: 100%; justify-content: center; }
             .id-input { width: 100% !important; }
-            .cloud-banner .btn-row { width: 100%; display: flex; flex-direction: row; gap: 10px; }
-            .cloud-banner .btn-row button { flex: 1; width: auto; }
+            
+            /* Backup/Restore buttons in single line (row) */
+            .cloud-banner .btn-row { 
+                width: 100%; 
+                display: flex; 
+                flex-direction: row; /* Force single line */
+                gap: 10px;
+            }
+            .cloud-banner .btn-row button { 
+                flex: 1; /* Stretch equally */
+                width: auto; 
+            }
+
+            /* Adjust Visual Area padding */
             #visualArea { padding: 20px 0; }
+            
             .view-container { padding: 15px; border-radius: 0; margin-left: -10px; margin-right: -10px; border-left: none; border-right: none;}
+            
+            /* Hide non-essential table columns on mobile */
             th:nth-child(2), td:nth-child(2) { font-size: 0.8rem; }
             .tz-picker-compact { width: 100%; }
+
+            /* Side-by-side buttons for Sort & View */
+            .btn-group-mobile {
+                display: flex;
+                gap: 10px;
+                width: 100%;
+            }
+            .btn-group-mobile > button {
+                flex: 1;
+                width: auto;
+            }
         }
     </style>
 </head>
@@ -576,6 +609,7 @@
                 </select>
             </div>
             
+            <!-- Row 2 -->
             <div class="input-group col-span-2">
                 <label>Chapter Title</label>
                 <input type="text" id="chapTitleIn" placeholder="e.g. The Beginning">
@@ -585,11 +619,13 @@
                 <input type="text" id="subChapTitleIn" placeholder="e.g. The Arrival">
             </div>
 
+            <!-- Row 3 -->
             <div class="input-group col-span-full">
                 <label>Details</label>
                 <textarea id="detailIn" rows="3" maxlength="1000" placeholder="Write your story beat here..."></textarea>
             </div>
             
+            <!-- Row 4 (Remarks) -->
             <div class="input-group col-span-full">
                 <label>Remarks</label>
                 <textarea id="remarksIn" rows="2" maxlength="500" placeholder="Notes, themes, or internal comments..." style="min-height:80px;"></textarea>
@@ -600,9 +636,14 @@
             <button id="btnAdd" class="btn-add" onclick="handleAdd()">+ Add Beat</button>
             <button id="btnSaveNew" style="display:none; background-color: var(--success);" onclick="saveAsNew()">+ Save as New</button>
             <button id="btnCancel" class="btn-cancel" onclick="cancelEdit()">Cancel</button>
+            
             <span class="desktop-only" style="width: 20px;"></span>
-            <button class="btn-sort" onclick="sortData('date')">Sort Date</button>
-            <button class="btn-sort" onclick="sortData('number')">Sort Chapter</button>
+            
+            <div class="btn-group-mobile">
+                <button class="btn-sort" onclick="sortData('date')">Sort Date</button>
+                <button class="btn-sort" onclick="sortData('number')">Sort Chapter</button>
+            </div>
+            
             <span class="desktop-only" style="flex-grow:1"></span>
             
             <select id="tzSelect" class="tz-picker-compact" onchange="updateTzPreference()">
@@ -618,13 +659,15 @@
                 <option value="Asia/Kathmandu">Kathmandu, Nepal (+5:45)</option>
             </select>
 
-            <button class="btn-view active" id="btnVis" onclick="toggleView('visual')">Visual</button>
-            <button class="btn-view" id="btnTab" onclick="toggleView('table')">List</button>
+            <div class="btn-group-mobile">
+                <button class="btn-view active" id="btnVis" onclick="toggleView('visual')">Visual</button>
+                <button class="btn-view" id="btnTab" onclick="toggleView('table')">List</button>
+            </div>
         </div>
     </div>
 
     <div class="view-container">
-        <!-- Header Label updated to default to UNSORTED -->
+        <!-- Header Label -->
         <div id="viewHeaderLabel" class="view-header-label">UNSORTED</div>
         
         <div id="visualArea" class="show"></div>
