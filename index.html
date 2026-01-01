@@ -192,6 +192,7 @@
             font-family: var(--font-ui);
         }
 
+        /* --- Navigation Bar --- */
         .navigation-bar {
             display: flex;
             justify-content: space-between;
@@ -270,8 +271,9 @@
         .panel-content { display: block; margin-top: 20px; border-top: 1px dashed #d4cdc3; padding-top: 20px; }
 
         .continuity-list { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 15px; }
-        .c-item-tag { display: flex; align-items: center; gap: 8px; padding: 4px 10px; background: #fff; border: 1px solid #d4cdc3; border-radius: 4px; font-size: 0.8rem; font-family: var(--font-ui); color: var(--text-main); }
+        .c-item-tag { display: flex; align-items: center; gap: 8px; padding: 4px 10px; background: #fff; border: 1px solid #d4cdc3; border-radius: 4px; font-size: 0.8rem; font-family: var(--font-ui); color: var(--text-main); transition: all 0.2s; }
         .c-item-tag.inactive { opacity: 0.5; filter: grayscale(100%); }
+        .c-item-tag.filtering { border-color: var(--primary); background-color: #f0ebe4; box-shadow: 0 0 0 2px var(--primary-hover); }
         
         .c-badge { 
             display: inline-flex; 
@@ -406,6 +408,10 @@
         .card-del { position: absolute; top: 5px; right: 8px; font-size: 1.1rem; color: var(--secondary); cursor: pointer; opacity: 0.5; }
         .card-del:hover { color: var(--danger); opacity: 1; }
 
+        /* Filter Toggle UI */
+        .filter-toggle-row { display: flex; align-items: center; gap: 10px; margin-bottom: 15px; font-family: var(--font-ui); font-size: 0.85rem; font-weight: 700; color: var(--text-muted); }
+        .filter-toggle-row input { width: 18px; height: 18px; cursor: pointer; }
+
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(44, 36, 32, 0.6); z-index: 1000; align-items: center; justify-content: center; }
         .modal-content { background: var(--panel); padding: 30px; border-radius: 4px; text-align: center; max-width: 400px; width: 90%; border: 1px solid #e6e0d4; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04); }
         .modal-content h3 { color: var(--primary); font-family: var(--font-main); margin-bottom: 10px; }
@@ -413,10 +419,10 @@
         #toast { visibility: hidden; min-width: 250px; background-color: var(--text-main); color: #fff; text-align: center; border-radius: 4px; padding: 12px 16px; position: fixed; z-index: 2000; left: 50%; bottom: 30px; transform: translateX(-50%); opacity: 0; transition: opacity 0.3s, bottom 0.3s; font-family: var(--font-ui); font-size: 0.9rem; }
         #toast.show { visibility: visible; opacity: 1; bottom: 50px; }
 
-        /* --- File Tools Container Layout --- */
         .file-tools { display: flex; flex-direction: column; gap: 10px; }
-        .file-tools-row-1 { display: flex; gap: 10px; }
-        #fileIn { width: 100%; }
+        .file-tools-row-1 { display: flex; gap: 10px; width: 100%; }
+        .file-tools-row-1 button { flex: 1; }
+        #fileIn { width: 100%; padding: 8px; border: 1px dashed var(--secondary); border-radius: 3px; }
 
         @media (max-width: 768px) {
             body { padding: 10px; padding-bottom: 100px; }
@@ -429,12 +435,7 @@
             #multiArea { max-height: 60vh; }
             .action-group { display: flex; flex-direction: row; width: 100%; gap: 10px; }
             .action-group button { flex: 1; padding: 12px 5px; font-size: 0.75rem; }
-
-            /* Enhanced File Tools Mobile Layout */
-            .file-tools-row-1 { width: 100%; }
-            .file-tools-row-1 button { flex: 1; }
-            .btn-reset { width: 100%; }
-
+            
             /* Enhanced Navigation Layout (3 Rows) */
             .navigation-bar { display: flex; flex-direction: column; gap: 12px; padding: 0; }
             .nav-left, .nav-right { width: 100%; display: flex; flex-direction: column; gap: 12px; }
@@ -442,11 +443,11 @@
             .navigation-bar .btn-group-mobile button { flex: 1; width: auto; }
             .tz-picker-compact { width: 100% !important; max-width: none !important; min-width: 0; }
 
-            /* Enhanced Cloud Sync Mobile Layout */
+            /* Cloud Sync Mobile Optimization */
             .cloud-banner { flex-direction: column; align-items: stretch; padding: 15px; }
-            .id-input-group { width: 100%; display: flex; gap: 5px; flex-wrap: nowrap; }
+            .id-input-group { width: 100%; display: flex; gap: 5px; }
             .id-input-group input { flex-grow: 1; min-width: 0; }
-            .cloud-banner .btn-row { width: 100%; display: flex; gap: 10px; margin: 0; }
+            .cloud-banner .btn-row { width: 100%; display: flex; gap: 10px; margin: 0; margin-top: 10px; }
             .cloud-banner .btn-row button { flex: 1; }
         }
     </style>
@@ -523,6 +524,11 @@
         </div>
         
         <div id="continuityContent" class="panel-content" style="display: none;">
+            <div class="filter-toggle-row">
+                <input type="checkbox" id="filterBeatsToggle" onchange="toggleFilterMode()">
+                <label for="filterBeatsToggle">Filter Beats</label>
+            </div>
+
             <div class="c-row-70-30">
                 <div class="input-group">
                     <label>Item Name</label>
@@ -604,7 +610,7 @@
                 <button class="btn-print" onclick="window.print()">Print / Save PDF</button>
             </div>
             <input type="file" id="fileIn" accept=".csv" onchange="uploadCSV(this)">
-            <button class="btn-reset" onclick="confirmReset()">Reset</button>
+            <button class="btn-reset" onclick="confirmReset()" class="btn-reset">Reset</button>
         </div>
     </div>
 
@@ -626,12 +632,6 @@
             <button class="btn-cloud" onclick="confirmRestore()" id="btnRestore" disabled style="background-color: var(--primary);">Restore</button>
         </div>
     </div>
-
-    <!-- MODALS -->
-    <div id="deleteModal" class="modal-overlay"><div class="modal-content"><h3>Delete Event?</h3><div class="btn-row" style="justify-content: center;"><button class="btn-reset" onclick="executeDelete()">Delete</button><button class="btn-dl" onclick="closeModal()">Cancel</button></div></div></div>
-    <div id="resetModal" class="modal-overlay"><div class="modal-content"><h3>Reset All?</h3><div class="btn-row" style="justify-content: center;"><button class="btn-reset" onclick="executeReset()">Clear All</button><button class="btn-dl" onclick="closeModal()">Cancel</button></div></div></div>
-    <div id="backupModal" class="modal-overlay"><div class="modal-content"><h3>Confirm Cloud Backup</h3><p id="backupInfo" style="text-align: left; background: #fdfbf7; padding: 15px; border-radius: 4px; border: 1px solid #e6e0d4; font-size:0.9rem;">Loading info...</p><div class="btn-row" style="justify-content: center;"><button class="btn-cloud" onclick="executeBackup()">Overwrite Cloud</button><button class="btn-dl" onclick="closeModal()">Cancel</button></div></div></div>
-    <div id="restoreModal" class="modal-overlay"><div class="modal-content"><h3>Confirm Restore</h3><p id="restoreInfo" style="text-align: left; background: #fdfbf7; padding: 15px; border-radius: 4px; border: 1px solid #e6e0d4; font-size:0.9rem; margin-top: 15px;">Loading cloud info...</p><div class="btn-row" style="justify-content: center;"><button class="btn-cloud" style="background-color: var(--primary);" onclick="executeRestore()">Yes, Restore</button><button class="btn-dl" onclick="closeModal()">Cancel</button></div></div></div>
 
     <div id="toast"></div>
 
@@ -740,7 +740,8 @@
         };
 
         // --- CORE LOGIC ---
-        let events = [], continuityItems = [], editIndex = -1, deleteTargetIndex = null, currentSortMethod = 'unsorted', currentTz = localStorage.getItem('storylines_tz') || '', editingContinuityId = null;
+        let events = [], continuityItems = [], editIndex = -1, currentSortMethod = 'unsorted', currentTz = localStorage.getItem('storylines_tz') || '', editingContinuityId = null;
+        let activeFilterIds = []; // Array to store multiple filters
         const STORAGE_KEY = 'storylines_persist';
 
         window.onload = function() {
@@ -766,6 +767,12 @@
         window.toggleBeatPanel = () => { const content = document.getElementById('beatPanelContent'), icon = document.getElementById('beatPanelIcon'); if (content.style.display === 'none') { content.style.display = 'block'; icon.innerText = '➖'; } else { content.style.display = 'none'; icon.innerText = '➕'; } }
         window.toggleContinuityPanel = () => { const content = document.getElementById('continuityContent'), icon = document.getElementById('cPanelIcon'); if (content.style.display === 'block') { content.style.display = 'none'; icon.innerText = '➕'; } else { content.style.display = 'block'; icon.innerText = '➖'; } }
 
+        window.toggleFilterMode = () => {
+            const isFilterOn = document.getElementById('filterBeatsToggle').checked;
+            if (!isFilterOn) activeFilterIds = []; // Clear filters when toggle off
+            renderContinuityList(); render();
+        }
+
         window.addContinuityItem = () => {
             const name = document.getElementById('cNameIn').value, icon = document.getElementById('cIconIn').value || '🔹', start = document.getElementById('cStartIn').value, end = document.getElementById('cEndIn').value;
             if(!name || !start) return showToast("Name and Start Date required");
@@ -775,6 +782,18 @@
                 cancelContinuityEdit();
             } else { continuityItems.push({ id: Date.now().toString(), name, icon, start, end, visible: true }); }
             saveLocalData(); renderContinuityList(); render();
+        }
+
+        window.handleContinuityClick = (id) => {
+            const isFilterOn = document.getElementById('filterBeatsToggle').checked;
+            if (isFilterOn) {
+                const index = activeFilterIds.indexOf(id);
+                if (index > -1) activeFilterIds.splice(index, 1);
+                else activeFilterIds.push(id);
+                renderContinuityList(); render();
+            } else {
+                editContinuityItem(id);
+            }
         }
 
         window.editContinuityItem = (id) => { 
@@ -796,6 +815,7 @@
             if(confirm("Remove this item?")) { 
                 continuityItems = continuityItems.filter(i => i.id !== id); 
                 if (editingContinuityId === id) cancelContinuityEdit(); 
+                activeFilterIds = activeFilterIds.filter(fid => fid !== id);
                 saveLocalData(); renderContinuityList(); render(); 
             } 
         }
@@ -819,12 +839,14 @@
             container.innerHTML = ''; 
             const sorted = [...continuityItems].sort((a, b) => new Date(a.start) - new Date(b.start)); 
             sorted.forEach(item => { 
+                const isFiltering = activeFilterIds.includes(item.id);
                 const el = document.createElement('div'); 
-                el.className = `c-item-tag ${!item.visible ? 'inactive' : ''}`; 
-                el.innerHTML = `<span onclick="toggleContinuityVisibility('${item.id}')" style="cursor:pointer; margin-right:5px; opacity:0.6;">${item.visible ? '👁️' : '🔒'}</span><span onclick="editContinuityItem('${item.id}')" style="cursor:pointer; font-weight:bold;">${item.icon} ${item.name}</span><span onclick="deleteContinuityItem('${item.id}')" style="cursor:pointer; color:var(--danger); font-weight:bold; margin-left:8px;">×</span>`; 
+                el.className = `c-item-tag ${!item.visible ? 'inactive' : ''} ${isFiltering ? 'filtering' : ''}`; 
+                el.innerHTML = `<span onclick="event.stopPropagation(); toggleContinuityVisibility('${item.id}')" style="cursor:pointer; margin-right:5px; opacity:0.6;">${item.visible ? '👁️' : '🔒'}</span><span onclick="handleContinuityClick('${item.id}')" style="cursor:pointer; font-weight:bold;">${item.icon} ${item.name}</span><span onclick="event.stopPropagation(); deleteContinuityItem('${item.id}')" style="cursor:pointer; color:var(--danger); font-weight:bold; margin-left:8px;">×</span>`; 
                 container.appendChild(el); 
             }); 
         }
+        window.renderContinuityList = renderContinuityList;
 
         function getActiveContinuity(beatDateStr) { const beatDate = new Date(beatDateStr); return continuityItems.filter(item => { if(!item.visible) return false; const s = new Date(item.start), e = item.end ? new Date(item.end) : null; return beatDate >= s && (!e || beatDate <= e); }); }
 
@@ -899,12 +921,7 @@
             let displayDate, displayTime, displayDay, displayBasis = "Local Browser";
             if (evt.preferredDisplayTz) {
                 const pref = convertTime(evt.date, evt.preferredDisplayTz);
-                if (pref) { 
-                    displayDate = pref.dateRaw; 
-                    displayTime = pref.time; 
-                    displayDay = pref.weekday; 
-                    displayBasis = evt.preferredCountry || "Custom Location"; 
-                }
+                if (pref) { displayDate = pref.dateRaw; displayTime = pref.time; displayDay = pref.weekday; displayBasis = evt.preferredCountry || "Custom Location"; }
             }
             if (!displayDate) {
                 displayDate = getFormattedDate(evt.date);
@@ -947,20 +964,36 @@
             const linear = document.getElementById('visualArea'), body = document.getElementById('tableBody'), multi = document.getElementById('multiArea'), msg = document.getElementById('emptyMsg');
             linear.innerHTML = ''; body.innerHTML = ''; multi.innerHTML = ''; if (events.length === 0) { msg.style.display = 'block'; return; } msg.style.display = 'none';
             
-            events.forEach((evt, i) => {
-                const parts = createCardHtml(evt, i);
+            const isFilterOn = document.getElementById('filterBeatsToggle').checked;
+            
+            // Filtering logic using AND (Intersection) for multiple tracking items
+            const displayEvents = events.map((e, idx) => ({ ...e, originalIndex: idx })).filter(evt => {
+                if (!isFilterOn || activeFilterIds.length === 0) return true;
+                const bTime = new Date(evt.date).getTime();
+                // Beat must fall within the range of ALL selected items
+                return activeFilterIds.every(fid => {
+                    const item = continuityItems.find(i => i.id === fid);
+                    if (!item) return true;
+                    const sTime = new Date(item.start).getTime();
+                    const eTime = item.end ? new Date(item.end).getTime() : Infinity;
+                    return bTime >= sTime && bTime <= eTime;
+                });
+            });
+
+            displayEvents.forEach((evt) => {
+                const parts = createCardHtml(evt, evt.originalIndex);
                 body.innerHTML += parts.table;
                 linear.innerHTML += parts.linear;
             });
 
             const yearGroups = {};
             const activeDayNumbers = new Set();
-            events.forEach((evt, i) => {
+            displayEvents.forEach((evt) => {
                 const d = new Date(evt.date);
                 const year = d.getUTCFullYear();
                 activeDayNumbers.add(d.getUTCDate());
                 if (!yearGroups[year]) yearGroups[year] = [];
-                yearGroups[year].push({ ...evt, originalIndex: i });
+                yearGroups[year].push(evt);
             });
 
             const sortedYears = Object.keys(yearGroups).sort((a, b) => b - a);
@@ -970,20 +1003,16 @@
                 const track = document.createElement('div');
                 track.className = 'year-track';
                 track.innerHTML = `<div class="year-label">${year}</div>`;
-                
                 sortedDayLabels.forEach(dayNum => {
                     const slotEl = document.createElement('div');
                     slotEl.className = 'multi-day-slot';
-                    
                     const yearDayBeats = yearGroups[year].filter(b => new Date(b.date).getUTCDate() === dayNum)
                         .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-
                     if (yearDayBeats.length > 0) {
                         const dayTag = document.createElement('div');
                         dayTag.className = 'day-num-label';
                         dayTag.innerText = `DAY ${dayNum.toString().padStart(2, '0')}`;
                         slotEl.appendChild(dayTag);
-
                         const stacks = [];
                         yearDayBeats.forEach(beat => {
                             const bTime = new Date(beat.date).getTime();
@@ -996,7 +1025,6 @@
                             }
                             if(!stacked) stacks.push([beat]);
                         });
-
                         stacks.forEach(stack => {
                             stack.forEach(beat => {
                                 const cardParts = createCardHtml(beat, beat.originalIndex);
@@ -1008,21 +1036,20 @@
                 });
                 multi.appendChild(track);
             });
-
             if (currentSortMethod === 'number') setupDragAndDrop();
         }
+        window.render = render;
 
         window.sortData = (type) => { currentSortMethod = type; const label = document.getElementById('viewHeaderLabel'); if (type === 'number') { events.sort((a, b) => a.number - b.number); label.innerText = "CHAPTER"; } else if (type === 'date') { events.sort((a, b) => new Date(a.date) - new Date(b.date)); label.innerText = "CHRONOLOGICAL"; } render(); }
         
         window.toggleView = (v) => { 
-            document.getElementById('btnLinear').classList.toggle('active', v === 'linear');
-            document.getElementById('btnMulti').classList.toggle('active', v === 'multi');
-            document.getElementById('btnTab').classList.toggle('active', v === 'table');
-            
+            const btns = document.querySelectorAll('.btn-view'); btns.forEach(b => b.classList.remove('active'));
+            if(v === 'linear') document.getElementById('btnLinear').classList.add('active');
+            if(v === 'multi') document.getElementById('btnMulti').classList.add('active');
+            if(v === 'table') document.getElementById('btnTab').classList.add('active');
             document.getElementById('visualArea').classList.toggle('show', v === 'linear');
             document.getElementById('multiArea').classList.toggle('show', v === 'multi');
             document.getElementById('tableArea').classList.toggle('show', v === 'table');
-
             const isMulti = v === 'multi';
             document.getElementById('btnSortDate').disabled = isMulti;
             document.getElementById('btnSortChapter').disabled = isMulti;
@@ -1030,8 +1057,7 @@
 
         function clearInputs() { document.getElementById('dateIn').value = ''; document.getElementById('numIn').value = ''; document.getElementById('chapTitleIn').value = ''; document.getElementById('subChapTitleIn').value = ''; document.getElementById('detailIn').value = ''; document.getElementById('remarksIn').value = ''; document.getElementById('detailIn').style.height = 'auto'; }
         function showToast(m) { const t = document.getElementById("toast"); t.innerText = m; t.className = "show"; setTimeout(() => t.className = "", 3000); }
-        window.askDelete = (i) => { deleteTargetIndex = i; document.getElementById('deleteModal').style.display = 'flex'; }
-        window.executeDelete = () => { events.splice(deleteTargetIndex, 1); saveLocalData(); render(); closeModal(); }
+        window.askDelete = (i) => { if(confirm("Delete this event?")) { events.splice(i, 1); saveLocalData(); render(); } }
         window.closeModal = () => { document.querySelectorAll('.modal-overlay').forEach(m => m.style.display = 'none'); }
 
         window.downloadCSV = () => { 
@@ -1099,8 +1125,7 @@
             }); 
         }
 
-        window.confirmReset = () => { document.getElementById('resetModal').style.display = 'flex'; }
-        window.executeReset = () => { events = []; continuityItems = []; saveLocalData(); render(); closeModal(); }
+        window.confirmReset = () => { if(confirm("Are you sure you want to reset everything?")) { events = []; continuityItems = []; saveLocalData(); render(); } }
     </script>
 </body>
 </html>
