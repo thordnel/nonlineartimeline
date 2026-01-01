@@ -192,7 +192,7 @@
             font-family: var(--font-ui);
         }
 
-        /* --- Navigation Bar Multi-Row Layout --- */
+        /* --- Navigation Bar Layout --- */
         .navigation-bar {
             display: flex;
             flex-direction: column;
@@ -287,7 +287,6 @@
         .c-item-tag.inactive { opacity: 0.5; filter: grayscale(100%); }
         .c-item-tag.filtering { border-color: var(--primary); background-color: #f0ebe4; box-shadow: 0 0 0 2px var(--primary-hover); }
         
-        /* CSS Tooltip */
         .c-badge { 
             display: inline-flex; 
             align-items: center; 
@@ -304,6 +303,7 @@
             cursor: help; 
             position: relative;
         }
+        
         .c-badge[data-tooltip]:hover::after {
             content: attr(data-tooltip);
             position: absolute;
@@ -346,10 +346,6 @@
         tr.draggable, .h-item.draggable { cursor: grab; }
         tr.dragging, .h-item.dragging { opacity: 0.4; background-color: var(--drag-bg); }
         tr.drag-over, .h-item.drag-over { border-bottom: 2px solid var(--primary); }
-
-        .action-btn { background: none; border: none; cursor: pointer; font-size: 1.1rem; padding: 5px; color: var(--secondary); transition: color 0.2s;}
-        .action-btn:hover { color: var(--primary); }
-        .del-btn:hover { color: var(--danger); }
 
         /* --- MultiTimeline Floating Scrollbar Fix --- */
         #multiArea { 
@@ -576,7 +572,7 @@
         </div>
     </div>
 
-    <!-- NAVIGATION BAR WITH MULTI-ROW LOGIC -->
+    <!-- NAVIGATION BAR -->
     <div class="navigation-bar">
         <div class="nav-top-row">
             <div class="nav-left">
@@ -708,7 +704,6 @@
             const btn = document.getElementById('btnBackup'), originalText = btn.innerText;
             btn.innerText = "Checking..."; btn.disabled = true;
             try {
-                // RULE 1 Path Fix for permission issues when using manual linking
                 const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'backups', activeSyncId);
                 const docSnap = await getDoc(docRef);
                 let infoHtml = "No existing backup found. <br>This will create a new cloud record.";
@@ -798,9 +793,15 @@
         window.toggleFilterMode = () => {
             const isFilterOn = document.getElementById('filterBeatsToggle').checked;
             if (!isFilterOn) activeFilterIds = []; 
+            
+            const btnCAdd = document.getElementById('btnCAdd');
+            const btnCCancel = document.getElementById('btnCCancel');
+            
+            if (btnCAdd) btnCAdd.disabled = isFilterOn;
+            if (btnCCancel) btnCCancel.disabled = isFilterOn;
+
             renderContinuityList(); render();
         }
-        window.toggleFilterMode = window.toggleFilterMode;
 
         window.addContinuityItem = () => {
             const name = document.getElementById('cNameIn').value, icon = document.getElementById('cIconIn').value || '🔹', start = document.getElementById('cStartIn').value, end = document.getElementById('cEndIn').value;
@@ -1154,6 +1155,7 @@
 
         window.confirmReset = () => { document.getElementById('resetModal').style.display = 'flex'; }
         window.executeReset = () => { events = []; continuityItems = []; saveLocalData(); render(); closeModal(); }
+        window.executeDelete = () => {} // Kept for legacy compatibility
 
         // Cleanup: Assign to window for module availability
         window.toggleBeatPanel = window.toggleBeatPanel;
