@@ -16,29 +16,34 @@
     
     <style>
         /* --- OFFLINE FONT LOADING --- */
+        /* Note: Ensure these files exist in your root directory */
         @font-face {
             font-family: 'Merriweather';
             src: url('merriweather-light.woff2') format('woff2');
             font-weight: 300;
             font-style: normal;
+            font-display: swap;
         }
         @font-face {
             font-family: 'Merriweather';
             src: url('merriweather-regular.woff2') format('woff2');
             font-weight: 400;
             font-style: normal;
+            font-display: swap;
         }
         @font-face {
             font-family: 'Merriweather';
             src: url('merriweather-bold.woff2') format('woff2');
             font-weight: 700;
             font-style: normal;
+            font-display: swap;
         }
         @font-face {
             font-family: 'Merriweather';
             src: url('merriweather-black.woff2') format('woff2');
             font-weight: 900;
             font-style: normal;
+            font-display: swap;
         }
 
         :root {
@@ -71,6 +76,10 @@
             padding-bottom: 80px;
             background-color: var(--bg);
             color: var(--text-main);
+            /* Fix for iOS font weight issues */
+            font-synthesis: none;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
         }
 
         /* --- Header --- */
@@ -218,17 +227,8 @@
             gap: 20px;
         }
 
-        .nav-left {
-            display: flex;
-            align-items: center;
-        }
-
-        .nav-right {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            flex-shrink: 0;
-        }
+        .nav-left { display: flex; align-items: center; }
+        .nav-right { display: flex; align-items: center; gap: 15px; flex-shrink: 0; }
 
         .cloud-banner {
             display: flex;
@@ -299,7 +299,6 @@
         .c-item-tag { display: flex; align-items: center; gap: 8px; padding: 4px 10px; background: #fff; border: 1px solid #d4cdc3; border-radius: 4px; font-size: 0.8rem; font-family: var(--font-ui); color: var(--text-main); }
         .c-item-tag.inactive { opacity: 0.5; filter: grayscale(100%); }
         
-        /* --- CSS Tooltip for Badges --- */
         .c-badge { 
             display: inline-flex; 
             align-items: center; 
@@ -930,7 +929,7 @@
         }
 
         window.editEvent = (i) => {
-            editIndex = i; const e = events[i]; document.getElementById('dateIn').value = e.date; document.getElementById('numIn').value = e.number; document.getElementById('chapTitleIn').value = e.chapterTitle || ''; document.getElementById('subChapTitleIn').value = e.subChapterTitle || ''; document.getElementById('detailIn').value = e.details; document.getElementById('remarksIn').value = e.remarks || '';
+            editIndex = i; const e = events[i]; document.getElementById('dateIn').value = e.date; document.getElementById('numIn').value = e.number; document.getElementById('chapTitleIn').value = e.chapterTitle || ''; document.getElementById('subChapterTitleIn').value = e.subChapterTitle || ''; document.getElementById('detailIn').value = e.details; document.getElementById('remarksIn').value = e.remarks || '';
             document.getElementById('btnAdd').innerText = "Update Beat"; document.getElementById('btnAdd').className = "btn-update"; document.getElementById('btnCancel').style.display = "inline-block"; document.getElementById('btnSaveNew').style.display = "inline-block";
             if (document.getElementById('beatPanelContent').style.display === 'none') window.toggleBeatPanel();
         }
