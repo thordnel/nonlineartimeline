@@ -217,6 +217,17 @@
             font-family: var(--font-ui);
         }
 
+        /* --- View Area Navigation Bar --- */
+        .navigation-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding: 0 5px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
         /* --- Cloud Banner --- */
         .cloud-banner {
             display: flex;
@@ -312,7 +323,6 @@
             padding-top: 20px;
         }
 
-        /* --- Continuity Space Specifics --- */
         .continuity-list {
             display: flex;
             flex-wrap: wrap;
@@ -642,6 +652,7 @@
             .btn-group-mobile > button { flex: 1; width: auto; }
             .c-row-70-30, .c-row-50-50 { grid-template-columns: 1fr; gap: 15px; }
             .header-branding { width: 90%; }
+            .navigation-bar { flex-direction: column; align-items: stretch; gap: 10px; }
         }
     </style>
 </head>
@@ -657,10 +668,10 @@
         <div class="section-label">Beat Space</div>
         <div class="panel-header" onclick="toggleBeatPanel()">
             <span style="font-weight:700; color:var(--text-main);">Manage Beats</span>
-            <span id="beatPanelIcon" style="color:var(--secondary);">➖</span>
+            <span id="beatPanelIcon" style="color:var(--secondary);">➕</span>
         </div>
         
-        <div id="beatPanelContent" class="panel-content">
+        <div id="beatPanelContent" class="panel-content" style="display: none;">
             <div class="controls">
                 <div class="input-group">
                     <label>Date & Time</label>
@@ -708,33 +719,6 @@
                     <button id="btnSaveNew" style="display:none; background-color: var(--success);" onclick="saveAsNew()">+ Save as New</button>
                     <button id="btnCancel" class="btn-cancel" onclick="cancelEdit()">Cancel</button>
                 </div>
-
-                <span class="desktop-only" style="width: 20px;"></span>
-                
-                <div class="btn-group-mobile">
-                    <button class="btn-sort" onclick="sortData('date')">Sort Date</button>
-                    <button class="btn-sort" onclick="sortData('number')">Sort Chapter</button>
-                </div>
-
-                <span class="desktop-only" style="flex-grow:1"></span>
-                
-                <select id="tzSelect" class="tz-picker-compact" onchange="updateTzPreference()">
-                    <option value="">Compare Time: Off</option>
-                    <option value="UTC">UTC (Universal Time)</option>
-                    <option value="Europe/Paris">Paris, France</option>
-                    <option value="Europe/Berlin">Frankfurt / Berlin, DE</option>
-                    <option value="Europe/Brussels">Brussels, Belgium</option>
-                    <option value="Europe/Riga">Riga, Latvia</option>
-                    <option value="Europe/London">London, UK</option>
-                    <option value="America/New_York">New York, EST</option>
-                    <option value="Asia/Tokyo">Tokyo, Japan</option>
-                    <option value="Asia/Kathmandu">Kathmandu, Nepal (+5:45)</option>
-                </select>
-
-                <div class="btn-group-mobile">
-                    <button class="btn-view active" id="btnVis" onclick="toggleView('visual')">Visual</button>
-                    <button class="btn-view" id="btnTab" onclick="toggleView('table')">List</button>
-                </div>
             </div>
         </div>
     </div>
@@ -779,6 +763,33 @@
         </div>
     </div>
 
+    <!-- TIMELINE NAVIGATION BAR (Extracted from Beat Space) -->
+    <div class="navigation-bar">
+        <div class="btn-group-mobile">
+            <button class="btn-sort" onclick="sortData('date')">Sort Date</button>
+            <button class="btn-sort" onclick="sortData('number')">Sort Chapter</button>
+        </div>
+
+        <select id="tzSelect" class="tz-picker-compact" onchange="updateTzPreference()">
+            <option value="">Compare Time: Off</option>
+            <option value="UTC">UTC (Universal Time)</option>
+            <option value="Europe/Paris">Paris, France</option>
+            <option value="Europe/Berlin">Frankfurt / Berlin, DE</option>
+            <option value="Europe/Brussels">Brussels, Belgium</option>
+            <option value="Europe/Riga">Riga, Latvia</option>
+            <option value="Europe/London">London, UK</option>
+            <option value="America/New_York">New York, EST</option>
+            <option value="Asia/Tokyo">Tokyo, Japan</option>
+            <option value="Asia/Kathmandu">Kathmandu, Nepal (+5:45)</option>
+        </select>
+
+        <div class="btn-group-mobile">
+            <button class="btn-view active" id="btnVis" onclick="toggleView('visual')">Visual</button>
+            <button class="btn-view" id="btnTab" onclick="toggleView('table')">List</button>
+        </div>
+    </div>
+
+    <!-- RESULT DISPLAY -->
     <div class="view-container">
         <div id="viewHeaderLabel" class="view-header-label">UNSORTED</div>
         <div id="visualArea" class="show"></div>
@@ -932,7 +943,7 @@
             } catch (err) { showToast("Restore failed."); }
         };
 
-        // --- CORE ---
+        // --- CORE LOGIC ---
         let events = [], continuityItems = [], editIndex = -1, deleteTargetIndex = null, currentSortMethod = 'unsorted', currentTz = localStorage.getItem('storylines_tz') || '', editingContinuityId = null;
         const STORAGE_KEY = 'storylines_persist';
 
