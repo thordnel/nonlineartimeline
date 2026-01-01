@@ -74,9 +74,11 @@
             padding-bottom: 80px;
             background-color: var(--bg);
             color: var(--text-main);
+            /* iOS Font Rendering Optimizations */
             font-synthesis: none;
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
+            text-rendering: optimizeLegibility;
         }
 
         /* --- Header --- */
@@ -418,9 +420,10 @@
         .h-card { margin-top: 15px; background: #fff; border: 1px solid #e6e0d4; border-top: 3px solid var(--primary); border-radius: 2px; padding: 15px; width: 190px; margin-left: 15px; margin-right: 15px; white-space: normal; text-align: left; position: relative; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); transition: transform 0.2s; cursor: pointer; }
         .multi-day-slot .h-card { margin: 0; width: 160px; padding: 12px; }
         .h-card:hover { transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
-        .h-detail-text { font-size: 0.9rem; font-weight: 300; color: var(--text-main); line-height: 1.5; white-space: pre-wrap; }
-        .h-val-text { font-family: var(--font-ui); font-size: 0.7rem; color: var(--secondary); margin-top: 0; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
+        .h-detail-text { font-size: 0.85rem; font-weight: 300; color: var(--text-main); line-height: 1.4; white-space: pre-wrap; }
+        .h-val-text { font-family: var(--font-ui); font-size: 0.65rem; color: var(--secondary); margin-top: 0; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
         .h-chap-title { font-size: 0.95rem; font-weight: 700; color: var(--text-main); margin-top: 4px; line-height: 1.2; font-family: var(--font-main); }
+        .h-sub-title { font-size: 0.8rem; font-style: italic; color: var(--text-muted); margin-bottom: 8px; line-height: 1.3; }
         .h-divider { border-bottom: 1px solid #f0ebe4; margin-bottom: 12px; }
         .h-remarks { margin-top: 12px; padding-top: 8px; border-top: 1px dashed #d4cdc3; font-size: 0.8rem; color: var(--text-muted); font-style: italic; line-height: 1.4; white-space: pre-wrap; }
 
@@ -940,8 +943,8 @@
 
             return {
                 table: `<tr class="${dragClass}" data-index="${i}" ${dragAttr}><td>${currentSortMethod === 'number' ? '☰' : ''}</td><td style="white-space: nowrap;">${displayDate} ${displayTime}<br><small>${displayDay}</small><br><span class="display-basis-tag">${displayBasis}</span>${altTzHtml}</td><td><b>${evt.number}</b><br><span style="font-weight:700;">${evt.chapterTitle || ''}</span></td><td>${evt.details}${evt.remarks ? `<div class="td-remarks">📝 ${evt.remarks}</div>` : ''}<div style="margin-top:8px">${cHtml}</div></td><td><button class="action-btn" onclick="editEvent(${i})">✎</button><button class="action-btn del-btn" onclick="askDelete(${i})">×</button></td></tr>`,
-                linear: `<div class="h-item ${dragClass}" data-index="${i}" ${dragAttr}><div class="h-date-wrap"><div class="h-date">${displayDate}</div><div class="h-day">${displayDay}</div><div class="h-time">${displayTime}<br><span class="display-basis-tag">${displayBasis}</span>${altTzHtml}</div></div><div class="h-dot-container"><div class="h-line"></div><div class="h-dot" onclick="editEvent(${i})"></div></div><div class="h-card" onclick="editEvent(${i})"><span class="card-del" onclick="event.stopPropagation(); askDelete(${i})">×</span><div class="h-val-text">Chapter ${evt.number}</div>${evt.chapterTitle ? `<div class="h-chap-title">${evt.chapterTitle}</div>` : ''}<div class="h-divider"></div><div class="h-detail-text">${evt.details}</div>${evt.remarks ? `<div class="h-remarks">${evt.remarks}</div>` : ''}${cHtml}</div></div>`,
-                multi: `<div class="h-item"><div class="h-date-wrap" style="min-height:auto; text-align:left;"><div class="h-date" style="font-size:0.7rem; font-weight:900;">${displayDate}</div><div class="h-time" style="font-size:0.6rem; color:var(--text-muted)">${displayTime} <span class="display-basis-tag" style="font-size:0.5rem; padding:1px 3px;">${displayBasis}</span></div>${altTzHtml}</div><div class="h-card" onclick="editEvent(${i})"><span class="card-del" onclick="event.stopPropagation(); askDelete(${i})">×</span><div class="h-val-text" style="font-size:0.55rem">CH ${evt.number}</div><div class="h-chap-title" style="font-size:0.75rem">${evt.chapterTitle || '...'}</div><div class="h-divider"></div><div class="h-detail-text" style="font-size:0.75rem">${evt.details.substring(0, 80)}${evt.details.length > 80 ? '...' : ''}</div>${cHtml}</div></div>`
+                linear: `<div class="h-item ${dragClass}" data-index="${i}" ${dragAttr}><div class="h-date-wrap"><div class="h-date">${displayDate}</div><div class="h-day">${displayDay}</div><div class="h-time">${displayTime}<br><span class="display-basis-tag">${displayBasis}</span>${altTzHtml}</div></div><div class="h-dot-container"><div class="h-line"></div><div class="h-dot" onclick="editEvent(${i})"></div></div><div class="h-card" onclick="editEvent(${i})"><span class="card-del" onclick="event.stopPropagation(); askDelete(${i})">×</span><div class="h-val-text">Chapter ${evt.number}</div>${evt.chapterTitle ? `<div class="h-chap-title">${evt.chapterTitle}</div>` : ''}${evt.subChapterTitle ? `<div class="h-sub-title">${evt.subChapterTitle}</div>` : ''}<div class="h-divider"></div><div class="h-detail-text">${evt.details}</div>${evt.remarks ? `<div class="h-remarks">${evt.remarks}</div>` : ''}${cHtml}</div></div>`,
+                multi: `<div class="h-item"><div class="h-date-wrap" style="min-height:auto; text-align:left;"><div class="h-date" style="font-size:0.7rem; font-weight:900;">${displayDate}</div><div class="h-time" style="font-size:0.6rem; color:var(--text-muted)">${displayTime} <span class="display-basis-tag" style="font-size:0.5rem; padding:1px 3px;">${displayBasis}</span></div>${altTzHtml}</div><div class="h-card" onclick="editEvent(${i})"><span class="card-del" onclick="event.stopPropagation(); askDelete(${i})">×</span><div class="h-val-text" style="font-size:0.55rem">CH ${evt.number}</div>${evt.chapterTitle ? `<div class="h-chap-title" style="font-size:0.75rem">${evt.chapterTitle}</div>` : ''}${evt.subChapterTitle ? `<div class="h-sub-title" style="font-size:0.65rem">${evt.subChapterTitle}</div>` : ''}<div class="h-divider"></div><div class="h-detail-text" style="font-size:0.75rem">${evt.details.substring(0, 80)}${evt.details.length > 80 ? '...' : ''}</div>${cHtml}</div></div>`
             };
         }
 
