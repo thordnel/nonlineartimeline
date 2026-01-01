@@ -258,20 +258,22 @@
             border-radius: 12px;
         }
 
-        /* --- Continuity Space Specifics --- */
-        .continuity-header {
+        /* --- Collapsible Panel Headers --- */
+        .panel-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
             cursor: pointer;
             user-select: none;
         }
-        .continuity-content {
-            display: none; /* Collapsed by default */
+        .panel-content {
+            display: block; /* Beat space starts open usually, logic handles visibility */
             margin-top: 20px;
             border-top: 1px dashed #d4cdc3;
             padding-top: 20px;
         }
+
+        /* --- Continuity Space Specifics --- */
         .continuity-list {
             display: flex;
             flex-wrap: wrap;
@@ -396,7 +398,7 @@
             padding: 0; 
             vertical-align: top;
             transform: rotateX(180deg); 
-            /* Fix: Ensure items allow the line to reach out to the next dot */
+            /* Ensure items allow the line to reach out to the next dot */
             overflow: visible; 
         }
 
@@ -536,7 +538,7 @@
             padding: 30px; 
             border-radius: 4px; 
             text-align: center; 
-            max-width: 350px; 
+            max-width: 400px; 
             width: 90%; 
             border: 1px solid #e6e0d4;
             box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
@@ -612,25 +614,24 @@
             .btn-row { gap: 10px; justify-content: stretch; }
             .btn-row > * { flex-grow: 1; }
             
-            /* Cloud Banner Stack */
-            .cloud-banner { flex-direction: column; text-align: center; gap: 15px; border-radius: 0; margin-left: -10px; margin-right: -10px; border-left: none; border-right: none; }
+            /* Cloud Banner Stack - touching edges */
+            .cloud-banner { flex-direction: column; text-align: center; gap: 15px; border-radius: 0; margin-left: -10px; margin-right: -10px; border-left: none; border-right: none; padding: 15px 10px; }
             
             .id-input-group { 
                 width: 100%; 
                 display: flex;
                 flex-direction: row; 
                 gap: 8px;
-                padding: 0 15px; /* Alignment with other elements */
             }
             .id-input-group .id-input { flex-grow: 1; width: auto !important; }
             
-            /* Backup/Restore buttons in single line row touching edge */
+            /* Backup/Restore buttons row touching edge */
             .cloud-banner .btn-row { 
                 width: 100%; 
                 display: flex; 
                 flex-direction: row; 
                 gap: 10px;
-                padding: 0 15px;
+                margin: 0;
             }
             .cloud-banner .btn-row button { 
                 flex: 1; 
@@ -670,115 +671,103 @@
     <h2 style="text-align:center; color:var(--primary); font-family:var(--font-main); font-weight:normal; letter-spacing:1px; margin-bottom:5px;">STORYLINES</h2>
     <h4 style="text-align:center; color:var(--text-muted); margin-top: 0; font-weight: normal; font-size: 0.9rem; font-family:var(--font-ui); text-transform: uppercase; letter-spacing: 1px;">Non-Linear Timeline Manager</h4>
 
-    <div class="cloud-banner" id="cloudBanner">
-        <div>
-            ☁️ <strong>Cloud Sync:</strong> <span id="syncStatus">Initializing...</span><br>
-            <span id="userIdDisplay" style="display: none; margin-top: 5px; font-size: 0.75rem;">
-                ID: <span class="cloud-id" id="userIdText" title="Click to copy" onclick="copyId()"></span>
-            </span>
-        </div>
-        
-        <div class="id-input-group">
-            <input type="text" id="manualIdIn" class="id-input" placeholder="Paste Device ID">
-            <button class="btn-cloud" onclick="linkExistingId()" style="padding: 6px 12px; font-size: 0.75rem;">Link</button>
-            <button class="btn-reset" onclick="resetToOriginalId()" style="padding: 6px 12px; font-size: 0.75rem; border-color:#991b1b; color:#991b1b;">Unlink</button>
-        </div>
-
-        <div class="btn-row btn-group-mobile">
-            <button class="btn-cloud" onclick="confirmBackup()" id="btnBackup" disabled>Backup</button>
-            <button class="btn-cloud" onclick="confirmRestore()" id="btnRestore" disabled style="background-color: var(--primary);">Restore</button>
-        </div>
-    </div>
-
-    <!-- BEAT SPACE -->
+    <!-- BEAT SPACE (Collapsible) -->
     <div class="panel">
         <div class="section-label">Beat Space</div>
-        <div class="controls">
-            <div class="input-group">
-                <label>Date & Time</label>
-                <input type="datetime-local" id="dateIn">
-            </div>
-            <div class="input-group">
-                <label>Chapter No.</label>
-                <input type="number" id="numIn" placeholder="e.g. 1.1" step="0.01">
-            </div>
-            <div class="input-group">
-                <label>Event Location</label>
-                <select id="inputTzSelect">
-                    <option value="Asia/Manila">Manila, Philippines</option>
-                    <option value="Europe/Berlin">Berlin / Frankfurt, Germany</option>
-                    <option value="Europe/Brussels">Brussels, Belgium</option>
-                    <option value="Europe/Paris">Paris, France</option>
-                    <option value="Europe/London">London, UK</option>
-                    <option value="Europe/Riga">Riga, Latvia</option>
-                </select>
-            </div>
-            
-            <div class="input-group col-span-2">
-                <label>Chapter Title</label>
-                <input type="text" id="chapTitleIn" placeholder="e.g. The Beginning">
-            </div>
-            <div class="input-group">
-                <label>SubChapter Title</label>
-                <input type="text" id="subChapTitleIn" placeholder="e.g. The Arrival">
-            </div>
-
-            <div class="input-group col-span-full">
-                <label>Details</label>
-                <textarea id="detailIn" rows="3" maxlength="1000" placeholder="Write your story beat here..."></textarea>
-            </div>
-            
-            <div class="input-group col-span-full">
-                <label>Remarks</label>
-                <textarea id="remarksIn" rows="2" maxlength="500" placeholder="Notes, themes, or internal comments..." style="min-height:80px;"></textarea>
-            </div>
+        <div class="panel-header" onclick="toggleBeatPanel()">
+            <span style="font-weight:700; color:var(--text-main);">Manage Beats</span>
+            <span id="beatPanelIcon" style="color:var(--secondary);">▼</span>
         </div>
+        
+        <div id="beatPanelContent" class="panel-content">
+            <div class="controls">
+                <!-- Row 1 -->
+                <div class="input-group">
+                    <label>Date & Time</label>
+                    <input type="datetime-local" id="dateIn">
+                </div>
+                <div class="input-group">
+                    <label>Chapter No.</label>
+                    <input type="number" id="numIn" placeholder="e.g. 1.1" step="0.01">
+                </div>
+                <div class="input-group">
+                    <label>Event Location</label>
+                    <select id="inputTzSelect">
+                        <option value="Asia/Manila">Manila, Philippines</option>
+                        <option value="Europe/Berlin">Berlin / Frankfurt, Germany</option>
+                        <option value="Europe/Brussels">Brussels, Belgium</option>
+                        <option value="Europe/Paris">Paris, France</option>
+                        <option value="Europe/London">London, UK</option>
+                        <option value="Europe/Riga">Riga, Latvia</option>
+                    </select>
+                </div>
+                
+                <div class="input-group col-span-2">
+                    <label>Chapter Title</label>
+                    <input type="text" id="chapTitleIn" placeholder="e.g. The Beginning">
+                </div>
+                <div class="input-group">
+                    <label>SubChapter Title</label>
+                    <input type="text" id="subChapTitleIn" placeholder="e.g. The Arrival">
+                </div>
 
-        <div class="btn-row">
-            <div class="btn-group-mobile action-group">
-                <button id="btnAdd" class="btn-add" onclick="handleAdd()">+ Add Beat</button>
-                <button id="btnSaveNew" style="display:none; background-color: var(--success);" onclick="saveAsNew()">+ Save as New</button>
-                <button id="btnCancel" class="btn-cancel" onclick="cancelEdit()">Cancel</button>
+                <div class="input-group col-span-full">
+                    <label>Details</label>
+                    <textarea id="detailIn" rows="3" maxlength="1000" placeholder="Write your story beat here..."></textarea>
+                </div>
+                
+                <div class="input-group col-span-full">
+                    <label>Remarks</label>
+                    <textarea id="remarksIn" rows="2" maxlength="500" placeholder="Notes, themes, or internal comments..." style="min-height:80px;"></textarea>
+                </div>
             </div>
 
-            <span class="desktop-only" style="width: 20px;"></span>
-            
-            <div class="btn-group-mobile">
-                <button class="btn-sort" onclick="sortData('date')">Sort Date</button>
-                <button class="btn-sort" onclick="sortData('number')">Sort Chapter</button>
-            </div>
+            <div class="btn-row">
+                <div class="btn-group-mobile action-group">
+                    <button id="btnAdd" class="btn-add" onclick="handleAdd()">+ Add Beat</button>
+                    <button id="btnSaveNew" style="display:none; background-color: var(--success);" onclick="saveAsNew()">+ Save as New</button>
+                    <button id="btnCancel" class="btn-cancel" onclick="cancelEdit()">Cancel</button>
+                </div>
 
-            <span class="desktop-only" style="flex-grow:1"></span>
-            
-            <select id="tzSelect" class="tz-picker-compact" onchange="updateTzPreference()">
-                <option value="">Compare Time: Off</option>
-                <option value="UTC">UTC (Universal Time)</option>
-                <option value="Europe/Paris">Paris, France</option>
-                <option value="Europe/Berlin">Frankfurt / Berlin, DE</option>
-                <option value="Europe/Brussels">Brussels, Belgium</option>
-                <option value="Europe/Riga">Riga, Latvia</option>
-                <option value="Europe/London">London, UK</option>
-                <option value="America/New_York">New York, EST</option>
-                <option value="Asia/Tokyo">Tokyo, Japan</option>
-                <option value="Asia/Kathmandu">Kathmandu, Nepal (+5:45)</option>
-            </select>
+                <span class="desktop-only" style="width: 20px;"></span>
+                
+                <div class="btn-group-mobile">
+                    <button class="btn-sort" onclick="sortData('date')">Sort Date</button>
+                    <button class="btn-sort" onclick="sortData('number')">Sort Chapter</button>
+                </div>
 
-            <div class="btn-group-mobile">
-                <button class="btn-view active" id="btnVis" onclick="toggleView('visual')">Visual</button>
-                <button class="btn-view" id="btnTab" onclick="toggleView('table')">List</button>
+                <span class="desktop-only" style="flex-grow:1"></span>
+                
+                <select id="tzSelect" class="tz-picker-compact" onchange="updateTzPreference()">
+                    <option value="">Compare Time: Off</option>
+                    <option value="UTC">UTC (Universal Time)</option>
+                    <option value="Europe/Paris">Paris, France</option>
+                    <option value="Europe/Berlin">Frankfurt / Berlin, DE</option>
+                    <option value="Europe/Brussels">Brussels, Belgium</option>
+                    <option value="Europe/Riga">Riga, Latvia</option>
+                    <option value="Europe/London">London, UK</option>
+                    <option value="America/New_York">New York, EST</option>
+                    <option value="Asia/Tokyo">Tokyo, Japan</option>
+                    <option value="Asia/Kathmandu">Kathmandu, Nepal (+5:45)</option>
+                </select>
+
+                <div class="btn-group-mobile">
+                    <button class="btn-view active" id="btnVis" onclick="toggleView('visual')">Visual</button>
+                    <button class="btn-view" id="btnTab" onclick="toggleView('table')">List</button>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- CONTINUITY SPACE -->
+    <!-- CONTINUITY SPACE (Collapsible) -->
     <div class="panel">
         <div class="section-label">Continuity Space</div>
-        <div class="continuity-header" onclick="toggleContinuityPanel()">
+        <div class="panel-header" onclick="toggleContinuityPanel()">
             <span style="font-weight:700; color:var(--text-main);">Manage Tracking Elements</span>
             <span id="cPanelIcon" style="color:var(--secondary);">▼</span>
         </div>
         
-        <div id="continuityContent" class="continuity-content">
+        <div id="continuityContent" class="panel-content" style="display: none;">
             <div class="c-row-70-30" style="display: grid; grid-template-columns: 7fr 3fr; gap: 20px;">
                 <div class="input-group">
                     <label>Item Name</label>
@@ -812,6 +801,7 @@
         </div>
     </div>
 
+    <!-- VIEW AREA -->
     <div class="view-container" style="clip-path: inset(0 0 0 0);">
         <!-- Header Label -->
         <div id="viewHeaderLabel" class="view-header-label">UNSORTED</div>
@@ -832,7 +822,9 @@
         <p id="emptyMsg" style="text-align:center; color:var(--text-muted); margin-top:2rem; font-style:italic;">The story has not yet begun...</p>
     </div>
 
+    <!-- FILE TOOLS -->
     <div class="panel" style="margin-top: 20px;">
+        <div class="section-label">File Tools</div>
         <div class="file-tools" style="display:flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap:10px;">
             <div class="file-tools-left" style="display:flex; gap:10px; flex-wrap:wrap;">
                 <button class="btn-dl" onclick="downloadCSV()">Save CSV</button>
@@ -843,7 +835,28 @@
         </div>
     </div>
 
-    <!-- Collapsible Documentation Footer -->
+    <!-- CLOUD BANNER (Relocated) -->
+    <div class="cloud-banner" id="cloudBanner">
+        <div>
+            ☁️ <strong>Cloud Sync:</strong> <span id="syncStatus">Initializing...</span><br>
+            <span id="userIdDisplay" style="display: none; margin-top: 5px; font-size: 0.75rem;">
+                ID: <span class="cloud-id" id="userIdText" title="Click to copy" onclick="copyId()"></span>
+            </span>
+        </div>
+        
+        <div class="id-input-group">
+            <input type="text" id="manualIdIn" class="id-input" placeholder="Paste Device ID">
+            <button class="btn-cloud" onclick="linkExistingId()" style="padding: 6px 12px; font-size: 0.75rem;">Link</button>
+            <button class="btn-reset" onclick="resetToOriginalId()" style="padding: 6px 12px; font-size: 0.75rem; border-color:#991b1b; color:#991b1b;">Unlink</button>
+        </div>
+
+        <div class="btn-row btn-group-mobile">
+            <button class="btn-cloud" onclick="confirmBackup()" id="btnBackup" disabled>Backup</button>
+            <button class="btn-cloud" onclick="confirmRestore()" id="btnRestore" disabled style="background-color: var(--primary);">Restore</button>
+        </div>
+    </div>
+
+    <!-- DOCUMENTATION -->
     <div class="readme-footer">
         <button class="readme-toggle-btn" onclick="toggleReadme()">📖 Read Documentation</button>
         <div id="readmeContainer"></div>
@@ -870,9 +883,8 @@
         </div>
     </div>
 
-    <!-- Smart Backup Modal -->
     <div id="backupModal" class="modal-overlay">
-        <div class="modal-content" style="max-width: 400px;">
+        <div class="modal-content">
             <h3 style="color:var(--cloud);">Confirm Cloud Backup</h3>
             <p>This will overwrite the cloud with the version from your current local timeline</p>
             <p id="backupInfo" style="text-align: left; background: #fdfbf7; padding: 15px; border-radius: 4px; border: 1px solid #e6e0d4; font-size:0.9rem;">Loading info...</p>
@@ -883,7 +895,6 @@
         </div>
     </div>
 
-    <!-- Restore Modal -->
     <div id="restoreModal" class="modal-overlay">
         <div class="modal-content">
             <h3 style="color:var(--cloud);">Confirm Restore</h3>
@@ -963,7 +974,9 @@
             document.getElementById('syncStatus').innerText = "Personal Cloud Active";
             document.getElementById('userIdDisplay').style.display = "block";
             document.getElementById('userIdText').innerText = activeSyncId;
-            document.getElementById('btnBackup').disabled = false;
+            
+            // Disable backup button if ID is "blank"
+            document.getElementById('btnBackup').disabled = (activeSyncId === 'blank');
             document.getElementById('btnRestore').disabled = false;
         }
 
@@ -1014,6 +1027,8 @@
 
         window.confirmBackup = async () => {
             if (!user || !db) return showToast("Please check setup.");
+            if (activeSyncId === "blank") return; // Extra safety guard
+
             const btn = document.getElementById('btnBackup');
             const originalText = btn.innerText;
             btn.innerText = "Checking...";
@@ -1049,7 +1064,7 @@
                 showToast("Could not verify cloud status.");
             } finally {
                 btn.innerText = originalText;
-                btn.disabled = false;
+                btn.disabled = (activeSyncId === 'blank');
             }
         }
 
@@ -1156,7 +1171,6 @@
             if(data) {
                 try {
                     const parsed = JSON.parse(data);
-                    // Handle migration from old format (array) to new format (object)
                     if (Array.isArray(parsed)) {
                         events = parsed;
                         continuityItems = [];
@@ -1171,7 +1185,19 @@
             }
         }
 
-        // --- CONTINUITY LOGIC ---
+        // --- UI COLLAPSIBLE PANELS ---
+        window.toggleBeatPanel = () => {
+            const content = document.getElementById('beatPanelContent');
+            const icon = document.getElementById('beatPanelIcon');
+            if (content.style.display === 'none') {
+                content.style.display = 'block';
+                icon.innerText = '▲';
+            } else {
+                content.style.display = 'none';
+                icon.innerText = '▼';
+            }
+        }
+
         window.toggleContinuityPanel = () => {
             const content = document.getElementById('continuityContent');
             const icon = document.getElementById('cPanelIcon');
@@ -1184,6 +1210,7 @@
             }
         }
 
+        // --- CONTINUITY LOGIC ---
         window.addContinuityItem = () => {
             const name = document.getElementById('cNameIn').value;
             const icon = document.getElementById('cIconIn').value || '🔹';
@@ -1196,7 +1223,6 @@
                 // Update Existing
                 const idx = continuityItems.findIndex(i => i.id === editingContinuityId);
                 if (idx > -1) {
-                    // Preserve visibility state
                     const oldVisible = continuityItems[idx].visible;
                     continuityItems[idx] = { 
                         id: editingContinuityId, 
@@ -1218,9 +1244,8 @@
             
             saveLocalData();
             renderContinuityList();
-            render(); // Re-render beats to show badges
+            render(); 
             
-            // Clear inputs if not cancelling
             if (!editingContinuityId) {
                 document.getElementById('cNameIn').value = '';
                 document.getElementById('cIconIn').value = '';
@@ -1239,13 +1264,11 @@
             document.getElementById('cStartIn').value = item.start;
             document.getElementById('cEndIn').value = item.end || '';
             
-            // Change UI to Edit Mode
             const btn = document.getElementById('btnCAdd');
-            btn.innerText = "Update Item"; // Text for clarity
+            btn.innerText = "Update Item"; 
             btn.className = "btn-update";
             document.getElementById('btnCCancel').style.display = 'inline-block';
             
-            // Open panel if closed
             const content = document.getElementById('continuityContent');
             if (content.style.display !== 'block') {
                  window.toggleContinuityPanel();
@@ -1278,9 +1301,7 @@
         window.deleteContinuityItem = (id) => {
             if(confirm("Remove this tracking item?")) {
                 continuityItems = continuityItems.filter(i => i.id !== id);
-                // If deleting the item currently being edited, cancel edit
                 if (editingContinuityId === id) window.cancelContinuityEdit();
-                
                 saveLocalData();
                 renderContinuityList();
                 render();
@@ -1290,10 +1311,7 @@
         function renderContinuityList() {
             const container = document.getElementById('continuityListArea');
             container.innerHTML = '';
-            
-            // Sort by Start Date
             const sortedItems = [...continuityItems].sort((a, b) => new Date(a.start) - new Date(b.start));
-
             sortedItems.forEach(item => {
                 const el = document.createElement('div');
                 el.className = `c-item-tag ${!item.visible ? 'inactive' : ''}`;
@@ -1320,7 +1338,7 @@
             });
         }
 
-
+        // --- UTILS ---
         function detectUserNearestZone() {
             const browserTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
             const inputTzSelect = document.getElementById('inputTzSelect');
@@ -1384,12 +1402,16 @@
             document.getElementById('detailIn').value = e.details;
             document.getElementById('remarksIn').value = e.remarks || '';
             detectUserNearestZone();
-            document.getElementById('btnAdd').innerText = "Update Event";
+            document.getElementById('btnAdd').innerText = "Update Beat";
             document.getElementById('btnAdd').className = "btn-update";
             document.getElementById('btnCancel').style.display = "inline-block";
             document.getElementById('btnSaveNew').style.display = "inline-block";
             document.getElementById('detailIn').dispatchEvent(new Event('input'));
             document.getElementById('remarksIn').dispatchEvent(new Event('input'));
+            
+            // Expand beat panel if closed
+            const beatPanel = document.getElementById('beatPanelContent');
+            if (beatPanel.style.display === 'none') window.toggleBeatPanel();
         }
 
         window.cancelEdit = () => {
@@ -1411,18 +1433,14 @@
             msg.style.display = 'none';
 
             events.forEach((evt, i) => {
-                const dateParts = evt.date.split('T');
                 const friendlyDate = getFormattedDate(evt.date);
-                const localTime = dateParts[1] || '00:00';
+                const localTime = evt.date.split('T')[1] || '00:00';
                 const dayName = new Date(evt.date).toLocaleDateString('en-US', { weekday: 'long' });
                 const conv = convertTime(evt.date, currentTz);
                 let detailsHtml = evt.details;
                 if(evt.remarks) { detailsHtml += `<div class="td-remarks">📝 ${evt.remarks}</div>`; }
                 
-                // Continuity Calculation
                 const activeItems = getActiveContinuity(evt.date);
-                
-                // SORT Ensure items displayed on card are sorted by their Start Date
                 activeItems.sort((a, b) => new Date(a.start) - new Date(b.start));
 
                 let continuityHtml = '';
@@ -1432,7 +1450,6 @@
                         continuityHtml += `<span class="c-badge" title="Active: ${ci.name} (Since ${getFormattedDate(ci.start)})">${ci.icon} ${ci.name}</span>`;
                     });
                     continuityHtml += '</div>';
-                    // Append to List View Details
                     detailsHtml += `<div style="margin-top:8px">${continuityHtml}</div>`; 
                 }
 
@@ -1449,7 +1466,7 @@
                     </tr>`;
 
                 vis.innerHTML += `
-                    <div class="h-item ${dragClass}" data-index="${i}" ${dragAttr}>
+                    <div class="h-item ${dragClass}" data-index="${i}" ${dragAttr}">
                         <div class="h-date-wrap">
                             <div class="h-date">${friendlyDate}</div>
                             <div class="h-day">${dayName}</div>
@@ -1510,24 +1527,14 @@
             if (events.length === 0) return showToast("No data to save.");
             let csv = "Date,Chapter,ChapterTitle,SubChapterTitle,Details,Remarks\n";
             events.forEach(e => {
-                const safeTitle = (e.chapterTitle || '').replace(/,/g, '{com}');
-                const safeSub = (e.subChapterTitle || '').replace(/,/g, '{com}');
-                const safeDetails = e.details.replace(/\n/g, '{nl}').replace(/,/g, '{com}');
-                const safeRemarks = (e.remarks || '').replace(/\n/g, '{nl}').replace(/,/g, '{com}');
-                csv += `${e.date},${e.number},${safeTitle},${safeSub},${safeDetails},${safeRemarks}\n`;
+                csv += `${e.date},${e.number},${(e.chapterTitle || '').replace(/,/g, '{com}')},${(e.subChapterTitle || '').replace(/,/g, '{com}')},${e.details.replace(/\n/g, '{nl}').replace(/,/g, '{com}')},${(e.remarks || '').replace(/\n/g, '{nl}').replace(/,/g, '{com}')}\n`;
             });
-            // Append Continuity Data to CSV
             if(continuityItems.length > 0) {
-                 csv += "\n[CONTINUITY_DATA_START]\n";
-                 csv += "ID,Name,Icon,Start,End,Visible\n";
-                 continuityItems.forEach(ci => {
-                     csv += `${ci.id},${ci.name},${ci.icon},${ci.start},${ci.end || ''},${ci.visible}\n`;
-                 });
+                 csv += "\n[CONTINUITY_DATA_START]\nID,Name,Icon,Start,End,Visible\n";
+                 continuityItems.forEach(ci => { csv += `${ci.id},${ci.name},${ci.icon},${ci.start},${ci.end || ''},${ci.visible}\n`; });
                  csv += "[CONTINUITY_DATA_END]\n";
             }
-
-            const blob = new Blob([csv], { type: 'text/csv' });
-            const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'storylines.csv'; a.click();
+            const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' })); a.download = 'storylines.csv'; a.click();
         }
 
         window.uploadCSV = (input) => {
@@ -1535,11 +1542,9 @@
             const reader = new FileReader();
             reader.onload = (e) => {
                 const text = e.target.result;
-                // Split for continuity data
                 const continuitySplit = text.split('[CONTINUITY_DATA_START]');
                 const beatsData = continuitySplit[0].trim();
                 const continuityData = continuitySplit[1] ? continuitySplit[1].split('[CONTINUITY_DATA_END]')[0].trim() : null;
-
                 const lines = beatsData.split('\n');
                 let newEvents = [];
                 for(let i=1; i<lines.length; i++) {
@@ -1555,27 +1560,18 @@
                         if(d && !isNaN(n)) newEvents.push({ date: d, number: n, chapterTitle: title, subChapterTitle: sub, details: det, remarks: rem });
                     }
                 }
-
-                // Process Continuity
                 let newContinuity = [];
                 if(continuityData) {
                     const cLines = continuityData.split('\n');
                     for(let i=1; i<cLines.length; i++) {
                         const c = cLines[i].trim().split(',');
-                        if(c.length >= 4) {
-                             newContinuity.push({
-                                 id: c[0], name: c[1], icon: c[2], start: c[3], end: c[4] || '', visible: c[5] === 'true'
-                             });
-                        }
+                        if(c.length >= 4) newContinuity.push({ id: c[0], name: c[1], icon: c[2], start: c[3], end: c[4] || '', visible: c[5] === 'true' });
                     }
                 }
-
                 if(newEvents.length > 0) { 
                     events = newEvents; 
                     if(newContinuity.length > 0) continuityItems = newContinuity;
-                    saveLocalData(); 
-                    renderContinuityList();
-                    render(); 
+                    saveLocalData(); renderContinuityList(); render(); 
                     showToast("Data imported successfully"); 
                 }
             };
@@ -1583,52 +1579,26 @@
         }
 
         function setupDragAndDrop() {
-            // Helper for attaching events
-            const attachEvents = (elements) => {
-                elements.forEach(el => {
-                    el.ondragstart = (e) => { 
-                        e.dataTransfer.setData('idx', el.dataset.index); 
-                        el.classList.add('dragging'); 
-                    };
-                    el.ondragover = (e) => { 
-                        e.preventDefault(); 
-                        const target = e.currentTarget; 
-                        target.classList.add('drag-over'); 
-                    };
-                    el.ondragleave = (e) => {
-                         e.currentTarget.classList.remove('drag-over');
-                    };
-                    el.ondrop = (e) => {
-                        e.preventDefault();
-                        e.currentTarget.classList.remove('drag-over');
-                        const from = e.dataTransfer.getData('idx');
-                        const to = el.dataset.index;
-                        
-                        if (from === to) return;
-                        
-                        const draggedItem = events[from];
-                        const targetItem = events[to];
-                        
-                        if (Math.floor(draggedItem.number) !== Math.floor(targetItem.number)) {
-                            showToast("Cannot move between chapters.");
-                            return;
-                        }
-                        
-                        const item = events.splice(from, 1)[0];
-                        events.splice(to, 0, item);
-                        
-                        const intPart = Math.floor(item.number);
-                        const group = events.filter(ev => Math.floor(ev.number) === intPart);
-                        group.forEach((ev, k) => ev.number = intPart + (group.length > 9 ? (k+1)*0.01 : (k+1)*0.1));
-                        
-                        saveLocalData(); 
-                        render();
-                    };
-                });
-            };
-
-            attachEvents(document.querySelectorAll('tr.draggable'));
-            attachEvents(document.querySelectorAll('.h-item.draggable'));
+            if (currentSortMethod !== 'number') return;
+            const draggables = document.querySelectorAll('.draggable');
+            draggables.forEach(el => {
+                el.ondragstart = (e) => { e.dataTransfer.setData('idx', el.dataset.index); el.classList.add('dragging'); };
+                el.ondragover = (e) => { e.preventDefault(); e.currentTarget.classList.add('drag-over'); };
+                el.ondragleave = (e) => { e.currentTarget.classList.remove('drag-over'); };
+                el.ondrop = (e) => {
+                    e.preventDefault(); e.currentTarget.classList.remove('drag-over');
+                    const from = parseInt(e.dataTransfer.getData('idx')), to = parseInt(el.dataset.index);
+                    if (isNaN(from) || from === to) return;
+                    if (Math.floor(events[from].number) !== Math.floor(events[to].number)) return showToast("Cannot move between chapters.");
+                    const item = events.splice(from, 1)[0];
+                    events.splice(to, 0, item);
+                    const intPart = Math.floor(item.number), groupIndices = [];
+                    events.forEach((ev, idx) => { if(Math.floor(ev.number) === intPart) groupIndices.push(idx); });
+                    const step = groupIndices.length > 9 ? 0.01 : 0.1;
+                    groupIndices.forEach((arrayIdx, k) => { events[arrayIdx].number = parseFloat((intPart + (k + 1) * step).toFixed(2)); });
+                    saveLocalData(); render();
+                };
+            });
         }
 
         const README_URL = 'https://thordnel.github.io/nonlineartimeline/README.md';
