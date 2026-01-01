@@ -610,7 +610,8 @@
                 <button class="btn-print" onclick="window.print()">Print / Save PDF</button>
             </div>
             <input type="file" id="fileIn" accept=".csv" onchange="uploadCSV(this)">
-            <button class="btn-reset" onclick="confirmReset()" class="btn-reset">Reset</button>
+            <!-- Main Reset button disabled for the mean time -->
+            <button id="btnMainReset" class="btn-reset" onclick="confirmReset()" disabled>Reset</button>
         </div>
     </div>
 
@@ -632,6 +633,12 @@
             <button class="btn-cloud" onclick="confirmRestore()" id="btnRestore" disabled style="background-color: var(--primary);">Restore</button>
         </div>
     </div>
+
+    <!-- MODALS -->
+    <div id="deleteModal" class="modal-overlay"><div class="modal-content"><h3>Delete Event?</h3><div class="btn-row" style="justify-content: center;"><button class="btn-reset" onclick="executeDelete()">Delete</button><button class="btn-dl" onclick="closeModal()">Cancel</button></div></div></div>
+    <div id="resetModal" class="modal-overlay"><div class="modal-content"><h3>Reset All?</h3><div class="btn-row" style="justify-content: center;"><button class="btn-reset" onclick="executeReset()">Clear All</button><button class="btn-dl" onclick="closeModal()">Cancel</button></div></div></div>
+    <div id="backupModal" class="modal-overlay"><div class="modal-content"><h3>Confirm Cloud Backup</h3><p id="backupInfo" style="text-align: left; background: #fdfbf7; padding: 15px; border-radius: 4px; border: 1px solid #e6e0d4; font-size:0.9rem;">Loading info...</p><div class="btn-row" style="justify-content: center;"><button class="btn-cloud" onclick="executeBackup()">Overwrite Cloud</button><button class="btn-dl" onclick="closeModal()">Cancel</button></div></div></div>
+    <div id="restoreModal" class="modal-overlay"><div class="modal-content"><h3>Confirm Restore</h3><p id="restoreInfo" style="text-align: left; background: #fdfbf7; padding: 15px; border-radius: 4px; border: 1px solid #e6e0d4; font-size:0.9rem; margin-top: 15px;">Loading cloud info...</p><div class="btn-row" style="justify-content: center;"><button class="btn-cloud" style="background-color: var(--primary);" onclick="executeRestore()">Yes, Restore</button><button class="btn-dl" onclick="closeModal()">Cancel</button></div></div></div>
 
     <div id="toast"></div>
 
@@ -681,7 +688,8 @@
             const btn = document.getElementById('btnBackup'), originalText = btn.innerText;
             btn.innerText = "Checking..."; btn.disabled = true;
             try {
-                const docRef = doc(db, 'artifacts', appId, 'users', activeSyncId, 'data', 'main_record');
+                // Moving to public path to allow linking by custom ID reliably
+                const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'user_backups', activeSyncId);
                 const docSnap = await getDoc(docRef);
                 let infoHtml = "No existing backup found. <br>This will create a new cloud record.";
                 if (docSnap.exists()) {
@@ -692,13 +700,13 @@
                     }
                 }
                 document.getElementById('backupInfo').innerHTML = infoHtml; document.getElementById('backupModal').style.display = 'flex';
-            } catch(e) { showToast("Cloud verify failed. Check ID."); } finally { btn.innerText = originalText; btn.disabled = false; }
+            } catch(e) { showToast("Cloud verify failed. Permission denied."); } finally { btn.innerText = originalText; btn.disabled = false; }
         }
 
         window.executeBackup = async () => {
             window.closeModal();
             try {
-                const docRef = doc(db, 'artifacts', appId, 'users', activeSyncId, 'data', 'main_record');
+                const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'user_backups', activeSyncId);
                 await setDoc(docRef, { beats: events, continuity: continuityItems, lastUpdated: Date.now(), lastDevice: user.uid });
                 showToast("✅ Successfully backed up to Cloud");
             } catch (err) { showToast("Backup failed."); }
@@ -709,7 +717,7 @@
             const btn = document.getElementById('btnRestore'), originalText = btn.innerText;
             btn.innerText = "Checking..."; btn.disabled = true;
             try {
-                const docRef = doc(db, 'artifacts', appId, 'users', activeSyncId, 'data', 'main_record');
+                const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'user_backups', activeSyncId);
                 const docSnap = await getDoc(docRef);
                 let infoHtml = "No existing cloud data found.";
                 if (docSnap.exists()) {
@@ -720,13 +728,13 @@
                     }
                 }
                 document.getElementById('restoreInfo').innerHTML = infoHtml; document.getElementById('restoreModal').style.display = 'flex';
-            } catch(e) { showToast("Cloud verify failed. Check ID."); } finally { btn.innerText = originalText; btn.disabled = false; }
+            } catch(e) { showToast("Cloud verify failed. Permission denied."); } finally { btn.innerText = originalText; btn.disabled = false; }
         }
 
         window.executeRestore = async () => {
             window.closeModal();
             try {
-                const docRef = doc(db, 'artifacts', appId, 'users', activeSyncId, 'data', 'main_record');
+                const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'user_backups', activeSyncId);
                 const docSnap = await getDoc(docRef);
                 if (docSnap.exists()) { 
                     const data = docSnap.data();
@@ -966,11 +974,9 @@
             
             const isFilterOn = document.getElementById('filterBeatsToggle').checked;
             
-            // Filtering logic using AND (Intersection) for multiple tracking items
             const displayEvents = events.map((e, idx) => ({ ...e, originalIndex: idx })).filter(evt => {
                 if (!isFilterOn || activeFilterIds.length === 0) return true;
                 const bTime = new Date(evt.date).getTime();
-                // Beat must fall within the range of ALL selected items
                 return activeFilterIds.every(fid => {
                     const item = continuityItems.find(i => i.id === fid);
                     if (!item) return true;
@@ -1125,7 +1131,8 @@
             }); 
         }
 
-        window.confirmReset = () => { if(confirm("Are you sure you want to reset everything?")) { events = []; continuityItems = []; saveLocalData(); render(); } }
+        window.confirmReset = () => { document.getElementById('resetModal').style.display = 'flex'; }
+        window.executeReset = () => { events = []; continuityItems = []; saveLocalData(); render(); closeModal(); }
     </script>
 </body>
 </html>
