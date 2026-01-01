@@ -60,21 +60,42 @@
             color: var(--text-main);
         }
 
-        /* --- Header Area --- */
+        /* --- Header Branding --- */
         .header-branding {
             background-image: url('parchtitle.png');
             background-size: 100% 100%;
             background-repeat: no-repeat;
             background-position: center;
-            width: 330px; /* 1/3 of 1000px max-width */
+            width: 360px; 
             margin: 0 auto 30px auto;
             padding: 25px 15px;
             text-align: center;
-            min-height: 110px;
+            min-height: 120px;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
+        }
+
+        .main-title {
+            color: var(--primary);
+            font-family: var(--font-main);
+            font-weight: 900;
+            letter-spacing: 2px;
+            margin: 0;
+            font-size: 2.2rem; 
+            line-height: 1.1;
+        }
+
+        .main-subtitle {
+            color: var(--text-muted);
+            margin-top: 4px;
+            font-weight: normal;
+            font-size: 0.75rem;
+            font-family: var(--font-ui);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            line-height: 1.2;
         }
 
         /* --- UI Components --- */
@@ -120,7 +141,7 @@
             color: var(--text-main);
             width: 100%;
             transition: border-color 0.2s;
-            font-weight: 300; /* Merriweather Light */
+            font-weight: 300;
         }
         input:focus, textarea:focus, select:focus {
             outline: none;
@@ -128,12 +149,11 @@
             box-shadow: 0 0 0 2px rgba(140, 107, 93, 0.1);
         }
 
-        /* Auto-resize logic handled by JS, min-height increased */
         textarea { 
             resize: vertical; 
             min-height: 150px; 
             line-height: 1.5; 
-            overflow: hidden; /* Hide scrollbar when auto-expanding */
+            overflow: hidden; 
         }
 
         .btn-row { margin-top: 20px; display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
@@ -160,7 +180,6 @@
         button:active { transform: translateY(0); }
         button:disabled { opacity: 0.3; cursor: not-allowed; transform: none !important; box-shadow: none; filter: grayscale(1); }
 
-        /* Button Variants */
         .btn-add { background-color: var(--success); }
         .btn-update { background-color: var(--warning); color: #3e2e1e; }
         .btn-cancel { background-color: var(--secondary); display: none; }
@@ -215,7 +234,6 @@
             box-shadow: var(--shadow-card);
         }
         
-        /* Ensure buttons inside cloud banner are vertically aligned */
         .cloud-banner .btn-row {
             margin-top: 0;
         }
@@ -244,11 +262,9 @@
             box-shadow: var(--shadow-card);
             position: relative;
             border: 1px solid #e6e0d4;
-            /* Clipping at container level ensures the sliver artifact is gone without breaking internal lines */
             clip-path: inset(0 0 0 0);
         }
 
-        /* New Header Label Style */
         .view-header-label {
             text-align: center;
             font-family: var(--font-ui);
@@ -289,13 +305,12 @@
             user-select: none;
         }
         .panel-content {
-            display: block; /* Beat space starts open usually, logic handles visibility */
+            display: block; 
             margin-top: 20px;
             border-top: 1px dashed #d4cdc3;
             padding-top: 20px;
         }
 
-        /* --- Continuity Space Specifics --- */
         .continuity-list {
             display: flex;
             flex-wrap: wrap;
@@ -316,7 +331,6 @@
         }
         .c-item-tag.inactive { opacity: 0.5; filter: grayscale(100%); }
         
-        /* Badge on Cards */
         .c-badge {
             display: inline-flex;
             align-items: center;
@@ -339,7 +353,6 @@
             flex-wrap: wrap;
         }
 
-        /* --- TABLE VIEW --- */
         table { width: 100%; border-collapse: collapse; display: none; table-layout: fixed; }
         table.show { display: table; }
         
@@ -364,8 +377,8 @@
         
         th:nth-child(1) { width: 40px; } 
         th:nth-child(2) { width: 180px; } 
-        th:nth-child(3) { width: 160px; } /* Chapter */
-        th:nth-child(5) { width: 100px; } /* Action */
+        th:nth-child(3) { width: 160px; } 
+        th:nth-child(5) { width: 100px; } 
         
         td:nth-child(4) { 
             font-size: 0.95rem; 
@@ -375,7 +388,6 @@
             word-wrap: break-word;
         }
 
-        /* Remarks in Table */
         .td-remarks {
             font-size: 0.85rem;
             color: var(--text-muted);
@@ -396,7 +408,6 @@
         .action-btn:hover { color: var(--primary); }
         .del-btn:hover { color: var(--danger); }
 
-        /* --- 2. HORIZONTAL TIMELINE VIEW (Top Scrollbar) --- */
         #visualArea { 
             display: none; 
             overflow-x: auto;
@@ -405,7 +416,6 @@
             scroll-behavior: smooth;
             transform: rotateX(180deg); 
             align-items: flex-end; 
-            
             scrollbar-color: var(--secondary) transparent;
             scrollbar-width: thin;
         }
@@ -420,14 +430,12 @@
             padding: 0; 
             vertical-align: top;
             transform: rotateX(180deg); 
-            /* Ensure items allow the line to reach out to the next dot */
             overflow: visible; 
         }
 
-        /* Dot Container logic to force perfect alignment */
         .h-dot-container {
             width: 100%;
-            height: 30px; /* Specific height area for line/dot */
+            height: 30px; 
             position: relative;
             display: flex;
             align-items: center;
@@ -440,7 +448,7 @@
         .h-line {
             position: absolute;
             top: 50%;
-            left: 50%; /* Line starts exactly at dot center */
+            left: 50%; 
             width: 100%; 
             height: 2px;
             background: #d4cdc3; 
@@ -545,7 +553,6 @@
         .card-del { position: absolute; top: 5px; right: 8px; font-size: 1.1rem; color: var(--secondary); cursor: pointer; opacity: 0.5; }
         .card-del:hover { color: var(--danger); opacity: 1; }
 
-        /* --- MODAL --- */
         .modal-overlay {
             display: none;
             position: fixed;
@@ -575,7 +582,6 @@
         }
         #toast.show { visibility: visible; opacity: 1; bottom: 50px; }
 
-        /* --- Collapsible README Footer --- */
         .readme-footer {
             margin-top: 50px;
             border-top: 1px solid #e6e0d4;
@@ -614,90 +620,34 @@
         #readmeContainer h1, #readmeContainer h2 { color: var(--primary); border-bottom: 1px solid #f0ebe4; padding-bottom: 10px; margin-top: 30px; }
         #readmeContainer code { background: #f4f1ea; padding: 2px 6px; border-radius: 3px; font-family: monospace; color: var(--primary); }
 
-        @media print {
-            .panel, .view-toggles, #toast, .drag-hint, .btn-view, .tz-picker-compact, .cloud-banner, .readme-footer { display: none !important; }
-            body { background: white; }
-            table { display: table !important; width: 100%; }
-            th:nth-child(1), td:nth-child(1), th:nth-child(5), td:nth-child(5) { display: none; }
-        }
-
-        /* --- MOBILE OPTIMIZATIONS --- */
         @media (max-width: 768px) {
             body { padding: 10px; padding-bottom: 100px; }
-            
-            /* Edge-to-Edge Inputs */
             .panel { padding: 15px; border-radius: 0; margin-left: -10px; margin-right: -10px; border-left: none; border-right: none; }
             .controls { grid-template-columns: 1fr; gap: 15px; }
-            
-            /* Reset grid spans for mobile stack */
             .col-span-2, .col-span-full { grid-column: auto; }
-            
-            /* Full width buttons */
             .btn-row { gap: 10px; justify-content: stretch; }
             .btn-row > * { flex-grow: 1; }
-            
-            /* Cloud Banner Stack - touching edges */
             .cloud-banner { flex-direction: column; text-align: center; gap: 15px; border-radius: 0; margin-left: -10px; margin-right: -10px; border-left: none; border-right: none; padding: 15px 10px; }
-            
-            .id-input-group { 
-                width: 100%; 
-                display: flex;
-                flex-direction: row; 
-                gap: 8px;
-            }
+            .id-input-group { width: 100%; display: flex; flex-direction: row; gap: 8px; }
             .id-input-group .id-input { flex-grow: 1; width: auto !important; }
-            
-            /* Backup/Restore buttons row touching edge */
-            .cloud-banner .btn-row { 
-                width: 100%; 
-                display: flex; 
-                flex-direction: row; 
-                gap: 10px;
-                margin: 0;
-            }
-            .cloud-banner .btn-row button { 
-                flex: 1; 
-                width: auto; 
-            }
-
-            /* Adjust Visual Area padding */
+            .cloud-banner .btn-row { width: 100%; display: flex; flex-direction: row; gap: 10px; margin: 0; }
+            .cloud-banner .btn-row button { flex: 1; width: auto; }
             #visualArea { padding: 20px 0; }
-            
             .view-container { padding: 15px; border-radius: 0; margin-left: -10px; margin-right: -10px; border-left: none; border-right: none;}
-            
-            /* Hide non-essential table columns on mobile */
             th:nth-child(2), td:nth-child(2) { font-size: 0.8rem; }
             .tz-picker-compact { width: 100%; }
-
-            /* Side-by-side buttons for Sort & View */
-            .btn-group-mobile {
-                display: flex;
-                gap: 10px;
-                width: 100%;
-            }
-            .btn-group-mobile > button {
-                flex: 1;
-                width: auto;
-            }
-            
-            /* Continuity Grids - Mobile */
-            .c-row-70-30, .c-row-50-50 {
-                grid-template-columns: 1fr;
-                gap: 15px;
-            }
-
-            /* Branding mobile */
-            .header-branding {
-                width: 90%;
-            }
+            .btn-group-mobile { display: flex; gap: 10px; width: 100%; }
+            .btn-group-mobile > button { flex: 1; width: auto; }
+            .c-row-70-30, .c-row-50-50 { grid-template-columns: 1fr; gap: 15px; }
+            .header-branding { width: 90%; }
         }
     </style>
 </head>
 <body>
 
     <div class="header-branding">
-        <h2 class="main-title" style="font-size: 1.5rem; color:var(--primary); font-family:var(--font-main); font-weight:400; letter-spacing:2px; margin-bottom:1px; margin-top:3px;">STORYLINES</h2>
-        <h4 class="main-subtitle" style="color:var(--text-muted); margin-top: 0; font-weight: normal; font-size: 0.7rem; font-family:var(--font-ui); text-transform: uppercase; letter-spacing: 1px;">Non-Linear Timeline Manager</h4>
+        <h2 class="main-title">STORYLINES</h2>
+        <h4 class="main-subtitle">Non-Linear Timeline Manager</h4>
     </div>
 
     <!-- BEAT SPACE (Collapsible) -->
@@ -710,7 +660,6 @@
         
         <div id="beatPanelContent" class="panel-content">
             <div class="controls">
-                <!-- Row 1 -->
                 <div class="input-group">
                     <label>Date & Time</label>
                     <input type="datetime-local" id="dateIn">
@@ -824,26 +773,16 @@
                 <button id="btnCCancel" class="btn-cancel" onclick="cancelContinuityEdit()">Cancel</button>
             </div>
 
-            <div class="continuity-list" id="continuityListArea">
-                <!-- Items injected here -->
-            </div>
+            <div class="continuity-list" id="continuityListArea"></div>
         </div>
     </div>
 
-    <div class="view-container" style="clip-path: inset(0 0 0 0);">
-        <!-- Header Label -->
+    <div class="view-container">
         <div id="viewHeaderLabel" class="view-header-label">UNSORTED</div>
-        
         <div id="visualArea" class="show"></div>
         <table id="tableArea">
             <thead>
-                <tr>
-                    <th></th>
-                    <th>Date / Time</th>
-                    <th>Chapter</th>
-                    <th>Details</th>
-                    <th>Action</th>
-                </tr>
+                <tr><th></th><th>Date / Time</th><th>Chapter</th><th>Details</th><th>Action</th></tr>
             </thead>
             <tbody id="tableBody"></tbody>
         </table>
@@ -884,770 +823,212 @@
         </div>
     </div>
 
-    <!-- Collapsible Documentation Footer -->
     <div class="readme-footer">
         <button class="readme-toggle-btn" onclick="toggleReadme()">📖 Read Documentation</button>
         <div id="readmeContainer"></div>
     </div>
 
     <!-- Modals -->
-    <div id="deleteModal" class="modal-overlay">
-        <div class="modal-content">
-            <h3>Delete Event?</h3>
-            <div class="btn-row" style="justify-content: center;">
-                <button class="btn-reset" onclick="executeDelete()">Delete</button>
-                <button class="btn-dl" onclick="closeModal()">Cancel</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="resetModal" class="modal-overlay">
-        <div class="modal-content">
-            <h3>Reset All?</h3>
-            <div class="btn-row" style="justify-content: center;">
-                <button class="btn-reset" onclick="executeReset()">Clear All</button>
-                <button class="btn-dl" onclick="closeModal()">Cancel</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Smart Backup Modal -->
-    <div id="backupModal" class="modal-overlay">
-        <div class="modal-content">
-            <h3 style="color:var(--cloud);">Confirm Cloud Backup</h3>
-            <p>This will overwrite the cloud with the version from your current local timeline</p>
-            <p id="backupInfo" style="text-align: left; background: #fdfbf7; padding: 15px; border-radius: 4px; border: 1px solid #e6e0d4; font-size:0.9rem;">Loading info...</p>
-            <div class="btn-row" style="justify-content: center;">
-                <button class="btn-cloud" onclick="executeBackup()">Overwrite Cloud</button>
-                <button class="btn-dl" onclick="closeModal()">Cancel</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Restore Modal -->
-    <div id="restoreModal" class="modal-overlay">
-        <div class="modal-content">
-            <h3 style="color:var(--cloud);">Confirm Restore</h3>
-            <p>This will overwrite your current local timeline with the version from the cloud.</p>
-            <p id="restoreInfo" style="text-align: left; background: #fdfbf7; padding: 15px; border-radius: 4px; border: 1px solid #e6e0d4; font-size:0.9rem; margin-top: 15px;">Loading cloud info...</p>
-            <div class="btn-row" style="justify-content: center;">
-                <button class="btn-cloud" style="background-color: var(--primary);" onclick="executeRestore()">Yes, Restore</button>
-                <button class="btn-dl" onclick="closeModal()">Cancel</button>
-            </div>
-        </div>
-    </div>
+    <div id="deleteModal" class="modal-overlay"><div class="modal-content"><h3>Delete Event?</h3><div class="btn-row" style="justify-content: center;"><button class="btn-reset" onclick="executeDelete()">Delete</button><button class="btn-dl" onclick="closeModal()">Cancel</button></div></div></div>
+    <div id="resetModal" class="modal-overlay"><div class="modal-content"><h3>Reset All?</h3><div class="btn-row" style="justify-content: center;"><button class="btn-reset" onclick="executeReset()">Clear All</button><button class="btn-dl" onclick="closeModal()">Cancel</button></div></div></div>
+    <div id="backupModal" class="modal-overlay"><div class="modal-content"><h3>Confirm Cloud Backup</h3><p>This will overwrite the cloud with the version from your current local timeline</p><p id="backupInfo" style="text-align: left; background: #fdfbf7; padding: 15px; border-radius: 4px; border: 1px solid #e6e0d4; font-size:0.9rem;">Loading info...</p><div class="btn-row" style="justify-content: center;"><button class="btn-cloud" onclick="executeBackup()">Overwrite Cloud</button><button class="btn-dl" onclick="closeModal()">Cancel</button></div></div></div>
+    <div id="restoreModal" class="modal-overlay"><div class="modal-content"><h3>Confirm Restore</h3><p>This will overwrite your current local timeline with the version from the cloud.</p><p id="restoreInfo" style="text-align: left; background: #fdfbf7; padding: 15px; border-radius: 4px; border: 1px solid #e6e0d4; font-size:0.9rem; margin-top: 15px;">Loading cloud info...</p><div class="btn-row" style="justify-content: center;"><button class="btn-cloud" style="background-color: var(--primary);" onclick="executeRestore()">Yes, Restore</button><button class="btn-dl" onclick="closeModal()">Cancel</button></div></div></div>
 
     <div id="toast"></div>
 
     <script type="module">
+        const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js';
         import { getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js';
         import { getFirestore, doc, setDoc, getDoc } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js';
 
-        // --- FIREBASE CONFIGURATION ---
         let firebaseConfig = null;
-        try {
-            if (typeof __firebase_config !== 'undefined') {
-                firebaseConfig = JSON.parse(__firebase_config);
-            }
-        } catch (e) {}
-
-        if (!firebaseConfig) {
-            firebaseConfig = {
-                apiKey: "AIzaSyBb7WRsC6G_tUEzbA5W22m1zmYeQFqYXL4",
-                authDomain: "storylines-2c573.firebaseapp.com",
-                projectId: "storylines-2c573",
-                storageBucket: "storylines-2c573.firebasestorage.app",
-                messagingSenderId: "1001705274556",
-                appId: "1:1001705274556:web:29b134ef9dfa57f55224b9"
-            };
-        }
+        try { if (typeof __firebase_config !== 'undefined') { firebaseConfig = JSON.parse(__firebase_config); } } catch (e) {}
+        if (!firebaseConfig) { firebaseConfig = { apiKey: "AIzaSyBb7WRsC6G_tUEzbA5W22m1zmYeQFqYXL4", authDomain: "storylines-2c573.firebaseapp.com", projectId: "storylines-2c573", storageBucket: "storylines-2c573.firebasestorage.app", messagingSenderId: "1001705274556", appId: "1:1001705274556:web:29b134ef9dfa57f55224b9" }; }
 
         const appId = 'storylines-public';
-        
-        let user = null;
-        let db = null;
-        let auth = null;
+        let user = null, db = null, auth = null;
         let activeSyncId = localStorage.getItem('storylines_active_id') || null;
 
         const initFirebase = async () => {
-            if (!firebaseConfig || !firebaseConfig.apiKey) {
-                document.getElementById('syncStatus').innerText = "Setup Required";
-                return;
-            }
-
+            if (!firebaseConfig || !firebaseConfig.apiKey) { document.getElementById('syncStatus').innerText = "Setup Required"; return; }
             try {
                 const app = initializeApp(firebaseConfig);
                 auth = getAuth(app);
                 db = getFirestore(app);
-
-                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                    await signInWithCustomToken(auth, __initial_auth_token);
-                } else {
-                    await signInAnonymously(auth);
-                }
-
-                onAuthStateChanged(auth, (u) => {
-                    user = u;
-                    if (user) {
-                        activeSyncId = activeSyncId || user.uid;
-                        updateCloudUI();
-                    }
-                });
-            } catch (err) {
-                document.getElementById('syncStatus').innerText = "Connection Failed";
-                console.error("Firebase Error:", err);
-            }
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) { await signInWithCustomToken(auth, __initial_auth_token); } else { await signInAnonymously(auth); }
+                onAuthStateChanged(auth, (u) => { user = u; if (user) { activeSyncId = activeSyncId || user.uid; updateCloudUI(); } });
+            } catch (err) { document.getElementById('syncStatus').innerText = "Connection Failed"; }
         };
 
         function updateCloudUI() {
             document.getElementById('syncStatus').innerText = "Personal Cloud Active";
             document.getElementById('userIdDisplay').style.display = "block";
             document.getElementById('userIdText').innerText = activeSyncId;
-            
-            // Disable backup button if ID is "blank"
-            document.getElementById('btnBackup').disabled = (activeSyncId === 'blank');
+            const isBlank = activeSyncId === 'blank';
+            document.getElementById('btnBackup').disabled = isBlank;
             document.getElementById('btnRestore').disabled = false;
         }
 
-        window.copyId = () => {
-            const val = activeSyncId;
-            const el = document.createElement('textarea');
-            el.value = val;
-            document.body.appendChild(el);
-            el.select();
-            document.execCommand('copy');
-            document.body.removeChild(el);
-            showToast("ID Copied! Use this to link your other devices.");
-        }
-
-        window.linkExistingId = () => {
-            const id = document.getElementById('manualIdIn').value.trim();
-            if(!id) return showToast("Enter a valid ID");
-            activeSyncId = id;
-            localStorage.setItem('storylines_active_id', id);
-            updateCloudUI();
-            showToast("Device Linked! You can now Restore from this ID.");
-        }
-
-        window.resetToOriginalId = () => {
-            localStorage.removeItem('storylines_active_id');
-            if (user) {
-                activeSyncId = user.uid;
-                updateCloudUI();
-                showToast("Unlinked: Back to Original Device ID");
-                document.getElementById('manualIdIn').value = '';
-            }
-        }
-
-        function timeAgo(date) {
-            const seconds = Math.floor((new Date() - date) / 1000);
-            let interval = seconds / 31536000;
-            if (interval > 1) return Math.floor(interval) + " years ago";
-            interval = seconds / 2592000;
-            if (interval > 1) return Math.floor(interval) + " months ago";
-            interval = seconds / 86400;
-            if (interval > 1) return Math.floor(interval) + " days ago";
-            interval = seconds / 3600;
-            if (interval > 1) return Math.floor(interval) + " hours ago";
-            interval = seconds / 60;
-            if (interval > 1) return Math.floor(interval) + " minutes ago";
-            return Math.floor(seconds) + " seconds ago";
-        }
+        window.copyId = () => { const val = activeSyncId; const el = document.createElement('textarea'); el.value = val; document.body.appendChild(el); el.select(); document.execCommand('copy'); document.body.removeChild(el); showToast("ID Copied! Use this to link your other devices."); }
+        window.linkExistingId = () => { const id = document.getElementById('manualIdIn').value.trim(); if(!id) return showToast("Enter a valid ID"); activeSyncId = id; localStorage.setItem('storylines_active_id', id); updateCloudUI(); showToast("Device Linked! You can now Restore from this ID."); }
+        window.resetToOriginalId = () => { localStorage.removeItem('storylines_active_id'); if (user) { activeSyncId = user.uid; updateCloudUI(); showToast("Unlinked: Back to Original Device ID"); document.getElementById('manualIdIn').value = ''; } }
+        function timeAgo(date) { const seconds = Math.floor((new Date() - date) / 1000); let interval = seconds / 31536000; if (interval > 1) return Math.floor(interval) + " years ago"; interval = seconds / 2592000; if (interval > 1) return Math.floor(interval) + " months ago"; interval = seconds / 86400; if (interval > 1) return Math.floor(interval) + " days ago"; interval = seconds / 3600; if (interval > 1) return Math.floor(interval) + " hours ago"; interval = seconds / 60; if (interval > 1) return Math.floor(interval) + " minutes ago"; return Math.floor(seconds) + " seconds ago"; }
 
         window.confirmBackup = async () => {
-            if (!user || !db) return showToast("Please check setup.");
-            if (activeSyncId === "blank") return; // Safety guard
-
-            const btn = document.getElementById('btnBackup');
-            const originalText = btn.innerText;
-            btn.innerText = "Checking...";
-            btn.disabled = true;
-
+            if (!user || !db || activeSyncId === "blank") return showToast(activeSyncId === "blank" ? "ID 'blank' is protected." : "Please check setup.");
+            const btn = document.getElementById('btnBackup'), originalText = btn.innerText;
+            btn.innerText = "Checking..."; btn.disabled = true;
             try {
-                const docRef = doc(db, 'artifacts', appId, 'users', activeSyncId, 'data', 'main_record');
-                const docSnap = await getDoc(docRef);
-                
+                const docRef = doc(db, 'artifacts', appId, 'users', activeSyncId, 'data', 'main_record'), docSnap = await getDoc(docRef);
                 let infoHtml = "No existing backup found. <br>This will create a new cloud record.";
-                
                 if (docSnap.exists()) {
                     const data = docSnap.data();
                     if (data.lastUpdated) {
-                        const dateObj = new Date(data.lastUpdated);
-                        const dateStr = dateObj.toLocaleString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true });
-                        const rel = timeAgo(dateObj);
-                        const deviceStr = data.lastDevice ? data.lastDevice.substring(0, 6) + "..." : "Unknown";
-                        
-                        infoHtml = `
-                            <strong>Last Backup:</strong> ${dateStr} <br>
-                            <span style="color:var(--secondary);">(${rel})</span><br><br>
-                            <strong>By Device ID:</strong> <span style="font-family:monospace; background:#eee; padding:2px 4px; border-radius:3px;">${deviceStr}</span>
-                        `;
+                        const dO = new Date(data.lastUpdated), rel = timeAgo(dO), deviceStr = data.lastDevice ? data.lastDevice.substring(0, 6) + "..." : "Unknown";
+                        infoHtml = `<strong>Last Backup:</strong> ${dO.toLocaleString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true })} <br><span style="color:var(--secondary);">(${rel})</span><br><br><strong>By Device ID:</strong> <span style="font-family:monospace; background:#eee; padding:2px 4px; border-radius:3px;">${deviceStr}</span>`;
                     }
                 }
-                
-                document.getElementById('backupInfo').innerHTML = infoHtml;
-                document.getElementById('backupModal').style.display = 'flex';
-                
-            } catch(e) {
-                console.error(e);
-                showToast("Could not verify cloud status.");
-            } finally {
-                btn.innerText = originalText;
-                btn.disabled = (activeSyncId === 'blank');
-            }
+                document.getElementById('backupInfo').innerHTML = infoHtml; document.getElementById('backupModal').style.display = 'flex';
+            } catch(e) { showToast("Could not verify cloud status."); } finally { btn.innerText = originalText; btn.disabled = (activeSyncId === 'blank'); }
         }
 
         window.executeBackup = async () => {
             window.closeModal();
             try {
                 const docRef = doc(db, 'artifacts', appId, 'users', activeSyncId, 'data', 'main_record');
-                await setDoc(docRef, { 
-                    beats: events, 
-                    continuity: continuityItems, // Save continuity items
-                    lastUpdated: Date.now(),
-                    lastDevice: user.uid 
-                });
+                await setDoc(docRef, { beats: events, continuity: continuityItems, lastUpdated: Date.now(), lastDevice: user.uid });
                 showToast("✅ Successfully backed up to Cloud");
-            } catch (err) { 
-                console.error("Sync Error:", err);
-                if (err.code === 'permission-denied') {
-                    alert("Backup Failed: Permission Denied. Check Rules.");
-                } else {
-                    showToast("Backup failed. Check connectivity."); 
-                }
-            }
+            } catch (err) { showToast("Backup failed."); }
         };
 
         window.confirmRestore = async () => {
             if (!user || !db) return showToast("Please check setup.");
-            const btn = document.getElementById('btnRestore');
-            const originalText = btn.innerText;
+            const btn = document.getElementById('btnRestore'), originalText = btn.innerText;
             btn.innerText = "Checking..."; btn.disabled = true;
-
             try {
-                const docRef = doc(db, 'artifacts', appId, 'users', activeSyncId, 'data', 'main_record');
-                const docSnap = await getDoc(docRef);
+                const docRef = doc(db, 'artifacts', appId, 'users', activeSyncId, 'data', 'main_record'), docSnap = await getDoc(docRef);
                 let infoHtml = "No existing cloud data found for this ID.";
                 if (docSnap.exists()) {
                     const data = docSnap.data();
                     if (data.lastUpdated) {
-                        const dateObj = new Date(data.lastUpdated);
-                        const dateStr = dateObj.toLocaleString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true });
-                        const rel = timeAgo(dateObj);
-                        const deviceStr = data.lastDevice ? data.lastDevice.substring(0, 6) + "..." : "Unknown";
-                        infoHtml = `<strong>Cloud Version:</strong> ${dateStr} <br><span style="color:var(--primary);">(${rel})</span><br><br><strong>From device:</strong> <span style="font-family:monospace; background:#e6e2d8; padding:2px 4px; border-radius:3px;">${deviceStr}</span>`;
+                        const dO = new Date(data.lastUpdated), rel = timeAgo(dO), deviceStr = data.lastDevice ? data.lastDevice.substring(0, 6) + "..." : "Unknown";
+                        infoHtml = `<strong>Cloud Version:</strong> ${dO.toLocaleString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true })} <br><span style="color:var(--primary);">(${rel})</span><br><br><strong>From device:</strong> <span style="font-family:monospace; background:#e6e2d8; padding:2px 4px; border-radius:3px;">${deviceStr}</span>`;
                     }
                 }
-                document.getElementById('restoreInfo').innerHTML = infoHtml;
-                document.getElementById('restoreModal').style.display = 'flex';
-            } catch(e) { console.error(e); showToast("Could not verify cloud status."); } finally { btn.innerText = originalText; btn.disabled = false; }
+                document.getElementById('restoreInfo').innerHTML = infoHtml; document.getElementById('restoreModal').style.display = 'flex';
+            } catch(e) { showToast("Could not verify cloud status."); } finally { btn.innerText = originalText; btn.disabled = false; }
         }
 
         window.executeRestore = async () => {
             window.closeModal();
             try {
-                const docRef = doc(db, 'artifacts', appId, 'users', activeSyncId, 'data', 'main_record');
-                const docSnap = await getDoc(docRef);
-                if (docSnap.exists()) {
-                    events = docSnap.data().beats || [];
-                    continuityItems = docSnap.data().continuity || []; // Restore continuity
-                    saveLocalData(); 
-                    renderContinuityList();
-                    render();
-                    showToast("🔄 Data restored successfully");
-                } else { showToast("No cloud data found."); }
-            } catch (err) { console.error("Restore Error:", err); showToast("Restore failed."); }
+                const docRef = doc(db, 'artifacts', appId, 'users', activeSyncId, 'data', 'main_record'), docSnap = await getDoc(docRef);
+                if (docSnap.exists()) { events = docSnap.data().beats || []; continuityItems = docSnap.data().continuity || []; saveLocalData(); renderContinuityList(); render(); showToast("🔄 Data restored successfully"); }
+                else { showToast("No cloud data found."); }
+            } catch (err) { showToast("Restore failed."); }
         };
 
-        // --- APP CORE LOGIC ---
-        let events = [];
-        let continuityItems = [];
-        let editIndex = -1; 
-        let deleteTargetIndex = null;
-        let currentSortMethod = 'unsorted'; 
-        let currentTz = localStorage.getItem('storylines_tz') || '';
-        let editingContinuityId = null;
+        // --- CORE ---
+        let events = [], continuityItems = [], editIndex = -1, deleteTargetIndex = null, currentSortMethod = 'unsorted', currentTz = localStorage.getItem('storylines_tz') || '', editingContinuityId = null;
         const STORAGE_KEY = 'storylines_persist';
 
         window.onload = function() {
-            document.getElementById('tzSelect').value = currentTz;
-            detectUserNearestZone();
-            loadLocalData();
-            initFirebase();
-            
-            const txDetail = document.getElementById('detailIn');
-            txDetail.addEventListener('input', function() { this.style.height = 'auto'; this.style.height = (this.scrollHeight) + 'px'; });
-            const txRemark = document.getElementById('remarksIn');
-            txRemark.addEventListener('input', function() { this.style.height = 'auto'; this.style.height = (this.scrollHeight) + 'px'; });
-
-            // Service Worker Registration
-            if ('serviceWorker' in navigator) {
-                window.addEventListener('load', () => {
-                    navigator.serviceWorker.register('./sw.js')
-                        .then(reg => console.log('Service Worker registered!', reg))
-                        .catch(err => console.log('Service Worker registration failed:', err));
-                });
-            }
+            document.getElementById('tzSelect').value = currentTz; detectUserNearestZone(); loadLocalData(); initFirebase();
+            const txDetail = document.getElementById('detailIn'); txDetail.addEventListener('input', function() { this.style.height = 'auto'; this.style.height = (this.scrollHeight) + 'px'; });
+            const txRemark = document.getElementById('remarksIn'); txRemark.addEventListener('input', function() { this.style.height = 'auto'; this.style.height = (this.scrollHeight) + 'px'; });
+            if ('serviceWorker' in navigator) { window.addEventListener('load', () => { navigator.serviceWorker.register('./sw.js').then(reg => console.log('Service Worker registered!', reg)).catch(err => console.log('Service Worker registration failed:', err)); }); }
         };
 
-        function saveLocalData() { 
-            const payload = { events: events, continuity: continuityItems };
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(payload)); 
-        }
-
+        function saveLocalData() { localStorage.setItem(STORAGE_KEY, JSON.stringify({ events, continuity: continuityItems })); }
         function loadLocalData() {
             const data = localStorage.getItem(STORAGE_KEY);
             if(data) {
                 try {
                     const parsed = JSON.parse(data);
-                    if (Array.isArray(parsed)) {
-                        events = parsed;
-                        continuityItems = [];
-                    } else {
-                        events = parsed.events || [];
-                        continuityItems = parsed.continuity || [];
-                    }
-                    events.forEach(e => e.number = parseFloat(e.number));
-                    renderContinuityList();
-                    render();
+                    if (Array.isArray(parsed)) { events = parsed; continuityItems = []; } 
+                    else { events = parsed.events || []; continuityItems = parsed.continuity || []; }
+                    events.forEach(e => e.number = parseFloat(e.number)); renderContinuityList(); render();
                 } catch(e) { console.error(e); }
             }
         }
 
-        // --- UI COLLAPSIBLE PANELS ---
-        window.toggleBeatPanel = () => {
-            const content = document.getElementById('beatPanelContent');
-            const icon = document.getElementById('beatPanelIcon');
-            if (content.style.display === 'none') {
-                content.style.display = 'block';
-                icon.innerText = '▼';
-            } else {
-                content.style.display = 'none';
-                icon.innerText = '▶';
-            }
-        }
+        window.toggleBeatPanel = () => { const content = document.getElementById('beatPanelContent'), icon = document.getElementById('beatPanelIcon'); if (content.style.display === 'none') { content.style.display = 'block'; icon.innerText = '▼'; } else { content.style.display = 'none'; icon.innerText = '▶'; } }
+        window.toggleContinuityPanel = () => { const content = document.getElementById('continuityContent'), icon = document.getElementById('cPanelIcon'); if (content.style.display === 'block') { content.style.display = 'none'; icon.innerText = '▼'; } else { content.style.display = 'block'; icon.innerText = '▲'; } }
 
-        window.toggleContinuityPanel = () => {
-            const content = document.getElementById('continuityContent');
-            const icon = document.getElementById('cPanelIcon');
-            if (content.style.display === 'block') {
-                content.style.display = 'none';
-                icon.innerText = '▼';
-            } else {
-                content.style.display = 'block';
-                icon.innerText = '▲';
-            }
-        }
-
-        // --- CONTINUITY LOGIC ---
         window.addContinuityItem = () => {
-            const name = document.getElementById('cNameIn').value;
-            const icon = document.getElementById('cIconIn').value || '🔹';
-            const start = document.getElementById('cStartIn').value;
-            const end = document.getElementById('cEndIn').value;
-
+            const name = document.getElementById('cNameIn').value, icon = document.getElementById('cIconIn').value || '🔹', start = document.getElementById('cStartIn').value, end = document.getElementById('cEndIn').value;
             if(!name || !start) return showToast("Name and Start Date required");
-
             if (editingContinuityId) {
-                // Update Existing
                 const idx = continuityItems.findIndex(i => i.id === editingContinuityId);
-                if (idx > -1) {
-                    const oldVisible = continuityItems[idx].visible;
-                    continuityItems[idx] = { 
-                        id: editingContinuityId, 
-                        name, icon, start, end, 
-                        visible: oldVisible 
-                    };
-                    showToast("Tracking item updated");
-                }
-                window.cancelContinuityEdit();
-            } else {
-                // Create New
-                const item = {
-                    id: Date.now().toString(),
-                    name, icon, start, end,
-                    visible: true
-                };
-                continuityItems.push(item);
-            }
-            
-            saveLocalData();
-            renderContinuityList();
-            render(); 
-            
-            if (!editingContinuityId) {
-                document.getElementById('cNameIn').value = '';
-                document.getElementById('cIconIn').value = '';
-                document.getElementById('cStartIn').value = '';
-                document.getElementById('cEndIn').value = '';
-            }
+                if (idx > -1) { continuityItems[idx] = { id: editingContinuityId, name, icon, start, end, visible: continuityItems[idx].visible }; showToast("Tracking item updated"); }
+                cancelContinuityEdit();
+            } else { continuityItems.push({ id: Date.now().toString(), name, icon, start, end, visible: true }); }
+            saveLocalData(); renderContinuityList(); render();
+            if (!editingContinuityId) { document.getElementById('cNameIn').value = ''; document.getElementById('cIconIn').value = ''; document.getElementById('cStartIn').value = ''; document.getElementById('cEndIn').value = ''; }
         }
+        window.editContinuityItem = (id) => { const item = continuityItems.find(i => i.id === id); if (!item) return; editingContinuityId = id; document.getElementById('cNameIn').value = item.name; document.getElementById('cIconIn').value = item.icon; document.getElementById('cStartIn').value = item.start; document.getElementById('cEndIn').value = item.end || ''; const btn = document.getElementById('btnCAdd'); btn.innerText = "Update Item"; btn.className = "btn-update"; document.getElementById('btnCCancel').style.display = 'inline-block'; if (document.getElementById('continuityContent').style.display !== 'block') window.toggleContinuityPanel(); }
+        window.cancelContinuityEdit = () => { editingContinuityId = null; document.getElementById('cNameIn').value = ''; document.getElementById('cIconIn').value = ''; document.getElementById('cStartIn').value = ''; document.getElementById('cEndIn').value = ''; const btn = document.getElementById('btnCAdd'); btn.innerText = "+ Add Item"; btn.className = "btn-add"; document.getElementById('btnCCancel').style.display = 'none'; }
+        window.toggleContinuityVisibility = (id) => { const item = continuityItems.find(i => i.id === id); if(item) { item.visible = !item.visible; saveLocalData(); renderContinuityList(); render(); } }
+        window.deleteContinuityItem = (id) => { if(confirm("Remove this item?")) { continuityItems = continuityItems.filter(i => i.id !== id); if (editingContinuityId === id) cancelContinuityEdit(); saveLocalData(); renderContinuityList(); render(); } }
+        function renderContinuityList() { const container = document.getElementById('continuityListArea'); container.innerHTML = ''; const sorted = [...continuityItems].sort((a, b) => new Date(a.start) - new Date(b.start)); sorted.forEach(item => { const el = document.createElement('div'); el.className = `c-item-tag ${!item.visible ? 'inactive' : ''}`; el.innerHTML = `<span onclick="toggleContinuityVisibility('${item.id}')" style="cursor:pointer; margin-right:5px; opacity:0.6;">${item.visible ? '👁️' : '🔒'}</span><span onclick="editContinuityItem('${item.id}')" style="cursor:pointer; font-weight:bold;">${item.icon} ${item.name}</span><span onclick="deleteContinuityItem('${item.id}')" style="cursor:pointer; color:var(--danger); font-weight:bold; margin-left:8px;">×</span>`; container.appendChild(el); }); }
+        function getActiveContinuity(beatDateStr) { const beatDate = new Date(beatDateStr); return continuityItems.filter(item => { if(!item.visible) return false; const s = new Date(item.start), e = item.end ? new Date(item.end) : null; return beatDate >= s && (!e || beatDate <= e); }); }
 
-        window.editContinuityItem = (id) => {
-            const item = continuityItems.find(i => i.id === id);
-            if (!item) return;
-            
-            editingContinuityId = id;
-            document.getElementById('cNameIn').value = item.name;
-            document.getElementById('cIconIn').value = item.icon;
-            document.getElementById('cStartIn').value = item.start;
-            document.getElementById('cEndIn').value = item.end || '';
-            
-            const btn = document.getElementById('btnCAdd');
-            btn.innerText = "Update Item"; 
-            btn.className = "btn-update";
-            document.getElementById('btnCCancel').style.display = 'inline-block';
-            
-            const content = document.getElementById('continuityContent');
-            if (content.style.display !== 'block') {
-                 window.toggleContinuityPanel();
-            }
-        }
-
-        window.cancelContinuityEdit = () => {
-            editingContinuityId = null;
-            document.getElementById('cNameIn').value = '';
-            document.getElementById('cIconIn').value = '';
-            document.getElementById('cStartIn').value = '';
-            document.getElementById('cEndIn').value = '';
-            
-            const btn = document.getElementById('btnCAdd');
-            btn.innerText = "+ Add Item";
-            btn.className = "btn-add";
-            document.getElementById('btnCCancel').style.display = 'none';
-        }
-
-        window.toggleContinuityVisibility = (id) => {
-            const item = continuityItems.find(i => i.id === id);
-            if(item) {
-                item.visible = !item.visible;
-                saveLocalData();
-                renderContinuityList();
-                render();
-            }
-        }
-
-        window.deleteContinuityItem = (id) => {
-            if(confirm("Remove this tracking item?")) {
-                continuityItems = continuityItems.filter(i => i.id !== id);
-                if (editingContinuityId === id) window.cancelContinuityEdit();
-                saveLocalData();
-                renderContinuityList();
-                render();
-            }
-        }
-
-        function renderContinuityList() {
-            const container = document.getElementById('continuityListArea');
-            container.innerHTML = '';
-            const sortedItems = [...continuityItems].sort((a, b) => new Date(a.start) - new Date(b.start));
-            sortedItems.forEach(item => {
-                const el = document.createElement('div');
-                el.className = `c-item-tag ${!item.visible ? 'inactive' : ''}`;
-                el.innerHTML = `
-                    <span onclick="toggleContinuityVisibility('${item.id}')" style="cursor:pointer; margin-right:5px; opacity:0.6;" title="Toggle Visibility">
-                        ${item.visible ? '👁️' : '🔒'} 
-                    </span>
-                    <span onclick="editContinuityItem('${item.id}')" style="cursor:pointer; font-weight:bold;" title="Edit Item">
-                        ${item.icon} ${item.name}
-                    </span>
-                    <span onclick="deleteContinuityItem('${item.id}')" style="cursor:pointer; color:var(--danger); font-weight:bold; margin-left:8px;">×</span>
-                `;
-                container.appendChild(el);
-            });
-        }
-
-        function getActiveContinuity(beatDateStr) {
-            const beatDate = new Date(beatDateStr);
-            return continuityItems.filter(item => {
-                if(!item.visible) return false;
-                const start = new Date(item.start);
-                const end = item.end ? new Date(item.end) : null;
-                return beatDate >= start && (!end || beatDate <= end);
-            });
-        }
-
-        // --- UTILS ---
-        function detectUserNearestZone() {
-            const browserTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-            const inputTzSelect = document.getElementById('inputTzSelect');
-            const found = Array.from(inputTzSelect.options).find(opt => opt.value === browserTz);
-            inputTzSelect.value = found ? browserTz : "Europe/Berlin";
-        }
-
-        function convertToLocal(inputDateValue, sourceTz) {
-            if (!inputDateValue) return null;
-            const [datePart, timePart] = inputDateValue.split('T');
-            const [y, m, d] = datePart.split('-').map(Number);
-            const [hh, mm] = timePart.split(':').map(Number);
-            const formatter = new Intl.DateTimeFormat('en-US', { timeZone: sourceTz, year: 'numeric', month: 'numeric', day: 'numeric', hour: 'numeric', minute: 'numeric', second: 'numeric', hour12: false });
-            let testDate = new Date(Date.UTC(y, m - 1, d, hh, mm));
-            const parts = formatter.formatToParts(testDate);
-            const getP = t => parseInt(parts.find(p => p.type === t).value);
-            const sourceWallClock = Date.UTC(getP('year'), getP('month') - 1, getP('day'), getP('hour') % 24, getP('minute'));
-            const diff = testDate.getTime() - sourceWallClock;
-            const actualUtc = new Date(testDate.getTime() + diff);
-            const pad = (n) => n.toString().padStart(2, '0');
-            return `${actualUtc.getFullYear()}-${pad(actualUtc.getMonth()+1)}-${pad(actualUtc.getDate())}T${pad(actualUtc.getHours())}:${pad(actualUtc.getMinutes())}`;
-        }
-
+        function detectUserNearestZone() { const bTz = Intl.DateTimeFormat().resolvedOptions().timeZone; document.getElementById('inputTzSelect').value = bTz; }
+        function convertToLocal(inputDateValue, sourceTz) { if (!inputDateValue) return null; const [datePart, timePart] = inputDateValue.split('T'), [y, m, d] = datePart.split('-').map(Number), [hh, mm] = timePart.split(':').map(Number), formatter = new Intl.DateTimeFormat('en-US', { timeZone: sourceTz, year: 'numeric', month: 'numeric', day: 'numeric', hour: 'numeric', minute: 'numeric', second: 'numeric', hour12: false }); let testDate = new Date(Date.UTC(y, m - 1, d, hh, mm)); const parts = formatter.formatToParts(testDate), getP = t => parseInt(parts.find(p => p.type === t).value), sourceWallClock = Date.UTC(getP('year'), getP('month') - 1, getP('day'), getP('hour') % 24, getP('minute')), actualUtc = new Date(testDate.getTime() + (testDate.getTime() - sourceWallClock)), pad = (n) => n.toString().padStart(2, '0'); return `${actualUtc.getFullYear()}-${pad(actualUtc.getMonth()+1)}-${pad(actualUtc.getDate())}T${pad(actualUtc.getHours())}:${pad(actualUtc.getMinutes())}`; }
         window.updateTzPreference = () => { currentTz = document.getElementById('tzSelect').value; localStorage.setItem('storylines_tz', currentTz); render(); }
-
-        function convertTime(dateStr, targetTz) {
-            if (!targetTz || !dateStr) return null;
-            try {
-                const d = new Date(dateStr);
-                const timeF = new Intl.DateTimeFormat('en-GB', { timeZone: targetTz, hour: '2-digit', minute: '2-digit', hour12: false });
-                const dayF = new Intl.DateTimeFormat('en-GB', { timeZone: targetTz, day: 'numeric', month: 'short' });
-                const weekF = new Intl.DateTimeFormat('en-US', { timeZone: targetTz, weekday: 'long' });
-                return { time: timeF.format(d), day: dayF.format(d), weekday: weekF.format(d), zone: targetTz.split('/').pop().replace('_', ' ') };
-            } catch(e) { return null; }
-        }
-
-        const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+        function convertTime(dateStr, targetTz) { if (!targetTz || !dateStr) return null; try { const d = new Date(dateStr), tF = new Intl.DateTimeFormat('en-GB', { timeZone: targetTz, hour: '2-digit', minute: '2-digit', hour12: false }), dF = new Intl.DateTimeFormat('en-GB', { timeZone: targetTz, day: 'numeric', month: 'short' }), wF = new Intl.DateTimeFormat('en-US', { timeZone: targetTz, weekday: 'long' }); return { time: tF.format(d), day: dF.format(d), weekday: wF.format(d), zone: targetTz.split('/').pop().replace('_', ' ') }; } catch(e) { return null; } }
         function getFormattedDate(dateStr) { if (!dateStr) return ''; const [y, m, d] = dateStr.split('T')[0].split('-'); return `${parseInt(d)} ${MONTHS[parseInt(m)-1]} ${y}`; }
 
         window.handleAdd = () => {
-            const rawDate = document.getElementById('dateIn').value;
-            const sourceTz = document.getElementById('inputTzSelect').value;
-            const num = document.getElementById('numIn').value;
-            const chapTitle = document.getElementById('chapTitleIn').value;
-            const subTitle = document.getElementById('subChapTitleIn').value;
-            const details = document.getElementById('detailIn').value;
-            const remarks = document.getElementById('remarksIn').value;
-            if (!rawDate || num === '' || !details) { showToast("Fill all fields (except titles/remarks)"); return; }
-            const date = convertToLocal(rawDate, sourceTz);
-            const beat = { date, number: parseFloat(num), chapterTitle: chapTitle, subChapterTitle: subTitle, details: details, remarks: remarks };
+            const rawDate = document.getElementById('dateIn').value, sourceTz = document.getElementById('inputTzSelect').value, num = document.getElementById('numIn').value, cT = document.getElementById('chapTitleIn').value, sT = document.getElementById('subChapTitleIn').value, det = document.getElementById('detailIn').value, rem = document.getElementById('remarksIn').value;
+            if (!rawDate || num === '' || !det) return showToast("Fill all fields (except titles/remarks)");
+            const date = convertToLocal(rawDate, sourceTz), beat = { date, number: parseFloat(num), chapterTitle: cT, subChapterTitle: sT, details: det, remarks: rem };
             if (editIndex > -1) { events[editIndex] = beat; cancelEdit(); } else { events.push(beat); sortData(currentSortMethod); clearInputs(); }
             saveLocalData(); render();
         }
-
         window.editEvent = (i) => {
-            editIndex = i; const e = events[i];
-            document.getElementById('dateIn').value = e.date;
-            document.getElementById('numIn').value = e.number;
-            document.getElementById('chapTitleIn').value = e.chapterTitle || '';
-            document.getElementById('subChapTitleIn').value = e.subChapterTitle || '';
-            document.getElementById('detailIn').value = e.details;
-            document.getElementById('remarksIn').value = e.remarks || '';
-            detectUserNearestZone();
-            document.getElementById('btnAdd').innerText = "Update Beat";
-            document.getElementById('btnAdd').className = "btn-update";
-            document.getElementById('btnCancel').style.display = "inline-block";
-            document.getElementById('btnSaveNew').style.display = "inline-block";
-            document.getElementById('detailIn').dispatchEvent(new Event('input'));
-            document.getElementById('remarksIn').dispatchEvent(new Event('input'));
-            
-            // Expand beat panel if closed
-            const beatPanel = document.getElementById('beatPanelContent');
-            if (beatPanel.style.display === 'none') window.toggleBeatPanel();
+            editIndex = i; const e = events[i]; document.getElementById('dateIn').value = e.date; document.getElementById('numIn').value = e.number; document.getElementById('chapTitleIn').value = e.chapterTitle || ''; document.getElementById('subChapTitleIn').value = e.subChapterTitle || ''; document.getElementById('detailIn').value = e.details; document.getElementById('remarksIn').value = e.remarks || '';
+            detectUserNearestZone(); document.getElementById('btnAdd').innerText = "Update Beat"; document.getElementById('btnAdd').className = "btn-update"; document.getElementById('btnCancel').style.display = "inline-block"; document.getElementById('btnSaveNew').style.display = "inline-block"; document.getElementById('detailIn').dispatchEvent(new Event('input')); document.getElementById('remarksIn').dispatchEvent(new Event('input'));
+            if (document.getElementById('beatPanelContent').style.display === 'none') window.toggleBeatPanel();
         }
-
-        window.cancelEdit = () => {
-            editIndex = -1; clearInputs(); detectUserNearestZone();
-            document.getElementById('btnAdd').innerText = "+ Add Beat";
-            document.getElementById('btnAdd').className = "btn-add";
-            document.getElementById('btnCancel').style.display = "none";
-            document.getElementById('btnSaveNew').style.display = "none";
-        }
-
+        window.cancelEdit = () => { editIndex = -1; clearInputs(); detectUserNearestZone(); document.getElementById('btnAdd').innerText = "+ Add Beat"; document.getElementById('btnAdd').className = "btn-add"; document.getElementById('btnCancel').style.display = "none"; document.getElementById('btnSaveNew').style.display = "none"; }
         window.saveAsNew = () => { editIndex = -1; handleAdd(); cancelEdit(); }
 
         function render() {
-            const vis = document.getElementById('visualArea');
-            const body = document.getElementById('tableBody');
-            const msg = document.getElementById('emptyMsg');
-            vis.innerHTML = ''; body.innerHTML = '';
-            if (events.length === 0) { msg.style.display = 'block'; return; }
-            msg.style.display = 'none';
-
+            const vis = document.getElementById('visualArea'), body = document.getElementById('tableBody'), msg = document.getElementById('emptyMsg');
+            vis.innerHTML = ''; body.innerHTML = ''; if (events.length === 0) { msg.style.display = 'block'; return; } msg.style.display = 'none';
             events.forEach((evt, i) => {
-                const dateParts = evt.date.split('T');
-                const friendlyDate = getFormattedDate(evt.date);
-                const localTime = dateParts[1] || '00:00';
-                const dayName = new Date(evt.date).toLocaleDateString('en-US', { weekday: 'long' });
-                const conv = convertTime(evt.date, currentTz);
-                let detailsHtml = evt.details;
-                if(evt.remarks) { detailsHtml += `<div class="td-remarks">📝 ${evt.remarks}</div>`; }
-                
-                // Continuity Calculation
-                const activeItems = getActiveContinuity(evt.date);
-                activeItems.sort((a, b) => new Date(a.start) - new Date(b.start));
-
-                let continuityHtml = '';
-                if(activeItems.length > 0) {
-                    continuityHtml = '<div class="c-badges-container">';
-                    activeItems.forEach(ci => {
-                        continuityHtml += `<span class="c-badge" title="Active: ${ci.name} (Since ${getFormattedDate(ci.start)})">${ci.icon} ${ci.name}</span>`;
-                    });
-                    continuityHtml += '</div>';
-                    // Append to List View Details
-                    detailsHtml += `<div style="margin-top:8px">${continuityHtml}</div>`; 
+                const friendlyDate = getFormattedDate(evt.date), localTime = evt.date.split('T')[1] || '00:00', dayName = new Date(evt.date).toLocaleDateString('en-US', { weekday: 'long' }), conv = convertTime(evt.date, currentTz);
+                let detailsHtml = evt.details; if(evt.remarks) { detailsHtml += `<div class="td-remarks">📝 ${evt.remarks}</div>`; }
+                const activeItems = getActiveContinuity(evt.date).sort((a, b) => new Date(a.start) - new Date(b.start));
+                let cHtml = ''; if(activeItems.length > 0) {
+                    cHtml = '<div class="c-badges-container">';
+                    activeItems.forEach(ci => cHtml += `<span class="c-badge" title="Active: ${ci.name} (Since ${getFormattedDate(ci.start)})">${ci.icon} ${ci.name}</span>`);
+                    cHtml += '</div>'; detailsHtml += `<div style="margin-top:8px">${cHtml}</div>`; 
                 }
-
-                const dragAttr = currentSortMethod === 'number' ? 'draggable="true"' : '';
-                const dragClass = currentSortMethod === 'number' ? 'draggable' : '';
-
-                body.innerHTML += `
-                    <tr class="${dragClass}" data-index="${i}" ${dragAttr}>
-                        <td>${currentSortMethod === 'number' ? '☰' : ''}</td>
-                        <td style="white-space: nowrap;">${friendlyDate} ${localTime}<br><small>${dayName}</small>${conv ? `<div class="tz-display">✈ ${conv.zone}: ${conv.day}, ${conv.time}<br><span style="font-weight: normal;">${conv.weekday}</span></div>` : ''}</td>
-                        <td><b>${evt.number}</b><br><span style="font-weight:700; font-size:0.85rem;">${evt.chapterTitle || ''}</span><br><span style="font-style:italic; font-size:0.75rem; color:var(--text-muted);">${evt.subChapterTitle || ''}</span></td>
-                        <td>${detailsHtml}</td>
-                        <td><button class="action-btn" onclick="editEvent(${i})">✎</button><button class="action-btn del-btn" onclick="askDelete(${i})">×</button></td>
-                    </tr>`;
-
-                vis.innerHTML += `
-                    <div class="h-item ${dragClass}" data-index="${i}" ${dragAttr}>
-                        <div class="h-date-wrap">
-                            <div class="h-date">${friendlyDate}</div>
-                            <div class="h-day">${dayName}</div>
-                            <div class="h-time">${localTime}${conv ? `<br><span style="color:var(--info); font-size: 0.7rem; font-weight: bold; display: block; margin-top: 4px; line-height:1.4;">✈ ${conv.zone}: ${conv.day}, ${conv.time}<br><span style="font-weight: normal;">${conv.weekday}</span></span>` : ''}</div>
-                        </div>
-                        <div class="h-dot-container"><div class="h-line"></div><div class="h-dot" onclick="editEvent(${i})"></div></div>
-                        <div class="h-card" onclick="editEvent(${i})">
-                            <span class="card-del" onclick="event.stopPropagation(); askDelete(${i})">×</span>
-                            <div class="h-val-text">Chapter ${evt.number}</div>
-                            ${evt.chapterTitle ? `<div class="h-chap-title">${evt.chapterTitle}</div>` : ''}
-                            ${evt.subChapterTitle ? `<div class="h-sub-title">${evt.subChapterTitle}</div>` : ''}
-                            <div class="h-divider"></div>
-                            <div class="h-detail-text">${evt.details}</div>
-                            ${evt.remarks ? `<div class="h-remarks">${evt.remarks}</div>` : ''}
-                            ${continuityHtml} 
-                        </div>
-                    </div>`;
+                const dragAttr = currentSortMethod === 'number' ? 'draggable="true"' : '', dragClass = currentSortMethod === 'number' ? 'draggable' : '';
+                body.innerHTML += `<tr class="${dragClass}" data-index="${i}" ${dragAttr}><td>${currentSortMethod === 'number' ? '☰' : ''}</td><td style="white-space: nowrap;">${friendlyDate} ${localTime}<br><small>${dayName}</small>${conv ? `<div class="tz-display">✈ ${conv.zone}: ${conv.day}, ${conv.time}<br><span style="font-weight: normal;">${conv.weekday}</span></div>` : ''}</td><td><b>${evt.number}</b><br><span style="font-weight:700; font-size:0.85rem;">${evt.chapterTitle || ''}</span><br><span style="font-style:italic; font-size:0.75rem; color:var(--text-muted);">${evt.subChapterTitle || ''}</span></td><td>${detailsHtml}</td><td><button class="action-btn" onclick="editEvent(${i})">✎</button><button class="action-btn del-btn" onclick="askDelete(${i})">×</button></td></tr>`;
+                vis.innerHTML += `<div class="h-item ${dragClass}" data-index="${i}" ${dragAttr}><div class="h-date-wrap"><div class="h-date">${friendlyDate}</div><div class="h-day">${dayName}</div><div class="h-time">${localTime}${conv ? `<br><span style="color:var(--info); font-size: 0.7rem; font-weight: bold; display: block; margin-top: 4px; line-height:1.4;">✈ ${conv.zone}: ${conv.day}, ${conv.time}<br><span style="font-weight: normal;">${conv.weekday}</span></span>` : ''}</div></div><div class="h-dot-container"><div class="h-line"></div><div class="h-dot" onclick="editEvent(${i})"></div></div><div class="h-card" onclick="editEvent(${i})"><span class="card-del" onclick="event.stopPropagation(); askDelete(${i})">×</span><div class="h-val-text">Chapter ${evt.number}</div>${evt.chapterTitle ? `<div class="h-chap-title">${evt.chapterTitle}</div>` : ''}${evt.subChapterTitle ? `<div class="h-sub-title">${evt.subChapterTitle}</div>` : ''}<div class="h-divider"></div><div class="h-detail-text">${evt.details}</div>${evt.remarks ? `<div class="h-remarks">${evt.remarks}</div>` : ''}${cHtml}</div></div>`;
             });
-            
-            if (currentSortMethod === 'number') {
-                setupDragAndDrop();
-            }
+            if (currentSortMethod === 'number') setupDragAndDrop();
         }
 
-        window.sortData = (type) => {
-            currentSortMethod = type;
-            const label = document.getElementById('viewHeaderLabel');
-            if (type === 'number') { events.sort((a, b) => a.number - b.number); label.innerText = "CHAPTER"; }
-            else if (type === 'date') { events.sort((a, b) => new Date(a.date) - new Date(b.date)); label.innerText = "CHRONOLOGICAL"; }
-            render();
-        }
-
-        window.toggleView = (v) => {
-            document.getElementById('btnVis').classList.toggle('active', v === 'visual');
-            document.getElementById('btnTab').classList.toggle('active', v === 'table');
-            document.getElementById('visualArea').style.display = v === 'visual' ? 'flex' : 'none';
-            document.getElementById('tableArea').style.display = v === 'table' ? 'table' : 'none';
-        }
-
-        function clearInputs() {
-            document.getElementById('dateIn').value = '';
-            document.getElementById('numIn').value = '';
-            document.getElementById('chapTitleIn').value = '';
-            document.getElementById('subChapTitleIn').value = '';
-            document.getElementById('detailIn').value = '';
-            document.getElementById('remarksIn').value = '';
-            document.getElementById('detailIn').style.height = 'auto';
-            document.getElementById('remarksIn').style.height = 'auto';
-        }
-
+        window.sortData = (type) => { currentSortMethod = type; const label = document.getElementById('viewHeaderLabel'); if (type === 'number') { events.sort((a, b) => a.number - b.number); label.innerText = "CHAPTER"; } else if (type === 'date') { events.sort((a, b) => new Date(a.date) - new Date(b.date)); label.innerText = "CHRONOLOGICAL"; } render(); }
+        window.toggleView = (v) => { document.getElementById('btnVis').classList.toggle('active', v === 'visual'); document.getElementById('btnTab').classList.toggle('active', v === 'table'); document.getElementById('visualArea').style.display = v === 'visual' ? 'flex' : 'none'; document.getElementById('tableArea').style.display = v === 'table' ? 'table' : 'none'; }
+        function clearInputs() { document.getElementById('dateIn').value = ''; document.getElementById('numIn').value = ''; document.getElementById('chapTitleIn').value = ''; document.getElementById('subChapTitleIn').value = ''; document.getElementById('detailIn').value = ''; document.getElementById('remarksIn').value = ''; document.getElementById('detailIn').style.height = 'auto'; document.getElementById('remarksIn').style.height = 'auto'; }
         function showToast(m) { const t = document.getElementById("toast"); t.innerText = m; t.className = "show"; setTimeout(() => t.className = "", 3000); }
-
         window.askDelete = (i) => { deleteTargetIndex = i; document.getElementById('deleteModal').style.display = 'flex'; }
         window.executeDelete = () => { events.splice(deleteTargetIndex, 1); saveLocalData(); render(); closeModal(); }
         window.closeModal = () => { document.querySelectorAll('.modal-overlay').forEach(m => m.style.display = 'none'); }
 
-        window.downloadCSV = () => {
-            if (events.length === 0) return showToast("No data to save.");
-            let csv = "Date,Chapter,ChapterTitle,SubChapterTitle,Details,Remarks\n";
-            events.forEach(e => {
-                csv += `${e.date},${e.number},${(e.chapterTitle || '').replace(/,/g, '{com}')},${(e.subChapterTitle || '').replace(/,/g, '{com}')},${e.details.replace(/\n/g, '{nl}').replace(/,/g, '{com}')},${(e.remarks || '').replace(/\n/g, '{nl}').replace(/,/g, '{com}')}\n`;
-            });
-            if(continuityItems.length > 0) {
-                 csv += "\n[CONTINUITY_DATA_START]\nID,Name,Icon,Start,End,Visible\n";
-                 continuityItems.forEach(ci => { csv += `${ci.id},${ci.name},${ci.icon},${ci.start},${ci.end || ''},${ci.visible}\n`; });
-                 csv += "[CONTINUITY_DATA_END]\n";
-            }
-            const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' })); a.download = 'storylines.csv'; a.click();
-        }
-
-        window.uploadCSV = (input) => {
-            if (!input.files[0]) return;
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                const text = e.target.result;
-                const continuitySplit = text.split('[CONTINUITY_DATA_START]');
-                const beatsData = continuitySplit[0].trim();
-                const continuityData = continuitySplit[1] ? continuitySplit[1].split('[CONTINUITY_DATA_END]')[0].trim() : null;
-                const lines = beatsData.split('\n');
-                let newEvents = [];
-                for(let i=1; i<lines.length; i++) {
-                    const line = lines[i].trim();
-                    if(!line) continue;
-                    const p = line.split(',');
-                    if(p.length >= 3) {
-                        const d = p[0], n = parseFloat(p[1]);
-                        let title = '', sub = '', det = '', rem = '';
-                        if (p.length >= 6) { title = p[2].replace(/{com}/g, ','); sub = p[3].replace(/{com}/g, ','); det = p[4].replace(/{nl}/g, '\n').replace(/{com}/g, ','); rem = p.slice(5).join(',').replace(/{nl}/g, '\n').replace(/{com}/g, ','); }
-                        else if (p.length >= 5) { title = p[2].replace(/{com}/g, ','); sub = p[3].replace(/{com}/g, ','); det = p.slice(4).join(',').replace(/{nl}/g, '\n').replace(/{com}/g, ','); }
-                        else { det = p.slice(2).join(',').replace(/{nl}/g, '\n').replace(/{com}/g, ','); }
-                        if(d && !isNaN(n)) newEvents.push({ date: d, number: n, chapterTitle: title, subChapterTitle: sub, details: det, remarks: rem });
-                    }
-                }
-                let newContinuity = [];
-                if(continuityData) {
-                    const cLines = continuityData.split('\n');
-                    for(let i=1; i<cLines.length; i++) {
-                        const c = cLines[i].trim().split(',');
-                        if(c.length >= 4) newContinuity.push({ id: c[0], name: c[1], icon: c[2], start: c[3], end: c[4] || '', visible: c[5] === 'true' });
-                    }
-                }
-                if(newEvents.length > 0) { 
-                    events = newEvents; 
-                    if(newContinuity.length > 0) continuityItems = newContinuity;
-                    saveLocalData(); renderContinuityList(); render(); 
-                    showToast("Data imported successfully"); 
-                }
-            };
-            reader.readAsText(input.files[0]);
-        }
-
-        function setupDragAndDrop() {
-            if (currentSortMethod !== 'number') return;
-            const draggables = document.querySelectorAll('.draggable');
-            draggables.forEach(el => {
-                el.ondragstart = (e) => { e.dataTransfer.setData('idx', el.dataset.index); el.classList.add('dragging'); };
-                el.ondragover = (e) => { e.preventDefault(); e.currentTarget.classList.add('drag-over'); };
-                el.ondragleave = (e) => { e.currentTarget.classList.remove('drag-over'); };
-                el.ondrop = (e) => {
-                    e.preventDefault(); e.currentTarget.classList.remove('drag-over');
-                    const from = parseInt(e.dataTransfer.getData('idx')), to = parseInt(el.dataset.index);
-                    if (isNaN(from) || from === to) return;
-                    if (Math.floor(events[from].number) !== Math.floor(events[to].number)) return showToast("Cannot move between chapters.");
-                    const item = events.splice(from, 1)[0];
-                    events.splice(to, 0, item);
-                    const intPart = Math.floor(item.number), groupIndices = [];
-                    events.forEach((ev, idx) => { if(Math.floor(ev.number) === intPart) groupIndices.push(idx); });
-                    const step = groupIndices.length > 9 ? 0.01 : 0.1;
-                    groupIndices.forEach((arrayIdx, k) => { events[arrayIdx].number = parseFloat((intPart + (k + 1) * step).toFixed(2)); });
-                    saveLocalData(); render();
-                };
-            });
-        }
-
+        window.downloadCSV = () => { if (events.length === 0) return showToast("No data to save."); let csv = "Date,Chapter,ChapterTitle,SubChapterTitle,Details,Remarks\n"; events.forEach(e => { csv += `${e.date},${e.number},${(e.chapterTitle || '').replace(/,/g, '{com}')},${(e.subChapterTitle || '').replace(/,/g, '{com}')},${e.details.replace(/\n/g, '{nl}').replace(/,/g, '{com}')},${(e.remarks || '').replace(/\n/g, '{nl}').replace(/,/g, '{com}')}\n`; }); if(continuityItems.length > 0) { csv += "\n[CONTINUITY_DATA_START]\nID,Name,Icon,Start,End,Visible\n"; continuityItems.forEach(ci => { csv += `${ci.id},${ci.name},${ci.icon},${ci.start},${ci.end || ''},${ci.visible}\n`; }); csv += "[CONTINUITY_DATA_END]\n"; } const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' })); a.download = 'storylines.csv'; a.click(); }
+        window.uploadCSV = (input) => { if (!input.files[0]) return; const reader = new FileReader(); reader.onload = (e) => { const text = e.target.result, continuitySplit = text.split('[CONTINUITY_DATA_START]'), beatsData = continuitySplit[0].trim(), continuityData = continuitySplit[1] ? continuitySplit[1].split('[CONTINUITY_DATA_END]')[0].trim() : null, lines = beatsData.split('\n'); let newEvents = []; for(let i=1; i<lines.length; i++) { const line = lines[i].trim(); if(!line) continue; const p = line.split(','); if(p.length >= 3) { const d = p[0], n = parseFloat(p[1]); let title = '', sub = '', det = '', rem = ''; if (p.length >= 6) { title = p[2].replace(/{com}/g, ','); sub = p[3].replace(/{com}/g, ','); det = p[4].replace(/{nl}/g, '\n').replace(/{com}/g, ','); rem = p.slice(5).join(',').replace(/{nl}/g, '\n').replace(/{com}/g, ','); } else if (p.length >= 5) { title = p[2].replace(/{com}/g, ','); sub = p[3].replace(/{com}/g, ','); det = p.slice(4).join(',').replace(/{nl}/g, '\n').replace(/{com}/g, ','); } else { det = p.slice(2).join(',').replace(/{nl}/g, '\n').replace(/{com}/g, ','); } if(d && !isNaN(n)) newEvents.push({ date: d, number: n, chapterTitle: title, subChapterTitle: sub, details: det, remarks: rem }); } } let newContinuity = []; if(continuityData) { const cLines = continuityData.split('\n'); for(let i=1; i<cLines.length; i++) { const c = cLines[i].trim().split(','); if(c.length >= 4) newContinuity.push({ id: c[0], name: c[1], icon: c[2], start: c[3], end: c[4] || '', visible: c[5] === 'true' }); } } if(newEvents.length > 0) { events = newEvents; if(newContinuity.length > 0) continuityItems = newContinuity; saveLocalData(); renderContinuityList(); render(); showToast("Data imported successfully"); } }; reader.readAsText(input.files[0]); }
+        function setupDragAndDrop() { if (currentSortMethod !== 'number') return; document.querySelectorAll('.draggable').forEach(el => { el.ondragstart = (e) => { e.dataTransfer.setData('idx', el.dataset.index); el.classList.add('dragging'); }; el.ondragover = (e) => { e.preventDefault(); e.currentTarget.classList.add('drag-over'); }; el.ondragleave = (e) => { e.currentTarget.classList.remove('drag-over'); }; el.ondrop = (e) => { e.preventDefault(); e.currentTarget.classList.remove('drag-over'); const from = parseInt(e.dataTransfer.getData('idx')), to = parseInt(el.dataset.index); if (isNaN(from) || from === to) return; if (Math.floor(events[from].number) !== Math.floor(events[to].number)) return showToast("Cannot move between chapters."); const item = events.splice(from, 1)[0]; events.splice(to, 0, item); const intPart = Math.floor(item.number), groupIndices = []; events.forEach((ev, idx) => { if(Math.floor(ev.number) === intPart) groupIndices.push(idx); }); const step = groupIndices.length > 9 ? 0.01 : 0.1; groupIndices.forEach((arrayIdx, k) => { events[arrayIdx].number = parseFloat((intPart + (k + 1) * step).toFixed(2)); }); saveLocalData(); render(); }; }); }
         const README_URL = 'https://thordnel.github.io/nonlineartimeline/README.md';
-        window.toggleReadme = async () => {
-            const container = document.getElementById('readmeContainer');
-            if (container.style.display === 'block') { container.style.display = 'none'; return; }
-            if (!container.innerHTML) {
-                container.innerHTML = '<div style="text-align:center; padding:20px; color:#64748b;">Loading documentation...</div>';
-                try {
-                    const response = await fetch(README_URL); if (!response.ok) throw new Error("Could not load README");
-                    const text = await response.text(); container.innerHTML = parseMarkdown(text);
-                } catch (e) { container.innerHTML = `<div style="text-align:center; color:#ef4444;">Failed to load documentation.<br><a href="${README_URL}" target="_blank">Click here to view README on GitHub</a></div>`; }
-            }
-            container.style.display = 'block'; container.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }
-
+        window.toggleReadme = async () => { const container = document.getElementById('readmeContainer'); if (container.style.display === 'block') { container.style.display = 'none'; return; } if (!container.innerHTML) { container.innerHTML = '<div style="text-align:center; padding:20px; color:#64748b;">Loading documentation...</div>'; try { const response = await fetch(README_URL); if (!response.ok) throw new Error("Could not load README"); const text = await response.text(); container.innerHTML = parseMarkdown(text); } catch (e) { container.innerHTML = `<div style="text-align:center; color:#ef4444;">Failed to load documentation.<br><a href="${README_URL}" target="_blank">Click here to view README on GitHub</a></div>`; } } container.style.display = 'block'; container.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+        
         function parseMarkdown(md) {
             let html = md.replace(/\r\n/g, '\n'); 
             html = html.replace(/^###\s+(.*$)/gim, '<h3>$1</h3>').replace(/^##\s+(.*$)/gim, '<h2>$1</h2>').replace(/^#\s+(.*$)/gim, '<h1>$1</h1>').replace(/\*\*(.*?)\*\*/gim, '<b>$1</b>').replace(/\[(.*?)\]\((.*?)\)/gim, "<a href='$2' target='_blank'>$1</a>").replace(/^\s*-\s+(.*$)/gim, '<ul><li>$1</li></ul>').replace(/<\/ul>\s*<ul>/gim, '').replace(/^>\s+(.*$)/gim, '<blockquote>$1</blockquote>').replace(/`(.*?)`/gim, '<code>$1</code>').replace(/^\s*---\s*$/gim, '<hr>').replace(/\n\n/gim, '<br><br>').replace(/(<\/h[1-3]>)\s*<br><br>/gim, '$1').replace(/(<hr>)\s*<br><br>/gim, '$1');
