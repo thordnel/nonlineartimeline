@@ -843,8 +843,80 @@
         window.executeDelete = () => { events.splice(deleteTargetIndex, 1); saveLocalData(); render(); closeModal(); }
         window.closeModal = () => { document.querySelectorAll('.modal-overlay').forEach(m => m.style.display = 'none'); }
 
-        window.downloadCSV = () => { if (events.length === 0) return; let csv = "Date,Chapter,ChapterTitle,SubChapterTitle,Details,Remarks,PrefTz,PrefCountry\n"; events.forEach(e => { csv += `${e.date},${e.number},${(e.chapterTitle || '').replace(/,/g, '{com}')},${(e.subChapterTitle || '').replace(/,/g, '{com}')},${e.details.replace(/\n/g, '{nl}').replace(/,/g, '{com}')},${(e.remarks || '').replace(/\n/g, '{nl}').replace(/,/g, '{com}')},${e.preferredDisplayTz || ''},${e.preferredCountry || ''}\n`; }); const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' })); a.download = 'storylines.csv'; a.click(); }
-        window.uploadCSV = (input) => { if (!input.files[0]) return; const reader = new FileReader(); reader.onload = (e) => { const text = e.target.result, lines = text.split('\n'); let newEvents = []; for(let i=1; i<lines.length; i++) { const p = lines[i].trim().split(','); if(p.length >= 3) { const d = p[0], n = parseFloat(p[1]); if(!isNaN(n)) newEvents.push({ date: d, number: n, chapterTitle: p[2]?.replace(/{com}/g,','), subChapterTitle: p[3]?.replace(/{com}/g,','), details: p[4]?.replace(/{nl}/g,'\n').replace(/{com}/g,','), remarks: p[5]?.replace(/{nl}/g,'\n').replace(/{com}/g,','), preferredDisplayTz: p[6], preferredCountry: p[7] }); } } if(newEvents.length > 0) { events = newEvents; saveLocalData(); render(); } }; reader.readAsText(input.files[0]); }
+        window.downloadCSV = () => { 
+            if (events.length === 0) return showToast("No data to save."); 
+            let csv = "Date,Chapter,ChapterTitle,SubChapterTitle,Details,Remarks,PrefTz,PrefCountry\n"; 
+            events.forEach(e => { 
+                csv += `${e.date},${e.number},${(e.chapterTitle || '').replace(/,/g, '{com}')},${(e.subChapterTitle || '').replace(/,/g, '{com}')},${e.details.replace(/\n/g, '{nl}').replace(/,/g, '{com}')},${(e.remarks || '').replace(/\n/g, '{nl}').replace(/,/g, '{com}')},${e.preferredDisplayTz || ''},${e.preferredCountry || ''}\n`; 
+            }); 
+            if(continuityItems.length > 0) { 
+                csv += "\n[CONTINUITY_DATA_START]\nID,Name,Icon,Start,End,Visible\n"; 
+                continuityItems.forEach(ci => { 
+                    csv += `${ci.id},${ci.name},${ci.icon},${ci.start},${ci.end || ''},${ci.visible}\n`; 
+                }); 
+                csv += "[CONTINUITY_DATA_END]\n"; 
+            } 
+            const a = document.createElement('a'); 
+            a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' })); 
+            a.download = 'storylines.csv'; 
+            a.click(); 
+        }
+
+        window.uploadCSV = (input) => { 
+            if (!input.files[0]) return; 
+            const reader = new FileReader(); 
+            reader.onload = (e) => { 
+                const text = e.target.result;
+                const continuitySplit = text.split('[CONTINUITY_DATA_START]');
+                const beatsData = continuitySplit[0].trim();
+                const continuityData = continuitySplit[1] ? continuitySplit[1].split('[CONTINUITY_DATA_END]')[0].trim() : null;
+                
+                const lines = beatsData.split('\n'); 
+                let newEvents = []; 
+                for(let i=1; i<lines.length; i++) { 
+                    const p = lines[i].trim().split(','); 
+                    if(p.length >= 3) { 
+                        const d = p[0], n = parseFloat(p[1]); 
+                        if(!isNaN(n)) newEvents.push({ 
+                            date: d, 
+                            number: n, 
+                            chapterTitle: p[2]?.replace(/{com}/g,','), 
+                            subChapterTitle: p[3]?.replace(/{com}/g,','), 
+                            details: p[4]?.replace(/{nl}/g,'\n').replace(/{com}/g,','), 
+                            remarks: p[5]?.replace(/{nl}/g,'\n').replace(/{com}/g,','), 
+                            preferredDisplayTz: p[6] || '', 
+                            preferredCountry: p[7] || '' 
+                        }); 
+                    } 
+                } 
+                
+                let newContinuity = [];
+                if(continuityData) {
+                    const cLines = continuityData.split('\n');
+                    for(let i=1; i<cLines.length; i++) {
+                        const c = cLines[i].trim().split(',');
+                        if(c.length >= 4) newContinuity.push({ 
+                            id: c[0], 
+                            name: c[1], 
+                            icon: c[2], 
+                            start: c[3], 
+                            end: c[4] || '', 
+                            visible: c[5] === 'true' 
+                        });
+                    }
+                }
+
+                if(newEvents.length > 0) { 
+                    events = newEvents; 
+                    if(newContinuity.length > 0) continuityItems = newContinuity;
+                    saveLocalData(); 
+                    renderContinuityList();
+                    render(); 
+                    showToast("Data imported successfully");
+                } 
+            }; 
+            reader.readAsText(input.files[0]); 
+        }
         
         function setupDragAndDrop() { 
             document.querySelectorAll('.draggable').forEach(el => { 
