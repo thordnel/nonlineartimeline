@@ -192,18 +192,30 @@
             font-family: var(--font-ui);
         }
 
-        /* --- Navigation Bar --- */
+        /* --- Navigation Bar Multi-Row Layout --- */
         .navigation-bar {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-bottom: 25px;
+            padding: 0 5px;
+        }
+
+        .nav-top-row {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 25px;
-            padding: 0 5px;
-            gap: 20px;
+            width: 100%;
+        }
+
+        .nav-bottom-row {
+            display: flex;
+            justify-content: flex-end;
+            width: 100%;
         }
 
         .nav-left { display: flex; align-items: center; }
-        .nav-right { display: flex; align-items: center; gap: 15px; flex-shrink: 0; }
+        .nav-right { display: flex; align-items: center; gap: 15px; }
 
         .cloud-banner {
             display: flex;
@@ -275,6 +287,7 @@
         .c-item-tag.inactive { opacity: 0.5; filter: grayscale(100%); }
         .c-item-tag.filtering { border-color: var(--primary); background-color: #f0ebe4; box-shadow: 0 0 0 2px var(--primary-hover); }
         
+        /* CSS Tooltip */
         .c-badge { 
             display: inline-flex; 
             align-items: center; 
@@ -291,7 +304,6 @@
             cursor: help; 
             position: relative;
         }
-        
         .c-badge[data-tooltip]:hover::after {
             content: attr(data-tooltip);
             position: absolute;
@@ -339,7 +351,7 @@
         .action-btn:hover { color: var(--primary); }
         .del-btn:hover { color: var(--danger); }
 
-        /* --- MultiTimeline Styles --- */
+        /* --- MultiTimeline Floating Scrollbar Fix --- */
         #multiArea { 
             display: none; 
             flex-direction: column; 
@@ -355,6 +367,7 @@
         #multiArea.show { display: flex; }
 
         .year-track { display: flex; align-items: stretch; min-width: max-content; border-bottom: 1px dashed #d4cdc3; padding-bottom: 40px; }
+        
         .year-label { 
             font-family: var(--font-ui); 
             font-weight: 900; 
@@ -436,12 +449,16 @@
             .action-group { display: flex; flex-direction: row; width: 100%; gap: 10px; }
             .action-group button { flex: 1; padding: 12px 5px; font-size: 0.75rem; }
             
-            /* Enhanced Navigation Layout (3 Rows) */
+            /* 3-Line Mobile Navigation Layout */
             .navigation-bar { display: flex; flex-direction: column; gap: 12px; padding: 0; }
-            .nav-left, .nav-right { width: 100%; display: flex; flex-direction: column; gap: 12px; }
-            .navigation-bar .btn-group-mobile { width: 100%; display: flex; gap: 8px; }
+            .nav-top-row { flex-direction: column; gap: 12px; width: 100%; }
+            .nav-bottom-row { width: 100%; display: flex; justify-content: flex-end; }
+            
+            .nav-left, .nav-right { width: 100%; display: flex; }
+            .nav-left .btn-group-mobile, .nav-right .btn-group-mobile { width: 100%; display: flex; gap: 8px; }
             .navigation-bar .btn-group-mobile button { flex: 1; width: auto; }
-            .tz-picker-compact { width: 100% !important; max-width: none !important; min-width: 0; }
+            
+            .tz-picker-compact { width: 100% !important; max-width: none !important; min-width: 0; text-align-last: right; }
 
             /* Cloud Sync Mobile Optimization */
             .cloud-banner { flex-direction: column; align-items: stretch; padding: 15px; }
@@ -559,18 +576,27 @@
         </div>
     </div>
 
-    <!-- NAVIGATION BAR -->
+    <!-- NAVIGATION BAR WITH MULTI-ROW LOGIC -->
     <div class="navigation-bar">
-        <div class="nav-left">
-            <div class="btn-group-mobile">
-                <button id="btnSortDate" class="btn-sort" onclick="sortData('date')">Sort Date</button>
-                <button id="btnSortChapter" class="btn-sort" onclick="sortData('number')">Sort Chapter</button>
+        <div class="nav-top-row">
+            <div class="nav-left">
+                <div class="btn-group-mobile">
+                    <button id="btnSortDate" class="btn-sort" onclick="sortData('date')">Sort Date</button>
+                    <button id="btnSortChapter" class="btn-sort" onclick="sortData('number')">Sort Chapter</button>
+                </div>
+            </div>
+            <div class="nav-right">
+                <div class="btn-group-mobile">
+                    <button class="btn-view active" id="btnLinear" onclick="toggleView('linear')">Linear</button>
+                    <button class="btn-view" id="btnMulti" onclick="toggleView('multi')">MultiTimeline</button>
+                    <button class="btn-view" id="btnTab" onclick="toggleView('table')">List</button>
+                </div>
             </div>
         </div>
-        <div class="nav-right">
+        <div class="nav-bottom-row">
             <select id="tzSelect" class="tz-picker-compact" onchange="updateTzPreference()">
                 <option value="">Compare Time: Off</option>
-                <option value="UTC">UTC (Universal Time)</option>
+                <option value="UTC">UTC</option>
                 <option value="Asia/Manila">Philippines</option>
                 <option value="Europe/Paris">France</option>
                 <option value="Europe/Berlin">Germany</option>
@@ -579,11 +605,6 @@
                 <option value="Europe/London">United Kingdom</option>
                 <option value="Asia/Tokyo">Japan</option>
             </select>
-            <div class="btn-group-mobile">
-                <button class="btn-view active" id="btnLinear" onclick="toggleView('linear')">Linear</button>
-                <button class="btn-view" id="btnMulti" onclick="toggleView('multi')">MultiTimeline</button>
-                <button class="btn-view" id="btnTab" onclick="toggleView('table')">List</button>
-            </div>
         </div>
     </div>
 
@@ -610,7 +631,6 @@
                 <button class="btn-print" onclick="window.print()">Print / Save PDF</button>
             </div>
             <input type="file" id="fileIn" accept=".csv" onchange="uploadCSV(this)">
-            <!-- Main Reset button disabled for the mean time -->
             <button id="btnMainReset" class="btn-reset" onclick="confirmReset()" disabled>Reset</button>
         </div>
     </div>
@@ -688,8 +708,8 @@
             const btn = document.getElementById('btnBackup'), originalText = btn.innerText;
             btn.innerText = "Checking..."; btn.disabled = true;
             try {
-                // Moving to public path to allow linking by custom ID reliably
-                const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'user_backups', activeSyncId);
+                // RULE 1 Path Fix for permission issues when using manual linking
+                const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'backups', activeSyncId);
                 const docSnap = await getDoc(docRef);
                 let infoHtml = "No existing backup found. <br>This will create a new cloud record.";
                 if (docSnap.exists()) {
@@ -706,7 +726,7 @@
         window.executeBackup = async () => {
             window.closeModal();
             try {
-                const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'user_backups', activeSyncId);
+                const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'backups', activeSyncId);
                 await setDoc(docRef, { beats: events, continuity: continuityItems, lastUpdated: Date.now(), lastDevice: user.uid });
                 showToast("✅ Successfully backed up to Cloud");
             } catch (err) { showToast("Backup failed."); }
@@ -717,7 +737,7 @@
             const btn = document.getElementById('btnRestore'), originalText = btn.innerText;
             btn.innerText = "Checking..."; btn.disabled = true;
             try {
-                const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'user_backups', activeSyncId);
+                const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'backups', activeSyncId);
                 const docSnap = await getDoc(docRef);
                 let infoHtml = "No existing cloud data found.";
                 if (docSnap.exists()) {
@@ -734,7 +754,7 @@
         window.executeRestore = async () => {
             window.closeModal();
             try {
-                const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'user_backups', activeSyncId);
+                const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'backups', activeSyncId);
                 const docSnap = await getDoc(docRef);
                 if (docSnap.exists()) { 
                     const data = docSnap.data();
@@ -749,7 +769,7 @@
 
         // --- CORE LOGIC ---
         let events = [], continuityItems = [], editIndex = -1, currentSortMethod = 'unsorted', currentTz = localStorage.getItem('storylines_tz') || '', editingContinuityId = null;
-        let activeFilterIds = []; // Array to store multiple filters
+        let activeFilterIds = []; 
         const STORAGE_KEY = 'storylines_persist';
 
         window.onload = function() {
@@ -777,9 +797,10 @@
 
         window.toggleFilterMode = () => {
             const isFilterOn = document.getElementById('filterBeatsToggle').checked;
-            if (!isFilterOn) activeFilterIds = []; // Clear filters when toggle off
+            if (!isFilterOn) activeFilterIds = []; 
             renderContinuityList(); render();
         }
+        window.toggleFilterMode = window.toggleFilterMode;
 
         window.addContinuityItem = () => {
             const name = document.getElementById('cNameIn').value, icon = document.getElementById('cIconIn').value || '🔹', start = document.getElementById('cStartIn').value, end = document.getElementById('cEndIn').value;
@@ -1133,6 +1154,42 @@
 
         window.confirmReset = () => { document.getElementById('resetModal').style.display = 'flex'; }
         window.executeReset = () => { events = []; continuityItems = []; saveLocalData(); render(); closeModal(); }
+
+        // Cleanup: Assign to window for module availability
+        window.toggleBeatPanel = window.toggleBeatPanel;
+        window.toggleContinuityPanel = window.toggleContinuityPanel;
+        window.sortData = window.sortData;
+        window.toggleView = window.toggleView;
+        window.toggleFilterMode = window.toggleFilterMode;
+        window.render = window.render;
+        window.renderContinuityList = window.renderContinuityList;
+        window.handleContinuityClick = window.handleContinuityClick;
+        window.editContinuityItem = window.editContinuityItem;
+        window.deleteContinuityItem = window.deleteContinuityItem;
+        window.cancelContinuityEdit = window.cancelContinuityEdit;
+        window.toggleContinuityVisibility = window.toggleContinuityVisibility;
+        window.handleAdd = window.handleAdd;
+        window.editEvent = window.editEvent;
+        window.cancelEdit = window.cancelEdit;
+        window.saveAsNew = window.saveAsNew;
+        window.askDelete = window.askDelete;
+        window.confirmReset = window.confirmReset;
+        window.executeReset = window.executeReset;
+        window.executeDelete = window.executeDelete;
+        window.closeModal = window.closeModal;
+        window.downloadCSV = window.downloadCSV;
+        window.uploadCSV = window.uploadCSV;
+        window.copyId = window.copyId;
+        window.linkExistingId = window.linkExistingId;
+        window.resetToOriginalId = window.resetToOriginalId;
+        window.confirmBackup = window.confirmBackup;
+        window.executeBackup = window.executeBackup;
+        window.confirmRestore = window.confirmRestore;
+        window.executeRestore = window.executeRestore;
+        window.updateTzPreference = window.updateTzPreference;
+        window.setPreferredDisplayTz = window.setPreferredDisplayTz;
+        window.addContinuityItem = window.addContinuityItem;
+
     </script>
 </body>
 </html>
