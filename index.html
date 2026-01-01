@@ -22,28 +22,20 @@
     <style>
         :root {
             /* Parchment Palette */
-            --bg: #f4f1ea;        /* Warm Parchment Background */
-            --panel: #fdfbf7;     /* Lighter Cream for panels */
-            --text-main: #2c2420; /* Dark Sepia/Ink for main text */
-            --text-muted: #5d5650;/* Muted lighter brown */
-            
-            --primary: #8c6b5d;   /* Leather Brown for primary actions */
+            --bg: #f4f1ea;
+            --panel: #fdfbf7;
+            --text-main: #2c2420;
+            --text-muted: #5d5650;
+            --primary: #8c6b5d;
             --primary-hover: #755548;
-            
-            --secondary: #a89f91; /* Stone Gray for borders/secondary */
-            
-            --danger: #c25e5e;    /* Muted Red */
-            --success: #6b8c5d;   /* Muted Green */
-            --warning: #d9a648;   /* Muted Gold */
-            --info: #5d7a8c;      /* Muted Blue */
-            
-            --cloud: #5d7a8c;     /* Muted Blue for Cloud */
-            --drag-bg: #e6e2d8;   /* Darker parchment for drag state */
-            
-            /* Font Settings */
+            --secondary: #a89f91;
+            --danger: #c25e5e;
+            --success: #6b8c5d;
+            --warning: #d9a648;
+            --info: #5d7a8c;
+            --drag-bg: #e6e2d8;
             --font-main: 'Merriweather', 'Times New Roman', serif;
             --font-ui: system-ui, -apple-system, sans-serif;
-            
             --shadow-card: 0 2px 4px rgba(44, 36, 32, 0.05), 0 1px 2px rgba(44, 36, 32, 0.1);
         }
 
@@ -52,7 +44,7 @@
         body { 
             font-family: var(--font-main); 
             font-weight: 300; 
-            max-width: 1000px; 
+            max-width: 1200px; 
             margin: 0 auto; 
             padding: 20px; 
             padding-bottom: 80px;
@@ -60,7 +52,7 @@
             color: var(--text-main);
         }
 
-        /* --- Header Area --- */
+        /* --- Header --- */
         .header-branding {
             background-image: url('parchtitle.png');
             background-size: 100% 100%;
@@ -79,7 +71,6 @@
 
         .main-title {
             color: var(--primary);
-            font-family: var(--font-main);
             font-weight: 700;
             letter-spacing: 2px;
             margin: 0;
@@ -91,12 +82,10 @@
         .main-subtitle {
             color: var(--text-muted);
             margin-top: 4px;
-            font-weight: normal;
             font-size: 0.75rem;
             font-family: var(--font-ui);
             text-transform: uppercase;
             letter-spacing: 1px;
-            line-height: 1.2;
         }
 
         .panel {
@@ -148,19 +137,10 @@
             box-shadow: 0 0 0 2px rgba(140, 107, 93, 0.1);
         }
 
-        textarea { 
-            resize: vertical; 
-            min-height: 150px; 
-            line-height: 1.5; 
-            overflow: hidden; 
-        }
+        textarea { resize: vertical; min-height: 150px; line-height: 1.5; overflow: hidden; }
 
         .btn-row { margin-top: 20px; display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
-        
-        .btn-group-mobile {
-            display: flex;
-            gap: 10px;
-        }
+        .btn-group-mobile { display: flex; gap: 10px; }
 
         button {
             padding: 10px 18px;
@@ -187,18 +167,10 @@
         .btn-reset { background-color: transparent; border: 1px solid var(--danger); color: var(--danger); }
         .btn-reset:hover { background-color: var(--danger); color: white; }
         
-        .btn-view { 
-            background-color: transparent; 
-            color: var(--text-muted); 
-            border: 1px solid #d4cdc3; 
-        }
-        .btn-view.active { 
-            background-color: var(--primary); 
-            color: white; 
-            border-color: var(--primary); 
-        }
+        .btn-view { background-color: transparent; color: var(--text-muted); border: 1px solid #d4cdc3; }
+        .btn-view.active { background-color: var(--primary); color: white; border-color: var(--primary); }
         
-        .btn-cloud { background-color: var(--cloud); }
+        .btn-cloud { background-color: var(--info); }
         .btn-print { background-color: #4a5568; }
 
         .tz-picker-compact {
@@ -231,7 +203,7 @@
             align-items: center;
             background: #fff;
             border: 1px solid #e0e7ff;
-            border-left: 4px solid var(--cloud);
+            border-left: 4px solid var(--info);
             padding: 15px 25px;
             border-radius: 4px;
             margin-bottom: 25px;
@@ -243,7 +215,7 @@
         }
         
         .cloud-banner .btn-row { margin-top: 0; }
-        .cloud-id { font-family: 'Courier New', monospace; font-weight: bold; background: #f8fafc; padding: 3px 8px; border-radius: 3px; border: 1px solid #e2e8f0; color: var(--cloud); cursor: pointer; word-break: break-all; }
+        .cloud-id { font-family: 'Courier New', monospace; font-weight: bold; background: #f8fafc; padding: 3px 8px; border-radius: 3px; border: 1px solid #e2e8f0; color: var(--info); cursor: pointer; word-break: break-all; }
         .cloud-id:hover { background: #e0f2fe; }
         .id-input-group { display: flex; gap: 8px; align-items: center; }
         .id-input { width: 180px !important; padding: 8px 10px !important; font-size: 0.8rem !important; }
@@ -311,25 +283,36 @@
 
         .td-remarks { font-size: 0.85rem; color: var(--text-muted); font-style: italic; margin-top: 8px; padding-top: 8px; border-top: 1px dashed #d4cdc3; display: block; }
         .tz-display { font-family: var(--font-ui); font-size: 0.7rem; color: var(--info); font-weight: bold; margin-top: 6px; line-height: 1.4; }
-        
-        /* New Style for Clickable Time Suggestion */
         .tz-display.clickable { cursor: pointer; padding: 2px 4px; border-radius: 3px; transition: background 0.2s; }
         .tz-display.clickable:hover { background: rgba(93, 122, 140, 0.1); color: var(--primary); }
 
         .display-basis-tag { font-family: var(--font-ui); font-size: 0.65rem; color: var(--secondary); background: #f0f0f0; padding: 2px 6px; border-radius: 10px; margin-top: 4px; display: inline-block; font-weight: 700; text-transform: uppercase; }
 
-        tr.draggable { cursor: grab; }
-        tr.dragging { background-color: var(--drag-bg); opacity: 0.8; }
-        tr.drag-over { border-bottom: 2px solid var(--primary); }
+        tr.draggable, .h-item.draggable { cursor: grab; }
+        tr.dragging, .h-item.dragging { opacity: 0.4; background-color: var(--drag-bg); }
+        tr.drag-over, .h-item.drag-over { border-bottom: 2px solid var(--primary); }
 
         .action-btn { background: none; border: none; cursor: pointer; font-size: 1.1rem; padding: 5px; color: var(--secondary); transition: color 0.2s;}
         .action-btn:hover { color: var(--primary); }
         .del-btn:hover { color: var(--danger); }
 
+        /* --- MultiTimeline Styles --- */
+        #multiArea { display: none; flex-direction: column; gap: 40px; overflow-x: auto; padding: 40px 0; scrollbar-width: thin; }
+        #multiArea.show { display: flex; }
+
+        .year-track { display: flex; align-items: stretch; min-width: max-content; border-bottom: 1px dashed #d4cdc3; padding-bottom: 40px; }
+        .year-label { font-family: var(--font-ui); font-weight: 900; font-size: 2.5rem; color: #ebe5dc; position: sticky; left: 0; z-index: 10; pointer-events: none; line-height: 1; padding-right: 20px; text-shadow: 2px 2px 0 #fff; display: flex; align-items: center; background: rgba(253, 251, 247, 0.8); }
+        
+        .multi-day-slot { display: flex; flex-direction: column; gap: 15px; border-left: 2px solid #ebe5dc; padding-left: 15px; min-width: 180px; position: relative; }
+        .multi-day-slot::before { content: ''; position: absolute; left: -6px; top: 0; width: 10px; height: 10px; background: var(--bg); border: 2px solid var(--primary); border-radius: 50%; }
+        .day-num-label { font-family: var(--font-ui); font-size: 0.7rem; color: var(--primary); font-weight: 800; position: absolute; top: -25px; left: -10px; background: var(--bg); padding: 0 5px; border-radius: 10px; border: 1px solid #ebe5dc; }
+
         #visualArea { display: none; overflow-x: auto; padding: 40px 0; white-space: nowrap; scroll-behavior: smooth; transform: rotateX(180deg); align-items: flex-end; scrollbar-color: var(--secondary) transparent; scrollbar-width: thin; }
         #visualArea.show { display: flex; }
 
         .h-item { display: inline-flex; flex-direction: column; align-items: center; position: relative; min-width: 220px; padding: 0; vertical-align: top; transform: rotateX(180deg); overflow: visible; }
+        .multi-day-slot .h-item { transform: none; min-width: auto; padding: 0; }
+
         .h-dot-container { width: 100%; height: 30px; position: relative; display: flex; align-items: center; justify-content: center; flex-shrink: 0; z-index: 0; overflow: visible; }
         .h-line { position: absolute; top: 50%; left: 50%; width: 100%; height: 2px; background: #d4cdc3; transform: translateY(-50%); z-index: -1; pointer-events: none; }
         .h-item:last-child .h-line { display: none; }
@@ -343,11 +326,11 @@
         .h-dot:hover { background: var(--primary); transform: scale(1.2); }
 
         .h-card { margin-top: 15px; background: #fff; border: 1px solid #e6e0d4; border-top: 3px solid var(--primary); border-radius: 2px; padding: 15px; width: 190px; margin-left: 15px; margin-right: 15px; white-space: normal; text-align: left; position: relative; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); transition: transform 0.2s; cursor: pointer; }
+        .multi-day-slot .h-card { margin: 0; width: 160px; padding: 12px; }
         .h-card:hover { transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
         .h-detail-text { font-size: 0.9rem; font-weight: 300; color: var(--text-main); line-height: 1.5; white-space: pre-wrap; }
         .h-val-text { font-family: var(--font-ui); font-size: 0.7rem; color: var(--secondary); margin-top: 0; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
         .h-chap-title { font-size: 0.95rem; font-weight: 700; color: var(--text-main); margin-top: 4px; line-height: 1.2; font-family: var(--font-main); }
-        .h-sub-title { font-size: 0.8rem; font-style: italic; color: var(--text-muted); margin-bottom: 12px; line-height: 1.3; }
         .h-divider { border-bottom: 1px solid #f0ebe4; margin-bottom: 12px; }
         .h-remarks { margin-top: 12px; padding-top: 8px; border-top: 1px dashed #d4cdc3; font-size: 0.8rem; color: var(--text-muted); font-style: italic; line-height: 1.4; white-space: pre-wrap; }
 
@@ -361,34 +344,11 @@
         #toast { visibility: hidden; min-width: 250px; background-color: var(--text-main); color: #fff; text-align: center; border-radius: 4px; padding: 12px 16px; position: fixed; z-index: 2000; left: 50%; bottom: 30px; transform: translateX(-50%); opacity: 0; transition: opacity 0.3s, bottom 0.3s; font-family: var(--font-ui); font-size: 0.9rem; }
         #toast.show { visibility: visible; opacity: 1; bottom: 50px; }
 
-        .readme-footer { margin-top: 50px; border-top: 1px solid #e6e0d4; padding-top: 30px; text-align: center; }
-        .readme-toggle-btn { background: transparent; border: 1px solid var(--secondary); color: var(--secondary); padding: 8px 20px; border-radius: 20px; font-family: var(--font-ui); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; transition: all 0.2s; }
-        .readme-toggle-btn:hover { border-color: var(--primary); color: var(--primary); background: rgba(140, 107, 93, 0.05); }
-        
-        #readmeContainer { display: none; margin-top: 30px; text-align: left; background: #fff; padding: 40px; border-radius: 2px; border: 1px solid #e6e0d4; line-height: 1.8; color: var(--text-main); max-width: 800px; margin-left: auto; margin-right: auto; font-family: var(--font-main); }
-        #readmeContainer h1, #readmeContainer h2 { color: var(--primary); border-bottom: 1px solid #f0ebe4; padding-bottom: 10px; margin-top: 30px; }
-        #readmeContainer code { background: #f4f1ea; padding: 2px 6px; border-radius: 3px; font-family: monospace; color: var(--primary); }
-
         @media (max-width: 768px) {
             body { padding: 10px; padding-bottom: 100px; }
             .panel { padding: 15px; border-radius: 0; margin-left: -10px; margin-right: -10px; border-left: none; border-right: none; }
             .controls { grid-template-columns: 1fr; gap: 15px; }
-            .col-span-2, .col-span-full { grid-column: auto; }
-            .btn-row { gap: 10px; justify-content: stretch; }
-            .btn-row > * { flex-grow: 1; }
-            .cloud-banner { flex-direction: column; text-align: center; gap: 15px; border-radius: 0; margin-left: -10px; margin-right: -10px; border-left: none; border-right: none; padding: 15px 10px; }
-            .id-input-group { width: 100%; display: flex; flex-direction: row; gap: 8px; }
-            .id-input-group .id-input { flex-grow: 1; width: auto !important; }
-            .cloud-banner .btn-row { width: 100%; display: flex; flex-direction: row; gap: 10px; margin: 0; }
-            .cloud-banner .btn-row button { flex: 1; width: auto; }
-            #visualArea { padding: 20px 0; }
-            .view-container { padding: 15px; border-radius: 0; margin-left: -10px; margin-right: -10px; border-left: none; border-right: none;}
-            th:nth-child(2), td:nth-child(2) { font-size: 0.8rem; }
-            .tz-picker-compact { width: 100%; }
-            .btn-group-mobile { display: flex; gap: 10px; width: 100%; }
-            .btn-group-mobile > button { flex: 1; width: auto; }
             .header-branding { width: 90%; }
-            .navigation-bar { flex-direction: column; align-items: stretch; gap: 10px; }
         }
     </style>
 </head>
@@ -428,7 +388,6 @@
                         <option value="Europe/Riga">Latvia</option>
                     </select>
                 </div>
-                
                 <div class="input-group col-span-2">
                     <label>Chapter Title</label>
                     <input type="text" id="chapTitleIn" placeholder="e.g. The Beginning">
@@ -437,18 +396,15 @@
                     <label>SubChapter Title</label>
                     <input type="text" id="subChapTitleIn" placeholder="e.g. The Arrival">
                 </div>
-
                 <div class="input-group col-span-full">
                     <label>Details</label>
                     <textarea id="detailIn" rows="3" maxlength="1000" placeholder="Write your story beat here..."></textarea>
                 </div>
-                
                 <div class="input-group col-span-full">
                     <label>Remarks</label>
                     <textarea id="remarksIn" rows="2" maxlength="500" placeholder="Notes, themes, or internal comments..." style="min-height:80px;"></textarea>
                 </div>
             </div>
-
             <div class="btn-row">
                 <div class="btn-group-mobile action-group">
                     <button id="btnAdd" class="btn-add" onclick="handleAdd()">+ Add Beat</button>
@@ -496,7 +452,7 @@
         </div>
     </div>
 
-    <!-- TIMELINE NAVIGATION BAR -->
+    <!-- NAVIGATION BAR -->
     <div class="navigation-bar">
         <div class="btn-group-mobile">
             <button class="btn-sort" onclick="sortData('date')">Sort Date</button>
@@ -505,7 +461,7 @@
 
         <select id="tzSelect" class="tz-picker-compact" onchange="updateTzPreference()">
             <option value="">Compare Time: Off</option>
-            <option value="UTC">UTC (Universal Time)</option>
+            <option value="UTC">UTC</option>
             <option value="Asia/Manila">Philippines</option>
             <option value="Europe/Paris">France</option>
             <option value="Europe/Berlin">Germany</option>
@@ -516,15 +472,17 @@
         </select>
 
         <div class="btn-group-mobile">
-            <button class="btn-view active" id="btnVis" onclick="toggleView('visual')">Visual</button>
+            <button class="btn-view active" id="btnLinear" onclick="toggleView('linear')">Linear</button>
+            <button class="btn-view" id="btnMulti" onclick="toggleView('multi')">MultiTimeline</button>
             <button class="btn-view" id="btnTab" onclick="toggleView('table')">List</button>
         </div>
     </div>
 
-    <!-- RESULT DISPLAY -->
+    <!-- RESULTS -->
     <div class="view-container">
         <div id="viewHeaderLabel" class="view-header-label">UNSORTED</div>
         <div id="visualArea" class="show"></div>
+        <div id="multiArea"></div>
         <table id="tableArea">
             <thead>
                 <tr><th></th><th>Date / Time</th><th>Chapter</th><th>Details</th><th>Action</th></tr>
@@ -630,7 +588,7 @@
                     }
                 }
                 document.getElementById('backupInfo').innerHTML = infoHtml; document.getElementById('backupModal').style.display = 'flex';
-            } catch(e) { showToast("Could not verify cloud status."); } finally { btn.innerText = originalText; btn.disabled = false; }
+            } catch(e) { showToast("Cloud verify failed."); } finally { btn.innerText = originalText; btn.disabled = false; }
         }
 
         window.executeBackup = async () => {
@@ -657,7 +615,7 @@
                     }
                 }
                 document.getElementById('restoreInfo').innerHTML = infoHtml; document.getElementById('restoreModal').style.display = 'flex';
-            } catch(e) { showToast("Could not verify cloud status."); } finally { btn.innerText = originalText; btn.disabled = false; }
+            } catch(e) { showToast("Cloud verify failed."); } finally { btn.innerText = originalText; btn.disabled = false; }
         }
 
         window.executeRestore = async () => {
@@ -712,7 +670,7 @@
             } else { continuityItems.push({ id: Date.now().toString(), name, icon, start, end, visible: true }); }
             saveLocalData(); renderContinuityList(); render();
         }
-        window.cancelContinuityEdit = () => { editingContinuityId = null; document.getElementById('cNameIn').value = ''; document.getElementById('cIconIn').value = ''; document.getElementById('cStartIn').value = ''; document.getElementById('cEndIn').value = ''; document.getElementById('btnCAdd').innerText = "+ Add Item"; document.getElementById('btnCCancel').style.display = 'none'; }
+        window.cancelContinuityEdit = () => { editingContinuityId = null; document.getElementById('cNameIn').value = ''; document.getElementById('cIconIn').value = ''; document.getElementById('cStartIn').value = ''; document.getElementById('btnCAdd').innerText = "+ Add Item"; document.getElementById('btnCCancel').style.display = 'none'; }
         window.toggleContinuityVisibility = (id) => { const item = continuityItems.find(i => i.id === id); if(item) { item.visible = !item.visible; saveLocalData(); renderContinuityList(); render(); } }
         function renderContinuityList() { const container = document.getElementById('continuityListArea'); container.innerHTML = ''; const sorted = [...continuityItems].sort((a, b) => new Date(a.start) - new Date(b.start)); sorted.forEach(item => { const el = document.createElement('div'); el.className = `c-item-tag ${!item.visible ? 'inactive' : ''}`; el.innerHTML = `<span onclick="toggleContinuityVisibility('${item.id}')" style="cursor:pointer; margin-right:5px; opacity:0.6;">${item.visible ? '👁️' : '🔒'}</span><span style="font-weight:bold;">${item.icon} ${item.name}</span>`; container.appendChild(el); }); }
         function getActiveContinuity(beatDateStr) { const beatDate = new Date(beatDateStr); return continuityItems.filter(item => { if(!item.visible) return false; const s = new Date(item.start), e = item.end ? new Date(item.end) : null; return beatDate >= s && (!e || beatDate <= e); }); }
@@ -744,16 +702,14 @@
             } catch(e) { return null; } 
         }
 
-        // Feature: Set Preferred Display Timezone per beat
         window.setPreferredDisplayTz = (index, tz) => {
             if (!tz) return;
             const sel = document.getElementById('tzSelect');
             const country = sel.options[sel.selectedIndex].text;
             events[index].preferredDisplayTz = tz;
             events[index].preferredCountry = country;
-            saveLocalData();
-            render();
-            showToast(`Display Date set to ${country}`);
+            saveLocalData(); render();
+            showToast(`Display set to ${country}`);
         }
 
         window.handleAdd = () => {
@@ -762,10 +718,8 @@
             const date = convertToLocal(rawDate, sourceTz), beat = { date, number: parseFloat(num), chapterTitle: cT, subChapterTitle: sT, details: det, remarks: rem };
             if (editIndex > -1) { 
                 const old = events[editIndex];
-                beat.preferredDisplayTz = old.preferredDisplayTz;
-                beat.preferredCountry = old.preferredCountry;
-                events[editIndex] = beat; 
-                cancelEdit(); 
+                beat.preferredDisplayTz = old.preferredDisplayTz; beat.preferredCountry = old.preferredCountry;
+                events[editIndex] = beat; cancelEdit(); 
             } else { events.push(beat); sortData(currentSortMethod); clearInputs(); }
             saveLocalData(); render();
         }
@@ -779,64 +733,129 @@
         window.cancelEdit = () => { editIndex = -1; clearInputs(); document.getElementById('btnAdd').innerText = "+ Add Beat"; document.getElementById('btnAdd').className = "btn-add"; document.getElementById('btnCancel').style.display = "none"; document.getElementById('btnSaveNew').style.display = "none"; }
         window.saveAsNew = () => { editIndex = -1; handleAdd(); cancelEdit(); }
 
+        function createCardHtml(evt, i) {
+            let displayDate, displayTime, displayDay, displayBasis = "Local Browser";
+            if (evt.preferredDisplayTz) {
+                const pref = convertTime(evt.date, evt.preferredDisplayTz);
+                if (pref) { displayDate = pref.dateRaw; displayTime = pref.time; displayDay = pref.weekday; displayBasis = evt.preferredCountry || "Custom Location"; }
+            }
+            if (!displayDate) {
+                const localD = new Date(evt.date);
+                displayDate = `${localD.getUTCDate()} ${MONTHS[localD.getUTCMonth()]} ${localD.getUTCFullYear()}`;
+                displayTime = evt.date.split('T')[1] || '00:00';
+                displayDay = localD.toLocaleDateString('en-US', { weekday: 'long' });
+            }
+
+            const conv = convertTime(evt.date, currentTz);
+            let altTzHtml = '';
+            if (conv && currentTz) {
+                const sel = document.getElementById('tzSelect');
+                const countryName = sel.options[sel.selectedIndex].text;
+                altTzHtml = `<div class="tz-display clickable" onclick="event.stopPropagation(); setPreferredDisplayTz(${i}, '${currentTz}')" title="Click to set as Display Date">✈ ${countryName}: ${conv.dateRaw}, ${conv.time}<br><span style="font-weight: normal;">${conv.weekday}</span></div>`;
+            }
+
+            const activeItems = getActiveContinuity(evt.date).sort((a, b) => new Date(a.start) - new Date(b.start));
+            let cHtml = ''; 
+            if(activeItems.length > 0) {
+                cHtml = '<div class="c-badges-container">';
+                activeItems.forEach(ci => cHtml += `<span class="c-badge">${ci.icon} ${ci.name}</span>`);
+                cHtml += '</div>';
+            }
+
+            const dragAttr = currentSortMethod === 'number' ? 'draggable="true"' : '', dragClass = currentSortMethod === 'number' ? 'draggable' : '';
+
+            return {
+                table: `<tr class="${dragClass}" data-index="${i}" ${dragAttr}><td>${currentSortMethod === 'number' ? '☰' : ''}</td><td style="white-space: nowrap;">${displayDate} ${displayTime}<br><small>${displayDay}</small><br><span class="display-basis-tag">${displayBasis}</span>${altTzHtml}</td><td><b>${evt.number}</b><br><span style="font-weight:700;">${evt.chapterTitle || ''}</span></td><td>${evt.details}${evt.remarks ? `<div class="td-remarks">📝 ${evt.remarks}</div>` : ''}<div style="margin-top:8px">${cHtml}</div></td><td><button class="action-btn" onclick="editEvent(${i})">✎</button><button class="action-btn del-btn" onclick="askDelete(${i})">×</button></td></tr>`,
+                linear: `<div class="h-item ${dragClass}" data-index="${i}" ${dragAttr}><div class="h-date-wrap"><div class="h-date">${displayDate}</div><div class="h-day">${displayDay}</div><div class="h-time">${displayTime}<br><span class="display-basis-tag">${displayBasis}</span>${altTzHtml}</div></div><div class="h-dot-container"><div class="h-line"></div><div class="h-dot" onclick="editEvent(${i})"></div></div><div class="h-card" onclick="editEvent(${i})"><span class="card-del" onclick="event.stopPropagation(); askDelete(${i})">×</span><div class="h-val-text">Chapter ${evt.number}</div>${evt.chapterTitle ? `<div class="h-chap-title">${evt.chapterTitle}</div>` : ''}<div class="h-divider"></div><div class="h-detail-text">${evt.details}</div>${evt.remarks ? `<div class="h-remarks">${evt.remarks}</div>` : ''}${cHtml}</div></div>`,
+                multi: `<div class="h-item"><div class="h-date-wrap" style="min-height:auto; text-align:left;"><div class="h-date" style="font-size:0.7rem; font-weight:900;">${displayDate}</div><div class="h-time" style="font-size:0.6rem; color:var(--text-muted)">${displayTime} <span class="display-basis-tag" style="font-size:0.5rem; padding:1px 3px;">${displayBasis}</span></div>${altTzHtml}</div><div class="h-card" onclick="editEvent(${i})"><span class="card-del" onclick="event.stopPropagation(); askDelete(${i})">×</span><div class="h-val-text" style="font-size:0.55rem">CH ${evt.number}</div><div class="h-chap-title" style="font-size:0.75rem">${evt.chapterTitle || '...'}</div><div class="h-divider"></div><div class="h-detail-text" style="font-size:0.75rem">${evt.details.substring(0, 80)}${evt.details.length > 80 ? '...' : ''}</div>${cHtml}</div></div>`
+            };
+        }
+
         function render() {
-            const vis = document.getElementById('visualArea'), body = document.getElementById('tableBody'), msg = document.getElementById('emptyMsg');
-            vis.innerHTML = ''; body.innerHTML = ''; if (events.length === 0) { msg.style.display = 'block'; return; } msg.style.display = 'none';
+            const linear = document.getElementById('visualArea'), body = document.getElementById('tableBody'), multi = document.getElementById('multiArea'), msg = document.getElementById('emptyMsg');
+            linear.innerHTML = ''; body.innerHTML = ''; multi.innerHTML = ''; if (events.length === 0) { msg.style.display = 'block'; return; } msg.style.display = 'none';
             
+            // 1. Setup Standard Views
             events.forEach((evt, i) => {
-                // Determine Main Display Basis
-                let displayDate, displayTime, displayDay, displayBasis = "Local Browser";
-                if (evt.preferredDisplayTz) {
-                    const pref = convertTime(evt.date, evt.preferredDisplayTz);
-                    if (pref) {
-                        displayDate = pref.dateRaw;
-                        displayTime = pref.time;
-                        displayDay = pref.weekday;
-                        displayBasis = evt.preferredCountry || "Custom Location";
-                    }
-                }
-                
-                // Fallback to local if preferred not set or failing
-                if (!displayDate) {
-                    const localD = new Date(evt.date);
-                    displayDate = `${localD.getDate()} ${MONTHS[localD.getMonth()]} ${localD.getFullYear()}`;
-                    displayTime = evt.date.split('T')[1] || '00:00';
-                    displayDay = localD.toLocaleDateString('en-US', { weekday: 'long' });
-                }
-
-                // Alternative Comparison View (Blue clickable text)
-                const conv = convertTime(evt.date, currentTz);
-                let altTzHtml = '';
-                if (conv && currentTz) {
-                    const sel = document.getElementById('tzSelect');
-                    const countryName = sel.options[sel.selectedIndex].text;
-                    altTzHtml = `<div class="tz-display clickable" onclick="event.stopPropagation(); setPreferredDisplayTz(${i}, '${currentTz}')" title="Click to set as Display Date for this beat">✈ ${countryName}: ${conv.dateRaw}, ${conv.time}<br><span style="font-weight: normal;">${conv.weekday}</span></div>`;
-                }
-
-                let detailsHtml = evt.details; 
-                if(evt.remarks) { detailsHtml += `<div class="td-remarks">📝 ${evt.remarks}</div>`; }
-                
-                const activeItems = getActiveContinuity(evt.date).sort((a, b) => new Date(a.start) - new Date(b.start));
-                let cHtml = ''; 
-                if(activeItems.length > 0) {
-                    cHtml = '<div class="c-badges-container">';
-                    activeItems.forEach(ci => cHtml += `<span class="c-badge">${ci.icon} ${ci.name}</span>`);
-                    cHtml += '</div>'; detailsHtml += `<div style="margin-top:8px">${cHtml}</div>`; 
-                }
-
-                const dragAttr = currentSortMethod === 'number' ? 'draggable="true"' : '', dragClass = currentSortMethod === 'number' ? 'draggable' : '';
-                
-                // Table Rendering
-                body.innerHTML += `<tr class="${dragClass}" data-index="${i}" ${dragAttr}><td>${currentSortMethod === 'number' ? '☰' : ''}</td><td style="white-space: nowrap;">${displayDate} ${displayTime}<br><small>${displayDay}</small><br><span class="display-basis-tag">${displayBasis}</span>${altTzHtml}</td><td><b>${evt.number}</b><br><span style="font-weight:700;">${evt.chapterTitle || ''}</span></td><td>${detailsHtml}</td><td><button class="action-btn" onclick="editEvent(${i})">✎</button><button class="action-btn del-btn" onclick="askDelete(${i})">×</button></td></tr>`;
-                
-                // Visual Rendering
-                vis.innerHTML += `<div class="h-item" data-index="${i}"><div class="h-date-wrap"><div class="h-date">${displayDate}</div><div class="h-day">${displayDay}</div><div class="h-time">${displayTime}<br><span class="display-basis-tag">${displayBasis}</span>${altTzHtml}</div></div><div class="h-dot-container"><div class="h-line"></div><div class="h-dot" onclick="editEvent(${i})"></div></div><div class="h-card" onclick="editEvent(${i})"><span class="card-del" onclick="event.stopPropagation(); askDelete(${i})">×</span><div class="h-val-text">Chapter ${evt.number}</div>${evt.chapterTitle ? `<div class="h-chap-title">${evt.chapterTitle}</div>` : ''}<div class="h-divider"></div><div class="h-detail-text">${evt.details}</div>${evt.remarks ? `<div class="h-remarks">${evt.remarks}</div>` : ''}${cHtml}</div></div>`;
+                const parts = createCardHtml(evt, i);
+                body.innerHTML += parts.table;
+                linear.innerHTML += parts.linear;
             });
+
+            // 2. Setup MultiTimeline View
+            const yearGroups = {};
+            const activeDayNumbers = new Set();
+            events.forEach((evt, i) => {
+                const d = new Date(evt.date);
+                const year = d.getUTCFullYear();
+                activeDayNumbers.add(d.getUTCDate());
+                if (!yearGroups[year]) yearGroups[year] = [];
+                yearGroups[year].push({ ...evt, originalIndex: i });
+            });
+
+            const sortedYears = Object.keys(yearGroups).sort((a, b) => b - a);
+            const sortedDayLabels = Array.from(activeDayNumbers).sort((a, b) => a - b);
+
+            sortedYears.forEach(year => {
+                const track = document.createElement('div');
+                track.className = 'year-track';
+                track.innerHTML = `<div class="year-label">${year}</div>`;
+                
+                // For each "Active Day" across the project, we create a slot in this year's track
+                sortedDayLabels.forEach(dayNum => {
+                    const slotEl = document.createElement('div');
+                    slotEl.className = 'multi-day-slot';
+                    
+                    // Filter events for this year and this day
+                    const yearDayBeats = yearGroups[year].filter(b => new Date(b.date).getUTCDate() === dayNum)
+                        .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+                    if (yearDayBeats.length > 0) {
+                        const dayTag = document.createElement('div');
+                        dayTag.className = 'day-num-label';
+                        dayTag.innerText = `DAY ${dayNum}`;
+                        slotEl.appendChild(dayTag);
+
+                        // Cluster into stacks by the 3-hour window
+                        const stacks = [];
+                        yearDayBeats.forEach(beat => {
+                            const bTime = new Date(beat.date).getTime();
+                            let stacked = false;
+                            for(let stack of stacks) {
+                                const stackRefTime = new Date(stack[0].date).getTime();
+                                if (Math.abs(bTime - stackRefTime) <= 3 * 60 * 60 * 1000) { 
+                                    stack.push(beat); stacked = true; break;
+                                }
+                            }
+                            if(!stacked) stacks.push([beat]);
+                        });
+
+                        stacks.forEach(stack => {
+                            stack.forEach(beat => {
+                                const cardParts = createCardHtml(beat, beat.originalIndex);
+                                slotEl.innerHTML += cardParts.multi;
+                            });
+                        });
+                    }
+                    track.appendChild(slotEl);
+                });
+                multi.appendChild(track);
+            });
+
             if (currentSortMethod === 'number') setupDragAndDrop();
         }
 
         window.sortData = (type) => { currentSortMethod = type; const label = document.getElementById('viewHeaderLabel'); if (type === 'number') { events.sort((a, b) => a.number - b.number); label.innerText = "CHAPTER"; } else if (type === 'date') { events.sort((a, b) => new Date(a.date) - new Date(b.date)); label.innerText = "CHRONOLOGICAL"; } render(); }
-        window.toggleView = (v) => { document.getElementById('btnVis').classList.toggle('active', v === 'visual'); document.getElementById('btnTab').classList.toggle('active', v === 'table'); document.getElementById('visualArea').style.display = v === 'visual' ? 'flex' : 'none'; document.getElementById('tableArea').style.display = v === 'table' ? 'table' : 'none'; }
+        
+        window.toggleView = (v) => { 
+            document.getElementById('btnLinear').classList.toggle('active', v === 'linear');
+            document.getElementById('btnMulti').classList.toggle('active', v === 'multi');
+            document.getElementById('btnTab').classList.toggle('active', v === 'table');
+            document.getElementById('visualArea').classList.toggle('show', v === 'linear');
+            document.getElementById('multiArea').classList.toggle('show', v === 'multi');
+            document.getElementById('tableArea').classList.toggle('show', v === 'table');
+        }
+
         function clearInputs() { document.getElementById('dateIn').value = ''; document.getElementById('numIn').value = ''; document.getElementById('chapTitleIn').value = ''; document.getElementById('subChapTitleIn').value = ''; document.getElementById('detailIn').value = ''; document.getElementById('remarksIn').value = ''; document.getElementById('detailIn').style.height = 'auto'; }
         function showToast(m) { const t = document.getElementById("toast"); t.innerText = m; t.className = "show"; setTimeout(() => t.className = "", 3000); }
         window.askDelete = (i) => { deleteTargetIndex = i; document.getElementById('deleteModal').style.display = 'flex'; }
@@ -846,20 +865,13 @@
         window.downloadCSV = () => { 
             if (events.length === 0) return showToast("No data to save."); 
             let csv = "Date,Chapter,ChapterTitle,SubChapterTitle,Details,Remarks,PrefTz,PrefCountry\n"; 
-            events.forEach(e => { 
-                csv += `${e.date},${e.number},${(e.chapterTitle || '').replace(/,/g, '{com}')},${(e.subChapterTitle || '').replace(/,/g, '{com}')},${e.details.replace(/\n/g, '{nl}').replace(/,/g, '{com}')},${(e.remarks || '').replace(/\n/g, '{nl}').replace(/,/g, '{com}')},${e.preferredDisplayTz || ''},${e.preferredCountry || ''}\n`; 
-            }); 
+            events.forEach(e => { csv += `${e.date},${e.number},${(e.chapterTitle || '').replace(/,/g, '{com}')},${(e.subChapterTitle || '').replace(/,/g, '{com}')},${e.details.replace(/\n/g, '{nl}').replace(/,/g, '{com}')},${(e.remarks || '').replace(/\n/g, '{nl}').replace(/,/g, '{com}')},${e.preferredDisplayTz || ''},${e.preferredCountry || ''}\n`; }); 
             if(continuityItems.length > 0) { 
                 csv += "\n[CONTINUITY_DATA_START]\nID,Name,Icon,Start,End,Visible\n"; 
-                continuityItems.forEach(ci => { 
-                    csv += `${ci.id},${ci.name},${ci.icon},${ci.start},${ci.end || ''},${ci.visible}\n`; 
-                }); 
+                continuityItems.forEach(ci => { csv += `${ci.id},${ci.name},${ci.icon},${ci.start},${ci.end || ''},${ci.visible}\n`; }); 
                 csv += "[CONTINUITY_DATA_END]\n"; 
             } 
-            const a = document.createElement('a'); 
-            a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' })); 
-            a.download = 'storylines.csv'; 
-            a.click(); 
+            const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' })); a.download = 'storylines.csv'; a.click(); 
         }
 
         window.uploadCSV = (input) => { 
@@ -870,64 +882,50 @@
                 const continuitySplit = text.split('[CONTINUITY_DATA_START]');
                 const beatsData = continuitySplit[0].trim();
                 const continuityData = continuitySplit[1] ? continuitySplit[1].split('[CONTINUITY_DATA_END]')[0].trim() : null;
-                
                 const lines = beatsData.split('\n'); 
                 let newEvents = []; 
                 for(let i=1; i<lines.length; i++) { 
                     const p = lines[i].trim().split(','); 
                     if(p.length >= 3) { 
                         const d = p[0], n = parseFloat(p[1]); 
-                        if(!isNaN(n)) newEvents.push({ 
-                            date: d, 
-                            number: n, 
-                            chapterTitle: p[2]?.replace(/{com}/g,','), 
-                            subChapterTitle: p[3]?.replace(/{com}/g,','), 
-                            details: p[4]?.replace(/{nl}/g,'\n').replace(/{com}/g,','), 
-                            remarks: p[5]?.replace(/{nl}/g,'\n').replace(/{com}/g,','), 
-                            preferredDisplayTz: p[6] || '', 
-                            preferredCountry: p[7] || '' 
-                        }); 
+                        if(!isNaN(n)) newEvents.push({ date: d, number: n, chapterTitle: p[2]?.replace(/{com}/g,','), subChapterTitle: p[3]?.replace(/{com}/g,','), details: p[4]?.replace(/{nl}/g,'\n').replace(/{com}/g,','), remarks: p[5]?.replace(/{nl}/g,'\n').replace(/{com}/g,','), preferredDisplayTz: p[6] || '', preferredCountry: p[7] || '' }); 
                     } 
                 } 
-                
                 let newContinuity = [];
                 if(continuityData) {
                     const cLines = continuityData.split('\n');
                     for(let i=1; i<cLines.length; i++) {
                         const c = cLines[i].trim().split(',');
-                        if(c.length >= 4) newContinuity.push({ 
-                            id: c[0], 
-                            name: c[1], 
-                            icon: c[2], 
-                            start: c[3], 
-                            end: c[4] || '', 
-                            visible: c[5] === 'true' 
-                        });
+                        if(c.length >= 4) newContinuity.push({ id: c[0], name: c[1], icon: c[2], start: c[3], end: c[4] || '', visible: c[5] === 'true' });
                     }
                 }
-
-                if(newEvents.length > 0) { 
-                    events = newEvents; 
-                    if(newContinuity.length > 0) continuityItems = newContinuity;
-                    saveLocalData(); 
-                    renderContinuityList();
-                    render(); 
-                    showToast("Data imported successfully");
-                } 
+                if(newEvents.length > 0) { events = newEvents; if(newContinuity.length > 0) continuityItems = newContinuity; saveLocalData(); renderContinuityList(); render(); showToast("Data imported successfully"); } 
             }; 
             reader.readAsText(input.files[0]); 
         }
         
         function setupDragAndDrop() { 
+            if (currentSortMethod !== 'number') return;
             document.querySelectorAll('.draggable').forEach(el => { 
                 el.ondragstart = (e) => { e.dataTransfer.setData('idx', el.dataset.index); el.classList.add('dragging'); }; 
                 el.ondragover = (e) => { e.preventDefault(); e.currentTarget.classList.add('drag-over'); }; 
                 el.ondragleave = (e) => { e.currentTarget.classList.remove('drag-over'); }; 
-                el.ondrop = (e) => { e.preventDefault(); e.currentTarget.classList.remove('drag-over'); const from = parseInt(e.dataTransfer.getData('idx')), to = parseInt(el.dataset.index); if (from === to) return; const item = events.splice(from, 1)[0]; events.splice(to, 0, item); saveLocalData(); render(); }; 
+                el.ondrop = (e) => { 
+                    e.preventDefault(); 
+                    e.currentTarget.classList.remove('drag-over'); 
+                    const from = parseInt(e.dataTransfer.getData('idx')), to = parseInt(el.dataset.index); 
+                    if (isNaN(from) || from === to) return; 
+                    if (Math.floor(events[from].number) !== Math.floor(events[to].number)) return showToast("Cannot move between chapters.");
+                    const item = events.splice(from, 1)[0]; 
+                    events.splice(to, 0, item); 
+                    const intPart = Math.floor(item.number), groupIndices = [];
+                    events.forEach((ev, idx) => { if(Math.floor(ev.number) === intPart) groupIndices.push(idx); });
+                    const step = groupIndices.length > 9 ? 0.01 : 0.1;
+                    groupIndices.forEach((arrayIdx, k) => { events[arrayIdx].number = parseFloat((intPart + (k + 1) * step).toFixed(2)); });
+                    saveLocalData(); render(); 
+                }; 
             }); 
         }
-
-        window.toggleReadme = async () => { const container = document.getElementById('readmeContainer'); container.style.display = container.style.display === 'block' ? 'none' : 'block'; if(!container.innerHTML) container.innerHTML = "Documentation loading..."; }
 
         function confirmReset() { document.getElementById('resetModal').style.display = 'flex'; }
         window.executeReset = () => { events = []; continuityItems = []; saveLocalData(); render(); closeModal(); }
