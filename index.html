@@ -484,8 +484,8 @@
     <!-- NAVIGATION BAR -->
     <div class="navigation-bar">
         <div class="btn-group-mobile">
-            <button class="btn-sort" onclick="sortData('date')">Sort Date</button>
-            <button class="btn-sort" onclick="sortData('number')">Sort Chapter</button>
+            <button id="btnSortDate" class="btn-sort" onclick="sortData('date')">Sort Date</button>
+            <button id="btnSortChapter" class="btn-sort" onclick="sortData('number')">Sort Chapter</button>
         </div>
 
         <select id="tzSelect" class="tz-picker-compact" onchange="updateTzPreference()">
@@ -877,9 +877,15 @@
             document.getElementById('btnLinear').classList.toggle('active', v === 'linear');
             document.getElementById('btnMulti').classList.toggle('active', v === 'multi');
             document.getElementById('btnTab').classList.toggle('active', v === 'table');
+            
             document.getElementById('visualArea').classList.toggle('show', v === 'linear');
             document.getElementById('multiArea').classList.toggle('show', v === 'multi');
             document.getElementById('tableArea').classList.toggle('show', v === 'table');
+
+            // Logic to disable/enable sort buttons
+            const isMulti = v === 'multi';
+            document.getElementById('btnSortDate').disabled = isMulti;
+            document.getElementById('btnSortChapter').disabled = isMulti;
         }
 
         function clearInputs() { document.getElementById('dateIn').value = ''; document.getElementById('numIn').value = ''; document.getElementById('chapTitleIn').value = ''; document.getElementById('subChapTitleIn').value = ''; document.getElementById('detailIn').value = ''; document.getElementById('remarksIn').value = ''; document.getElementById('detailIn').style.height = 'auto'; }
