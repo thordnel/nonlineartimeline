@@ -296,12 +296,40 @@
         .action-btn:hover { color: var(--primary); }
         .del-btn:hover { color: var(--danger); }
 
-        /* --- MultiTimeline Styles --- */
-        #multiArea { display: none; flex-direction: column; gap: 40px; overflow-x: auto; padding: 40px 0; scrollbar-width: thin; }
+        /* --- MultiTimeline Floating Scrollbar Fix --- */
+        #multiArea { 
+            display: none; 
+            flex-direction: column; 
+            gap: 40px; 
+            overflow: auto; /* Enable both scrollbars internally */
+            max-height: 75vh; /* Pinned height so scrollbar is always visible in viewport */
+            padding: 40px 0; 
+            scrollbar-width: thin; 
+            scrollbar-color: var(--secondary) transparent;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+        }
         #multiArea.show { display: flex; }
 
         .year-track { display: flex; align-items: stretch; min-width: max-content; border-bottom: 1px dashed #d4cdc3; padding-bottom: 40px; }
-        .year-label { font-family: var(--font-ui); font-weight: 900; font-size: 2.5rem; color: #ebe5dc; position: sticky; left: 0; z-index: 10; pointer-events: none; line-height: 1; padding-right: 20px; text-shadow: 2px 2px 0 #fff; display: flex; align-items: center; background: rgba(253, 251, 247, 0.8); }
+        
+        .year-label { 
+            font-family: var(--font-ui); 
+            font-weight: 900; 
+            font-size: 2.2rem; 
+            color: #d4cdc3; 
+            position: sticky; 
+            left: 0; 
+            z-index: 20; 
+            pointer-events: none; 
+            line-height: 1; 
+            padding: 10px 20px; 
+            text-shadow: 1px 1px 0 #fff; 
+            display: flex; 
+            align-items: center; 
+            background: rgba(253, 251, 247, 0.95); /* Opaque background for horizontal scroll overlap */
+            border-right: 1px solid #ebe5dc;
+        }
         
         .multi-day-slot { display: flex; flex-direction: column; gap: 15px; border-left: 2px solid #ebe5dc; padding-left: 15px; min-width: 180px; position: relative; }
         .multi-day-slot::before { content: ''; position: absolute; left: -6px; top: 0; width: 10px; height: 10px; background: var(--bg); border: 2px solid var(--primary); border-radius: 50%; }
@@ -349,6 +377,7 @@
             .panel { padding: 15px; border-radius: 0; margin-left: -10px; margin-right: -10px; border-left: none; border-right: none; }
             .controls { grid-template-columns: 1fr; gap: 15px; }
             .header-branding { width: 90%; }
+            #multiArea { max-height: 60vh; } /* Tighter on mobile */
         }
     </style>
 </head>
@@ -461,7 +490,7 @@
 
         <select id="tzSelect" class="tz-picker-compact" onchange="updateTzPreference()">
             <option value="">Compare Time: Off</option>
-            <option value="UTC">UTC</option>
+            <option value="UTC">UTC (Universal Time)</option>
             <option value="Asia/Manila">Philippines</option>
             <option value="Europe/Paris">France</option>
             <option value="Europe/Berlin">Germany</option>
@@ -670,7 +699,7 @@
             } else { continuityItems.push({ id: Date.now().toString(), name, icon, start, end, visible: true }); }
             saveLocalData(); renderContinuityList(); render();
         }
-        window.cancelContinuityEdit = () => { editingContinuityId = null; document.getElementById('cNameIn').value = ''; document.getElementById('cIconIn').value = ''; document.getElementById('cStartIn').value = ''; document.getElementById('btnCAdd').innerText = "+ Add Item"; document.getElementById('btnCCancel').style.display = 'none'; }
+        window.cancelContinuityEdit = () => { editingContinuityId = null; document.getElementById('cNameIn').value = ''; document.getElementById('cIconIn').value = ''; document.getElementById('cStartIn').value = ''; document.getElementById('cEndIn').value = ''; document.getElementById('btnCAdd').innerText = "+ Add Item"; document.getElementById('btnCCancel').style.display = 'none'; }
         window.toggleContinuityVisibility = (id) => { const item = continuityItems.find(i => i.id === id); if(item) { item.visible = !item.visible; saveLocalData(); renderContinuityList(); render(); } }
         function renderContinuityList() { const container = document.getElementById('continuityListArea'); container.innerHTML = ''; const sorted = [...continuityItems].sort((a, b) => new Date(a.start) - new Date(b.start)); sorted.forEach(item => { const el = document.createElement('div'); el.className = `c-item-tag ${!item.visible ? 'inactive' : ''}`; el.innerHTML = `<span onclick="toggleContinuityVisibility('${item.id}')" style="cursor:pointer; margin-right:5px; opacity:0.6;">${item.visible ? '👁️' : '🔒'}</span><span style="font-weight:bold;">${item.icon} ${item.name}</span>`; container.appendChild(el); }); }
         function getActiveContinuity(beatDateStr) { const beatDate = new Date(beatDateStr); return continuityItems.filter(item => { if(!item.visible) return false; const s = new Date(item.start), e = item.end ? new Date(item.end) : null; return beatDate >= s && (!e || beatDate <= e); }); }
@@ -801,12 +830,10 @@
                 track.className = 'year-track';
                 track.innerHTML = `<div class="year-label">${year}</div>`;
                 
-                // For each "Active Day" across the project, we create a slot in this year's track
                 sortedDayLabels.forEach(dayNum => {
                     const slotEl = document.createElement('div');
                     slotEl.className = 'multi-day-slot';
                     
-                    // Filter events for this year and this day
                     const yearDayBeats = yearGroups[year].filter(b => new Date(b.date).getUTCDate() === dayNum)
                         .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
@@ -816,7 +843,6 @@
                         dayTag.innerText = `DAY ${dayNum}`;
                         slotEl.appendChild(dayTag);
 
-                        // Cluster into stacks by the 3-hour window
                         const stacks = [];
                         yearDayBeats.forEach(beat => {
                             const bTime = new Date(beat.date).getTime();
