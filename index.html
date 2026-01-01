@@ -569,8 +569,8 @@
     <!-- Modals -->
     <div id="deleteModal" class="modal-overlay"><div class="modal-content"><h3>Delete Event?</h3><div class="btn-row" style="justify-content: center;"><button class="btn-reset" onclick="executeDelete()">Delete</button><button class="btn-dl" onclick="closeModal()">Cancel</button></div></div></div>
     <div id="resetModal" class="modal-overlay"><div class="modal-content"><h3>Reset All?</h3><div class="btn-row" style="justify-content: center;"><button class="btn-reset" onclick="executeReset()">Clear All</button><button class="btn-dl" onclick="closeModal()">Cancel</button></div></div></div>
-    <div id="backupModal" class="modal-overlay"><div class="modal-content"><h3>Confirm Cloud Backup</h3><p id="backupInfo">Loading info...</p><div class="btn-row" style="justify-content: center;"><button class="btn-cloud" onclick="executeBackup()">Overwrite Cloud</button><button class="btn-dl" onclick="closeModal()">Cancel</button></div></div></div>
-    <div id="restoreModal" class="modal-overlay"><div class="modal-content"><h3>Confirm Restore</h3><p id="restoreInfo">Loading cloud info...</p><div class="btn-row" style="justify-content: center;"><button class="btn-cloud" style="background-color: var(--primary);" onclick="executeRestore()">Yes, Restore</button><button class="btn-dl" onclick="closeModal()">Cancel</button></div></div></div>
+    <div id="backupModal" class="modal-overlay"><div class="modal-content"><h3>Confirm Cloud Backup</h3><p id="backupInfo" style="text-align: left; background: #fdfbf7; padding: 15px; border-radius: 4px; border: 1px solid #e6e0d4; font-size:0.9rem;">Loading info...</p><div class="btn-row" style="justify-content: center;"><button class="btn-cloud" onclick="executeBackup()">Overwrite Cloud</button><button class="btn-dl" onclick="closeModal()">Cancel</button></div></div></div>
+    <div id="restoreModal" class="modal-overlay"><div class="modal-content"><h3>Confirm Restore</h3><p id="restoreInfo" style="text-align: left; background: #fdfbf7; padding: 15px; border-radius: 4px; border: 1px solid #e6e0d4; font-size:0.9rem; margin-top: 15px;">Loading cloud info...</p><div class="btn-row" style="justify-content: center;"><button class="btn-cloud" style="background-color: var(--primary);" onclick="executeRestore()">Yes, Restore</button><button class="btn-dl" onclick="closeModal()">Cancel</button></div></div></div>
 
     <div id="toast"></div>
 
@@ -613,6 +613,68 @@
         window.linkExistingId = () => { const id = document.getElementById('manualIdIn').value.trim(); if(!id) return; activeSyncId = id; localStorage.setItem('storylines_active_id', id); updateCloudUI(); showToast("Device Linked!"); }
         window.resetToOriginalId = () => { localStorage.removeItem('storylines_active_id'); if (user) { activeSyncId = user.uid; updateCloudUI(); showToast("Unlinked"); document.getElementById('manualIdIn').value = ''; } }
         
+        function timeAgo(date) { const seconds = Math.floor((new Date() - date) / 1000); let interval = seconds / 31536000; if (interval > 1) return Math.floor(interval) + " years ago"; interval = seconds / 2592000; if (interval > 1) return Math.floor(interval) + " months ago"; interval = seconds / 86400; if (interval > 1) return Math.floor(interval) + " days ago"; interval = seconds / 3600; if (interval > 1) return Math.floor(interval) + " hours ago"; interval = seconds / 60; if (interval > 1) return Math.floor(interval) + " minutes ago"; return Math.floor(seconds) + " seconds ago"; }
+
+        window.confirmBackup = async () => {
+            if (!user || !db || activeSyncId === "blank") return showToast("Sync not ready");
+            const btn = document.getElementById('btnBackup'), originalText = btn.innerText;
+            btn.innerText = "Checking..."; btn.disabled = true;
+            try {
+                const docRef = doc(db, 'artifacts', appId, 'users', activeSyncId, 'data', 'main_record'), docSnap = await getDoc(docRef);
+                let infoHtml = "No existing backup found. <br>This will create a new cloud record.";
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    if (data.lastUpdated) {
+                        const dO = new Date(data.lastUpdated), rel = timeAgo(dO), deviceStr = data.lastDevice ? data.lastDevice.substring(0, 6) + "..." : "Unknown";
+                        infoHtml = `<strong>Last Backup:</strong> ${dO.toLocaleString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true })} <br><span style="color:var(--secondary);">(${rel})</span><br><br><strong>By Device ID:</strong> ${deviceStr}`;
+                    }
+                }
+                document.getElementById('backupInfo').innerHTML = infoHtml; document.getElementById('backupModal').style.display = 'flex';
+            } catch(e) { showToast("Could not verify cloud status."); } finally { btn.innerText = originalText; btn.disabled = false; }
+        }
+
+        window.executeBackup = async () => {
+            window.closeModal();
+            try {
+                const docRef = doc(db, 'artifacts', appId, 'users', activeSyncId, 'data', 'main_record');
+                await setDoc(docRef, { beats: events, continuity: continuityItems, lastUpdated: Date.now(), lastDevice: user.uid });
+                showToast("✅ Successfully backed up to Cloud");
+            } catch (err) { showToast("Backup failed."); }
+        };
+
+        window.confirmRestore = async () => {
+            if (!user || !db) return showToast("Sync not ready");
+            const btn = document.getElementById('btnRestore'), originalText = btn.innerText;
+            btn.innerText = "Checking..."; btn.disabled = true;
+            try {
+                const docRef = doc(db, 'artifacts', appId, 'users', activeSyncId, 'data', 'main_record'), docSnap = await getDoc(docRef);
+                let infoHtml = "No existing cloud data found.";
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    if (data.lastUpdated) {
+                        const dO = new Date(data.lastUpdated), rel = timeAgo(dO), deviceStr = data.lastDevice ? data.lastDevice.substring(0, 6) + "..." : "Unknown";
+                        infoHtml = `<strong>Cloud Version:</strong> ${dO.toLocaleString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true })} <br><span style="color:var(--primary);">(${rel})</span><br><br><strong>From device:</strong> ${deviceStr}`;
+                    }
+                }
+                document.getElementById('restoreInfo').innerHTML = infoHtml; document.getElementById('restoreModal').style.display = 'flex';
+            } catch(e) { showToast("Could not verify cloud status."); } finally { btn.innerText = originalText; btn.disabled = false; }
+        }
+
+        window.executeRestore = async () => {
+            window.closeModal();
+            try {
+                const docRef = doc(db, 'artifacts', appId, 'users', activeSyncId, 'data', 'main_record'), docSnap = await getDoc(docRef);
+                if (docSnap.exists()) { 
+                    const data = docSnap.data();
+                    events = data.beats || []; 
+                    continuityItems = data.continuity || []; 
+                    saveLocalData(); renderContinuityList(); render(); 
+                    showToast("🔄 Data restored successfully"); 
+                }
+                else { showToast("No cloud data found."); }
+            } catch (err) { showToast("Restore failed."); }
+        };
+
         // --- CORE LOGIC ---
         let events = [], continuityItems = [], editIndex = -1, deleteTargetIndex = null, currentSortMethod = 'unsorted', currentTz = localStorage.getItem('storylines_tz') || '', editingContinuityId = null;
         const STORAGE_KEY = 'storylines_persist';
