@@ -1,11 +1,15 @@
-const CACHE_NAME = 'storylines-v2';
+const CACHE_NAME = 'storylines-v3';
 const ASSETS = [
-  './timeline_fixed.html',
+  './index.html',
   './manifest.json',
+  './parchtitle.png',
+  './merriweather-light.woff2',
+  './merriweather-regular.woff2',
+  './merriweather-bold.woff2',
+  './merriweather-black.woff2',
   'https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js',
   'https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js',
-  'https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js',
-  'https://fonts.googleapis.com/css2?family=Merriweather:wght@300;400;700;900&display=swap'
+  'https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js'
 ];
 
 // Install: Cache all core assets
@@ -31,15 +35,20 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   event.respondWith(
     caches.match(event.request).then((response) => {
-      return response || fetch(event.request).then((fetchRes) => {
-        return caches.open(CACHE_NAME).then((cache) => {
-          // Cache new successful requests for next time
-          if (event.request.method === 'GET') cache.put(event.request, fetchRes.clone());
-          return fetchRes;
-        });
+      // Return cached asset if found
+      if (response) return response;
+
+      // Otherwise fetch from network
+      return fetch(event.request).then((fetchRes) => {
+        // Only cache successful GET requests for local assets
+        if (event.request.method === 'GET' && fetchRes.status === 200) {
+           const copy = fetchRes.clone();
+           caches.open(CACHE_NAME).then(cache => cache.put(event.request, copy));
+        }
+        return fetchRes;
       });
     }).catch(() => {
-      // If both fail (offline and not cached), return a basic fallback if necessary
+      // Offline fallback can be added here if needed
     })
   );
 });
