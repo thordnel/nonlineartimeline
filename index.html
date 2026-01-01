@@ -14,12 +14,33 @@
     <meta name="theme-color" content="#f4f1ea">
     <link rel="apple-touch-icon" href="https://placehold.co/180x180/8c6b5d/ffffff?text=SL">
     
-    <!-- Add Merriweather Font -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@300;400;700;900&display=swap" rel="stylesheet">
-    
     <style>
+        /* --- OFFLINE FONT LOADING --- */
+        @font-face {
+            font-family: 'Merriweather';
+            src: url('merriweather-light.woff2') format('woff2');
+            font-weight: 300;
+            font-style: normal;
+        }
+        @font-face {
+            font-family: 'Merriweather';
+            src: url('merriweather-regular.woff2') format('woff2');
+            font-weight: 400;
+            font-style: normal;
+        }
+        @font-face {
+            font-family: 'Merriweather';
+            src: url('merriweather-bold.woff2') format('woff2');
+            font-weight: 700;
+            font-style: normal;
+        }
+        @font-face {
+            font-family: 'Merriweather';
+            src: url('merriweather-black.woff2') format('woff2');
+            font-weight: 900;
+            font-style: normal;
+        }
+
         :root {
             /* Parchment Palette */
             --bg: #f4f1ea;
@@ -669,7 +690,7 @@
                     const data = docSnap.data();
                     if (data.lastUpdated) {
                         const dO = new Date(data.lastUpdated), rel = timeAgo(dO), deviceStr = data.lastDevice ? data.lastDevice.substring(0, 6) + "..." : "Unknown";
-                        infoHtml = `<strong>Last Backup:</strong> ${dO.toLocaleString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true })} <br><span style="color:var(--secondary);">(${rel})</span><br><br><strong>By Device ID:</strong> ${deviceStr}`;
+                        infoHtml = `<strong>Last Backup:</strong> ${dO.toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true })} <br><span style="color:var(--secondary);">(${rel})</span><br><br><strong>By Device ID:</strong> ${deviceStr}`;
                     }
                 }
                 document.getElementById('backupInfo').innerHTML = infoHtml; document.getElementById('backupModal').style.display = 'flex';
@@ -696,7 +717,7 @@
                     const data = docSnap.data();
                     if (data.lastUpdated) {
                         const dO = new Date(data.lastUpdated), rel = timeAgo(dO), deviceStr = data.lastDevice ? data.lastDevice.substring(0, 6) + "..." : "Unknown";
-                        infoHtml = `<strong>Cloud Version:</strong> ${dO.toLocaleString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true })} <br><span style="color:var(--primary);">(${rel})</span><br><br><strong>From device:</strong> ${deviceStr}`;
+                        infoHtml = `<strong>Cloud Version:</strong> ${dO.toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true })} <br><span style="color:var(--primary);">(${rel})</span><br><br><strong>From device:</strong> ${deviceStr}`;
                     }
                 }
                 document.getElementById('restoreInfo').innerHTML = infoHtml; document.getElementById('restoreModal').style.display = 'flex';
