@@ -755,9 +755,56 @@
             } else { continuityItems.push({ id: Date.now().toString(), name, icon, start, end, visible: true }); }
             saveLocalData(); renderContinuityList(); render();
         }
-        window.cancelContinuityEdit = () => { editingContinuityId = null; document.getElementById('cNameIn').value = ''; document.getElementById('cIconIn').value = ''; document.getElementById('cStartIn').value = ''; document.getElementById('cEndIn').value = ''; document.getElementById('btnCAdd').innerText = "+ Add Item"; document.getElementById('btnCCancel').style.display = 'none'; }
+
+        window.editContinuityItem = (id) => { 
+            const item = continuityItems.find(i => i.id === id); 
+            if (!item) return; 
+            editingContinuityId = id; 
+            document.getElementById('cNameIn').value = item.name; 
+            document.getElementById('cIconIn').value = item.icon; 
+            document.getElementById('cStartIn').value = item.start; 
+            document.getElementById('cEndIn').value = item.end || ''; 
+            const btn = document.getElementById('btnCAdd'); 
+            btn.innerText = "Update Item"; 
+            btn.className = "btn-update"; 
+            document.getElementById('btnCCancel').style.display = 'inline-block'; 
+            if (document.getElementById('continuityContent').style.display !== 'block') window.toggleContinuityPanel(); 
+        }
+
+        window.deleteContinuityItem = (id) => { 
+            if(confirm("Remove this item?")) { 
+                continuityItems = continuityItems.filter(i => i.id !== id); 
+                if (editingContinuityId === id) cancelContinuityEdit(); 
+                saveLocalData(); renderContinuityList(); render(); 
+            } 
+        }
+
+        window.cancelContinuityEdit = () => { 
+            editingContinuityId = null; 
+            document.getElementById('cNameIn').value = ''; 
+            document.getElementById('cIconIn').value = ''; 
+            document.getElementById('cStartIn').value = ''; 
+            document.getElementById('cEndIn').value = ''; 
+            const btn = document.getElementById('btnCAdd');
+            btn.innerText = "+ Add Item"; 
+            btn.className = "btn-add";
+            document.getElementById('btnCCancel').style.display = 'none'; 
+        }
+
         window.toggleContinuityVisibility = (id) => { const item = continuityItems.find(i => i.id === id); if(item) { item.visible = !item.visible; saveLocalData(); renderContinuityList(); render(); } }
-        function renderContinuityList() { const container = document.getElementById('continuityListArea'); container.innerHTML = ''; const sorted = [...continuityItems].sort((a, b) => new Date(a.start) - new Date(b.start)); sorted.forEach(item => { const el = document.createElement('div'); el.className = `c-item-tag ${!item.visible ? 'inactive' : ''}`; el.innerHTML = `<span onclick="toggleContinuityVisibility('${item.id}')" style="cursor:pointer; margin-right:5px; opacity:0.6;">${item.visible ? '👁️' : '🔒'}</span><span style="font-weight:bold;">${item.icon} ${item.name}</span>`; container.appendChild(el); }); }
+        
+        function renderContinuityList() { 
+            const container = document.getElementById('continuityListArea'); 
+            container.innerHTML = ''; 
+            const sorted = [...continuityItems].sort((a, b) => new Date(a.start) - new Date(b.start)); 
+            sorted.forEach(item => { 
+                const el = document.createElement('div'); 
+                el.className = `c-item-tag ${!item.visible ? 'inactive' : ''}`; 
+                el.innerHTML = `<span onclick="toggleContinuityVisibility('${item.id}')" style="cursor:pointer; margin-right:5px; opacity:0.6;">${item.visible ? '👁️' : '🔒'}</span><span onclick="editContinuityItem('${item.id}')" style="cursor:pointer; font-weight:bold;">${item.icon} ${item.name}</span><span onclick="deleteContinuityItem('${item.id}')" style="cursor:pointer; color:var(--danger); font-weight:bold; margin-left:8px;">×</span>`; 
+                container.appendChild(el); 
+            }); 
+        }
+
         function getActiveContinuity(beatDateStr) { const beatDate = new Date(beatDateStr); return continuityItems.filter(item => { if(!item.visible) return false; const s = new Date(item.start), e = item.end ? new Date(item.end) : null; return beatDate >= s && (!e || beatDate <= e); }); }
 
         function detectUserNearestZone() { const bTz = Intl.DateTimeFormat().resolvedOptions().timeZone; document.getElementById('inputTzSelect').value = bTz; }
@@ -781,7 +828,7 @@
             try { 
                 const d = new Date(dateStr); 
                 const tF = new Intl.DateTimeFormat('en-GB', { timeZone: targetTz, hour: '2-digit', minute: '2-digit', hour12: false }); 
-                const dF = new Intl.DateTimeFormat('en-GB', { timeZone: targetTz, day: 'numeric', month: 'short', year: 'numeric' }); 
+                const dF = new Intl.DateTimeFormat('en-GB', { timeZone: targetTz, day: '2-digit', month: 'short', year: 'numeric' }); 
                 const wF = new Intl.DateTimeFormat('en-US', { timeZone: targetTz, weekday: 'long' }); 
                 return { time: tF.format(d), dateRaw: dF.format(d), weekday: wF.format(d) }; 
             } catch(e) { return null; } 
@@ -831,7 +878,12 @@
             let displayDate, displayTime, displayDay, displayBasis = "Local Browser";
             if (evt.preferredDisplayTz) {
                 const pref = convertTime(evt.date, evt.preferredDisplayTz);
-                if (pref) { displayDate = pref.dateRaw; displayTime = pref.time; displayDay = pref.weekday; displayBasis = evt.preferredCountry || "Custom Location"; }
+                if (pref) { 
+                    displayDate = pref.dateRaw; 
+                    displayTime = pref.time; 
+                    displayDay = pref.weekday; 
+                    displayBasis = evt.preferredCountry || "Custom Location"; 
+                }
             }
             if (!displayDate) {
                 displayDate = getFormattedDate(evt.date);
@@ -856,7 +908,6 @@
                     const startStr = getFormattedDate(ci.start);
                     const endStr = ci.end ? getFormattedDate(ci.end) : "Ongoing";
                     const durationText = `${startStr} - ${endStr}`;
-                    // Use data-tooltip for more robust visual persistence
                     cHtml += `<span class="c-badge" data-tooltip="Duration: ${durationText}" onclick="event.stopPropagation()">${ci.icon} ${ci.name}</span>`;
                 });
                 cHtml += '</div>';
@@ -1027,7 +1078,11 @@
             }); 
         }
 
-        function confirmReset() { document.getElementById('resetModal').style.display = 'flex'; }
+        function confirmReset() { 
+            if(confirm("Are you sure you want to reset everything?")) {
+                executeReset();
+            }
+        }
         window.executeReset = () => { events = []; continuityItems = []; saveLocalData(); render(); closeModal(); }
     </script>
 </body>
