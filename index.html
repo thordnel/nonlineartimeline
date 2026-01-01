@@ -60,7 +60,7 @@
             color: var(--text-main);
         }
 
-        /* --- Header Branding --- */
+        /* --- Header Area --- */
         .header-branding {
             background-image: url('parchtitle.png');
             background-size: 100% 100%;
@@ -80,11 +80,13 @@
         .main-title {
             color: var(--primary);
             font-family: var(--font-main);
-            font-weight: 900;
+            font-weight: 700; /* Medium Bold */
             letter-spacing: 2px;
             margin: 0;
             font-size: 2.2rem; 
             line-height: 1.1;
+            /* Text shadow to stand out over parchment background */
+            text-shadow: 1px 1px 0px rgba(255,255,255,0.4), 1px 2px 3px rgba(0,0,0,0.15);
         }
 
         .main-subtitle {
@@ -116,7 +118,6 @@
             align-items: start;
         }
         
-        /* Desktop Grid Helpers */
         .col-span-2 { grid-column: span 2; }
         .col-span-full { grid-column: 1 / -1; }
 
@@ -311,6 +312,7 @@
             padding-top: 20px;
         }
 
+        /* --- Continuity Space Specifics --- */
         .continuity-list {
             display: flex;
             flex-wrap: wrap;
@@ -655,7 +657,7 @@
         <div class="section-label">Beat Space</div>
         <div class="panel-header" onclick="toggleBeatPanel()">
             <span style="font-weight:700; color:var(--text-main);">Manage Beats</span>
-            <span id="beatPanelIcon" style="color:var(--secondary);">▼</span>
+            <span id="beatPanelIcon" style="color:var(--secondary);">➖</span>
         </div>
         
         <div id="beatPanelContent" class="panel-content">
@@ -742,7 +744,7 @@
         <div class="section-label">Continuity Space</div>
         <div class="panel-header" onclick="toggleContinuityPanel()">
             <span style="font-weight:700; color:var(--text-main);">Manage Tracking Elements</span>
-            <span id="cPanelIcon" style="color:var(--secondary);">▼</span>
+            <span id="cPanelIcon" style="color:var(--secondary);">➕</span>
         </div>
         
         <div id="continuityContent" class="panel-content" style="display: none;">
@@ -887,7 +889,7 @@
                     const data = docSnap.data();
                     if (data.lastUpdated) {
                         const dO = new Date(data.lastUpdated), rel = timeAgo(dO), deviceStr = data.lastDevice ? data.lastDevice.substring(0, 6) + "..." : "Unknown";
-                        infoHtml = `<strong>Last Backup:</strong> ${dO.toLocaleString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true })} <br><span style="color:var(--secondary);">(${rel})</span><br><br><strong>By Device ID:</strong> <span style="font-family:monospace; background:#eee; padding:2px 4px; border-radius:3px;">${deviceStr}</span>`;
+                        infoHtml = `<strong>Last Backup:</strong> ${dO.toLocaleString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true })} <br><span style="color:var(--secondary);">(${rel})</span><br><br><strong>By Device ID:</strong> <span style="font-family:monospace; background:#eee; padding:2px  4px; border-radius:3px;">${deviceStr}</span>`;
                     }
                 }
                 document.getElementById('backupInfo').innerHTML = infoHtml; document.getElementById('backupModal').style.display = 'flex';
@@ -954,8 +956,8 @@
             }
         }
 
-        window.toggleBeatPanel = () => { const content = document.getElementById('beatPanelContent'), icon = document.getElementById('beatPanelIcon'); if (content.style.display === 'none') { content.style.display = 'block'; icon.innerText = '▼'; } else { content.style.display = 'none'; icon.innerText = '▶'; } }
-        window.toggleContinuityPanel = () => { const content = document.getElementById('continuityContent'), icon = document.getElementById('cPanelIcon'); if (content.style.display === 'block') { content.style.display = 'none'; icon.innerText = '▼'; } else { content.style.display = 'block'; icon.innerText = '▲'; } }
+        window.toggleBeatPanel = () => { const content = document.getElementById('beatPanelContent'), icon = document.getElementById('beatPanelIcon'); if (content.style.display === 'none') { content.style.display = 'block'; icon.innerText = '➖'; } else { content.style.display = 'none'; icon.innerText = '➕'; } }
+        window.toggleContinuityPanel = () => { const content = document.getElementById('continuityContent'), icon = document.getElementById('cPanelIcon'); if (content.style.display === 'block') { content.style.display = 'none'; icon.innerText = '➕'; } else { content.style.display = 'block'; icon.innerText = '➖'; } }
 
         window.addContinuityItem = () => {
             const name = document.getElementById('cNameIn').value, icon = document.getElementById('cIconIn').value || '🔹', start = document.getElementById('cStartIn').value, end = document.getElementById('cEndIn').value;
