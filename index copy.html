@@ -1,0 +1,1297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Storylines - Non-Linear Manager</title>
+    
+    <!-- PWA & Mobile Settings -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Storylines">
+    <meta name="theme-color" content="#f4f1ea">
+    <link rel="apple-touch-icon" href="https://placehold.co/180x180/8c6b5d/ffffff?text=SL">
+    
+    <!-- Reverted to Google Fonts for reliability across iOS/Android -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@300;400;700;900&display=swap" rel="stylesheet">
+    
+    <!-- Markdown Support -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/4.3.0/marked.min.js"></script>
+
+    <style>
+        :root {
+            /* Parchment Palette */
+            --bg: #f4f1ea;
+            --panel: #fdfbf7;
+            --text-main: #2c2420;
+            --text-muted: #5d5650;
+            --primary: #8c6b5d;
+            --primary-hover: #755548;
+            --secondary: #a89f91;
+            --danger: #c25e5e;
+            --success: #6b8c5d;
+            --warning: #d9a648;
+            --info: #5d7a8c;
+            --drag-bg: #e6e2d8;
+            --font-main: 'Merriweather', 'Times New Roman', serif;
+            --font-ui: system-ui, -apple-system, sans-serif;
+            --shadow-card: 0 2px 4px rgba(44, 36, 32, 0.05), 0 1px 2px rgba(44, 36, 32, 0.1);
+        }
+
+        * { box-sizing: border-box; }
+
+        body { 
+            font-family: var(--font-main); 
+            font-weight: 300; 
+            max-width: 1200px; 
+            margin: 0 auto; 
+            padding: 20px; 
+            padding-bottom: 80px;
+            background-color: var(--bg);
+            color: var(--text-main);
+            font-synthesis: none;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            text-rendering: optimizeLegibility;
+        }
+
+        /* --- Header --- */
+        .header-branding {
+            background-image: url('parchtitle.png');
+            background-size: 100% 100%;
+            background-repeat: no-repeat;
+            background-position: center;
+            width: 450px; 
+            margin: 0 auto 30px auto;
+            padding: 25px 15px;
+            text-align: center;
+            min-height: 150px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .main-title {
+            color: var(--primary);
+            font-weight: 700;
+            letter-spacing: 2px;
+            margin: 0;
+            font-size: 2.2rem; 
+            line-height: 1.1;
+            text-shadow: 1px 1px 0px rgba(255,255,255,0.4), 1px 2px 3px rgba(0,0,0,0.15);
+        }
+
+        .main-subtitle {
+            color: var(--text-muted);
+            margin-top: 4px;
+            font-size: 0.75rem;
+            font-family: var(--font-ui);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .panel {
+            background: var(--panel);
+            padding: 25px;
+            border-radius: 4px;
+            box-shadow: var(--shadow-card);
+            margin-bottom: 25px;
+            border: 1px solid #e6e0d4;
+            position: relative;
+        }
+
+        .controls {
+            display: grid;
+            grid-template-columns: 1.4fr 0.8fr 1.2fr;
+            gap: 20px;
+            align-items: start;
+        }
+        
+        .col-span-2 { grid-column: span 2; }
+        .col-span-full { grid-column: 1 / -1; }
+
+        .input-group { display: flex; flex-direction: column; width: 100%; }
+        label { 
+            font-family: var(--font-ui);
+            font-size: 0.75rem; 
+            font-weight: 700; 
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 6px; 
+            color: var(--text-muted); 
+        }
+        
+        input, textarea, select { 
+            padding: 10px; 
+            border: 1px solid #d4cdc3; 
+            border-radius: 3px; 
+            font-size: 1rem; 
+            font-family: var(--font-main);
+            background-color: #fff;
+            color: var(--text-main);
+            width: 100%;
+            transition: border-color 0.2s;
+            font-weight: 300;
+        }
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(140, 107, 93, 0.1);
+        }
+
+        textarea { resize: vertical; min-height: 150px; line-height: 1.5; overflow: hidden; }
+
+        .btn-row { margin-top: 20px; display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+        .btn-group-mobile { display: flex; gap: 10px; width: 100%; }
+
+        button {
+            padding: 10px 18px;
+            border: none;
+            border-radius: 3px;
+            font-family: var(--font-ui);
+            font-weight: 600;
+            font-size: 0.85rem;
+            cursor: pointer;
+            color: white;
+            transition: all 0.2s;
+            white-space: nowrap;
+            letter-spacing: 0.02em;
+        }
+        button:hover { opacity: 0.95; transform: translateY(-1px); box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        button:active { transform: translateY(0); }
+        button:disabled { opacity: 0.3; cursor: not-allowed; transform: none !important; box-shadow: none; filter: grayscale(1); }
+
+        .btn-add { background-color: var(--success); }
+        .btn-update { background-color: var(--warning); color: #3e2e1e; }
+        .btn-cancel { background-color: var(--secondary); display: none; }
+        .btn-sort { background-color: var(--primary); }
+        .btn-dl { background-color: var(--secondary); }
+        .btn-reset { background-color: transparent; border: 1px solid var(--danger); color: var(--danger); }
+        .btn-reset:hover { background-color: var(--danger); color: white; }
+        
+        .btn-view { background-color: transparent; color: var(--text-muted); border: 1px solid #d4cdc3; }
+        .btn-view.active { background-color: var(--primary); color: white; border-color: var(--primary); }
+        
+        .btn-cloud { background-color: var(--info); }
+        .btn-print { background-color: #4a5568; }
+
+        .action-btn { background: #f0f0f0; color: #555; padding: 6px 10px; margin: 0 2px; font-size: 0.9rem; }
+        .action-btn:hover { background: #e0e0e0; color: var(--primary); }
+        .del-btn { color: #555; }
+        .del-btn:hover { background: var(--danger); color: white; }
+
+        .tz-picker-compact {
+            padding: 8px 12px;
+            font-size: 0.85rem;
+            border-radius: 3px;
+            border: 1px solid #d1d5db;
+            background: white;
+            color: var(--text-main);
+            font-weight: 600;
+            width: auto;
+            min-width: 220px;
+            height: 38px;
+            font-family: var(--font-ui);
+        }
+
+        /* --- Navigation Bar Layout --- */
+        .navigation-bar {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-bottom: 25px;
+            padding: 0 5px;
+        }
+
+        .nav-top-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+        }
+
+        .nav-bottom-row {
+            display: flex;
+            justify-content: flex-end;
+            width: 100%;
+        }
+
+        .nav-left { display: flex; align-items: center; }
+        .nav-right { display: flex; align-items: center; gap: 15px; }
+
+        .cloud-banner {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #fff;
+            border: 1px solid #e0e7ff;
+            border-left: 4px solid var(--info);
+            padding: 15px 25px;
+            border-radius: 4px;
+            margin-bottom: 25px;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            flex-wrap: wrap;
+            gap: 15px;
+            box-shadow: var(--shadow-card);
+        }
+        
+        .cloud-id { font-family: 'Courier New', monospace; font-weight: bold; background: #f8fafc; padding: 3px 8px; border-radius: 3px; border: 1px solid #e2e8f0; color: var(--info); cursor: pointer; word-break: break-all; }
+        .id-input-group { display: flex; gap: 8px; align-items: center; }
+        .id-input { width: 180px !important; padding: 8px 10px !important; font-size: 0.8rem !important; }
+
+        .view-container { 
+            background: var(--panel); 
+            padding: 30px; 
+            border-radius: 4px; 
+            min-height: 300px;
+            box-shadow: var(--shadow-card);
+            position: relative;
+            border: 1px solid #e6e0d4;
+            clip-path: inset(0 0 0 0);
+        }
+
+        .view-header-label {
+            text-align: center;
+            font-family: var(--font-ui);
+            font-size: 0.8rem;
+            font-weight: 800;
+            letter-spacing: 2px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e6e0d4;
+            margin-bottom: 20px;
+            width: 100%;
+        }
+
+        .section-label {
+            position: absolute;
+            top: -12px;
+            left: 20px;
+            background: var(--bg);
+            padding: 0 10px;
+            font-family: var(--font-ui);
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--primary);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border: 1px solid #e6e0d4;
+            border-radius: 12px;
+        }
+
+        .panel-header { display: flex; justify-content: space-between; align-items: center; cursor: pointer; user-select: none; }
+        .panel-content { display: block; margin-top: 20px; border-top: 1px dashed #d4cdc3; padding-top: 20px; }
+
+        .continuity-list { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 15px; }
+        .c-item-tag { display: flex; align-items: center; gap: 8px; padding: 4px 10px; background: #fff; border: 1px solid #d4cdc3; border-radius: 4px; font-size: 0.8rem; font-family: var(--font-ui); color: var(--text-main); transition: all 0.2s; }
+        .c-item-tag.inactive { opacity: 0.5; filter: grayscale(100%); }
+        .c-item-tag.filtering { border-color: var(--primary); background-color: #f0ebe4; box-shadow: 0 0 0 2px var(--primary-hover); }
+        
+        .c-badge { 
+            display: inline-flex; 
+            align-items: center; 
+            gap: 4px; 
+            padding: 2px 6px; 
+            background: #fdfbf7; 
+            border: 1px solid #e6e0d4; 
+            border-radius: 12px; 
+            font-size: 0.7rem; 
+            font-family: var(--font-ui); 
+            margin-right: 4px; 
+            margin-bottom: 4px; 
+            color: var(--text-muted); 
+            cursor: help; 
+            position: relative;
+        }
+        
+        .c-badge[data-tooltip]:hover::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 125%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #333;
+            color: #fff;
+            padding: 5px 10px;
+            border-radius: 4px;
+            white-space: nowrap;
+            font-size: 0.7rem;
+            z-index: 100;
+            pointer-events: none;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        /* Tighter spacing for badges container */
+        .c-badges-container { margin-top: 4px; padding-top: 4px; border-top: 1px dashed #e6e0d4; display: flex; flex-wrap: wrap; }
+
+        .c-row-70-30 { display: grid; grid-template-columns: 7fr 3fr; gap: 20px; }
+        .c-row-50-50 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px; }
+
+        table { width: 100%; border-collapse: collapse; display: none; table-layout: fixed; }
+        table.show { display: table; }
+        th { padding: 15px 10px; text-align: left; border-bottom: 2px solid #d4cdc3; font-family: var(--font-ui); font-weight: 700; color: var(--text-muted); text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.05em; }
+        td { padding: 15px 10px; border-bottom: 1px solid #ebe5dc; vertical-align: top; color: var(--text-main); }
+        th:nth-child(1) { width: 40px; } 
+        th:nth-child(2) { width: 180px; } 
+        th:nth-child(3) { width: 160px; } 
+        th:nth-child(5) { width: 100px; } 
+        td:nth-child(4) { font-size: 0.95rem; font-weight: 300; line-height: 1.6; white-space: pre-wrap; word-wrap: break-word; }
+
+        /* Markdown Styling within Details - Reduced Spacing */
+        .markdown-body { font-size: 0.95rem; }
+        .markdown-body p { margin: 0 0 4px 0; }
+        .markdown-body p:last-child { margin-bottom: 0; }
+        .markdown-body b, .markdown-body strong { font-weight: 700; color: var(--primary); }
+        .markdown-body ul, .markdown-body ol { margin: 4px 0; padding-left: 20px; }
+        .markdown-body li { margin-bottom: 2px; }
+        .markdown-body a { color: var(--info); text-decoration: underline; }
+
+        /* Remarks styling updated - Reduced Spacing */
+        .td-remarks { font-size: 0.75rem; color: var(--text-muted); font-style: italic; margin-top: 4px; padding-top: 4px; border-top: 1px dashed #d4cdc3; display: block; }
+        
+        /* Force markdown content inside remarks to respect the smaller font size */
+        .td-remarks .markdown-body { font-size: 0.75rem; }
+        .h-remarks .markdown-body { font-size: 0.7rem; }
+
+        .tz-display { font-family: var(--font-ui); font-size: 0.7rem; color: var(--info); font-weight: bold; margin-top: 6px; line-height: 1.4; }
+        .tz-display.clickable { cursor: pointer; padding: 2px 4px; border-radius: 3px; transition: background 0.2s; }
+        .tz-display.clickable:hover { background: rgba(93, 122, 140, 0.1); color: var(--primary); }
+
+        .display-basis-tag { font-family: var(--font-ui); font-size: 0.65rem; color: var(--secondary); background: #f0f0f0; padding: 2px 6px; border-radius: 10px; margin-top: 4px; display: inline-block; font-weight: 700; text-transform: uppercase; }
+
+        tr.draggable, .h-item.draggable { cursor: grab; }
+        tr.dragging, .h-item.dragging { opacity: 0.4; background-color: var(--drag-bg); }
+        tr.drag-over, .h-item.drag-over { border-bottom: 2px solid var(--primary); }
+
+        /* --- MultiTimeline Floating Scrollbar Fix --- */
+        #multiArea { 
+            display: none; 
+            flex-direction: column; 
+            gap: 40px; 
+            overflow: auto; 
+            max-height: 75vh; 
+            padding: 40px 0; 
+            scrollbar-width: thin; 
+            scrollbar-color: var(--secondary) transparent;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+        }
+        #multiArea.show { display: flex; }
+
+        .year-track { display: flex; align-items: stretch; min-width: max-content; border-bottom: 1px dashed #d4cdc3; padding-bottom: 40px; }
+        
+        .year-label { 
+            font-family: var(--font-ui); 
+            font-weight: 900; 
+            font-size: 2.2rem; 
+            color: #d4cdc3; 
+            position: sticky; 
+            left: 0; 
+            z-index: 20; 
+            pointer-events: none; 
+            line-height: 1; 
+            padding: 10px 20px; 
+            text-shadow: 1px 1px 0 #fff; 
+            display: flex; 
+            align-items: center; 
+            background: rgba(253, 251, 247, 0.95); 
+            border-right: 1px solid #ebe5dc;
+        }
+        
+        .multi-day-slot { display: flex; flex-direction: column; gap: 15px; border-left: 2px solid #ebe5dc; padding-left: 15px; min-width: 180px; position: relative; }
+        .multi-day-slot::before { content: ''; position: absolute; left: -6px; top: 0; width: 10px; height: 10px; background: var(--bg); border: 2px solid var(--primary); border-radius: 50%; }
+        .day-num-label { font-family: var(--font-ui); font-size: 0.7rem; color: var(--primary); font-weight: 800; position: absolute; top: -25px; left: -10px; background: var(--bg); padding: 0 5px; border-radius: 10px; border: 1px solid #ebe5dc; }
+
+        #visualArea { display: none; overflow-x: auto; padding: 40px 0; white-space: nowrap; scroll-behavior: smooth; transform: rotateX(180deg); align-items: flex-end; scrollbar-color: var(--secondary) transparent; scrollbar-width: thin; }
+        #visualArea.show { display: flex; }
+
+        .h-item { display: inline-flex; flex-direction: column; align-items: center; position: relative; min-width: 220px; padding: 0; vertical-align: top; transform: rotateX(180deg); overflow: visible; }
+        .multi-day-slot .h-item { transform: none; min-width: auto; padding: 0; }
+
+        .h-dot-container { width: 100%; height: 30px; position: relative; display: flex; align-items: center; justify-content: center; flex-shrink: 0; z-index: 0; overflow: visible; }
+        .h-line { position: absolute; top: 50%; left: 50%; width: 100%; height: 2px; background: #d4cdc3; transform: translateY(-50%); z-index: -1; pointer-events: none; }
+        .h-item:last-child .h-line { display: none; }
+
+        .h-date-wrap { text-align: center; margin-bottom: 5px; min-height: 100px; display: flex; flex-direction: column; justify-content: flex-end; padding: 0 10px; }
+        .h-date { font-family: var(--font-ui); font-size: 0.85rem; font-weight: 800; color: var(--text-main); line-height: 1.2; }
+        .h-day { font-family: var(--font-ui); font-size: 0.75rem; color: var(--primary); font-weight: 600; margin: 4px 0; letter-spacing: 1px; text-transform: uppercase; }
+        .h-time { font-family: var(--font-ui); font-size: 0.75rem; color: var(--text-muted); line-height: 1.4; }
+
+        .h-dot { width: 16px; height: 16px; background: var(--bg); border: 3px solid var(--primary); border-radius: 50%; z-index: 1; box-shadow: 0 0 0 4px var(--bg); cursor: pointer; transition: all 0.2s; position: relative; }
+        .h-dot:hover { background: var(--primary); transform: scale(1.2); }
+
+        .h-card { margin-top: 15px; background: #fff; border: 1px solid #e6e0d4; border-top: 3px solid var(--primary); border-radius: 2px; padding: 15px; width: 190px; margin-left: 15px; margin-right: 15px; white-space: normal; text-align: left; position: relative; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); transition: transform 0.2s; cursor: pointer; }
+        .multi-day-slot .h-card { margin: 0; width: 160px; padding: 12px; }
+        .h-card:hover { transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
+        .h-detail-text { font-size: 0.85rem; font-weight: 300; color: var(--text-main); line-height: 1.4; white-space: pre-wrap; }
+        .h-val-text { font-family: var(--font-ui); font-size: 0.65rem; color: var(--secondary); margin-top: 0; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
+        .h-chap-title { font-size: 0.95rem; font-weight: 700; color: var(--text-main); margin-top: 4px; line-height: 1.2; font-family: var(--font-main); }
+        .h-sub-title { font-size: 0.8rem; font-style: italic; color: var(--text-muted); margin-bottom: 8px; line-height: 1.3; }
+        .h-divider { border-bottom: 1px solid #f0ebe4; margin-bottom: 8px; }
+        /* Card Remarks - Reduced Spacing */
+        .h-remarks { margin-top: 6px; padding-top: 4px; border-top: 1px dashed #d4cdc3; font-size: 0.7rem; color: var(--text-muted); font-style: italic; line-height: 1.4; white-space: normal; }
+
+        .card-del { position: absolute; top: 5px; right: 8px; font-size: 1.1rem; color: var(--secondary); cursor: pointer; opacity: 0.5; }
+        .card-del:hover { color: var(--danger); opacity: 1; }
+
+        /* Filter Toggle UI */
+        .filter-toggle-row { display: flex; align-items: center; gap: 10px; margin-bottom: 15px; font-family: var(--font-ui); font-size: 0.85rem; font-weight: 700; color: var(--text-muted); }
+        .filter-toggle-row input { width: 18px; height: 18px; cursor: pointer; }
+
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(44, 36, 32, 0.6); z-index: 1000; align-items: center; justify-content: center; }
+        .modal-content { background: var(--panel); padding: 30px; border-radius: 4px; text-align: center; max-width: 400px; width: 90%; border: 1px solid #e6e0d4; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04); }
+        .modal-content h3 { color: var(--primary); font-family: var(--font-main); margin-bottom: 10px; }
+        
+        #toast { visibility: hidden; min-width: 250px; background-color: var(--text-main); color: #fff; text-align: center; border-radius: 4px; padding: 12px 16px; position: fixed; z-index: 2000; left: 50%; bottom: 30px; transform: translateX(-50%); opacity: 0; transition: opacity 0.3s, bottom 0.3s; font-family: var(--font-ui); font-size: 0.9rem; }
+        #toast.show { visibility: visible; opacity: 1; bottom: 50px; }
+
+        .file-tools { display: flex; flex-direction: column; gap: 10px; }
+        .file-tools-row-1 { display: flex; gap: 10px; width: 100%; }
+        .file-tools-row-1 button { flex: 1; }
+        #fileIn { width: 100%; padding: 8px; border: 1px dashed var(--secondary); border-radius: 3px; }
+
+        /* --- README Documentation Style --- */
+        .readme-footer { margin-top: 50px; border-top: 1px solid #e6e0d4; padding-top: 30px; text-align: center; }
+        .readme-toggle-btn { background: transparent; border: 1px solid var(--secondary); color: var(--secondary); padding: 8px 20px; border-radius: 20px; font-family: var(--font-ui); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; transition: all 0.2s; }
+        .readme-toggle-btn:hover { border-color: var(--primary); color: var(--primary); background: rgba(140, 107, 93, 0.05); }
+        #readmeContainer { display: none; margin-top: 30px; text-align: left; background: #fff; padding: 40px; border-radius: 2px; border: 1px solid #e6e0d4; line-height: 1.8; color: var(--text-main); max-width: 800px; margin-left: auto; margin-right: auto; font-family: var(--font-main); }
+        #readmeContainer h1, #readmeContainer h2 { color: var(--primary); border-bottom: 1px solid #f0ebe4; padding-bottom: 10px; margin-top: 30px; }
+        #readmeContainer code { background: #f4f1ea; padding: 2px 6px; border-radius: 3px; font-family: monospace; color: var(--primary); }
+        #readmeContainer a { color: var(--info); text-decoration: underline; }
+
+        @media (max-width: 768px) {
+            body { padding: 10px; padding-bottom: 100px; }
+            .panel { padding: 15px; border-radius: 0; margin-left: -10px; margin-right: -10px; border-left: none; border-right: none; }
+            .controls { grid-template-columns: 1fr; gap: 15px; }
+            .col-span-2, .col-span-full { grid-column: span 1 !important; }
+            .c-row-70-30, .c-row-50-50 { grid-template-columns: 1fr; gap: 15px; }
+            .c-row-50-50 { margin-top: 15px; }
+            .header-branding { width: 95%; max-width: none; }
+            #multiArea { max-height: 60vh; }
+            .action-group { display: flex; flex-direction: row; width: 100%; gap: 10px; }
+            .action-group button { flex: 1; padding: 12px 5px; font-size: 0.75rem; }
+            
+            /* 3-Line Mobile Navigation Layout */
+            .navigation-bar { display: flex; flex-direction: column; gap: 12px; padding: 0; }
+            .nav-top-row { flex-direction: column; gap: 12px; width: 100%; }
+            .nav-bottom-row { width: 100%; display: flex; justify-content: center; }
+            
+            .nav-left, .nav-right { width: 100%; display: flex; }
+            .nav-left .btn-group-mobile, .nav-right .btn-group-mobile { width: 100%; display: flex; gap: 8px; }
+            
+            /* Improved Mobile Navigation Buttons */
+            .nav-left .btn-group-mobile button, 
+            .nav-right .btn-group-mobile button {
+                flex: 1;
+                justify-content: center;
+                padding: 12px 4px;
+                font-size: 0.8rem;
+                white-space: nowrap;
+            }
+
+            /* Improved Mobile Timezone Picker */
+            .tz-picker-compact { 
+                width: 100% !important; 
+                max-width: none !important; 
+                min-width: 0; 
+                text-align: center; 
+                text-align-last: center;
+                height: 42px;
+                font-size: 0.9rem;
+            }
+
+            .cloud-banner { flex-direction: column; align-items: stretch; padding: 15px; }
+            .id-input-group { width: 100%; display: flex; gap: 5px; }
+            .id-input-group input { flex-grow: 1; min-width: 0; }
+            .cloud-banner .btn-row { width: 100%; display: flex; gap: 10px; margin: 0; margin-top: 10px; }
+            .cloud-banner .btn-row button { flex: 1; }
+            #readmeContainer { padding: 20px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header-branding">
+        <h2 class="main-title">STORYLINES</h2>
+        <h4 class="main-subtitle">Non-Linear Timeline Manager</h4>
+    </div>
+
+    <!-- BEAT SPACE -->
+    <div class="panel">
+        <div class="section-label">Beat Space</div>
+        <div class="panel-header" onclick="toggleBeatPanel()">
+            <span style="font-weight:700; color:var(--text-main);">Manage Beats</span>
+            <span id="beatPanelIcon" style="color:var(--secondary);">➕</span>
+        </div>
+        
+        <div id="beatPanelContent" class="panel-content" style="display: none;">
+            <div class="controls">
+                <div class="input-group">
+                    <label>Date & Time</label>
+                    <input type="datetime-local" id="dateIn">
+                </div>
+                <div class="input-group">
+                    <label>Chapter No.</label>
+                    <input type="number" id="numIn" placeholder="e.g. 1.1" step="0.01">
+                </div>
+                <div class="input-group">
+                    <label>Event Location</label>
+                    <select id="inputTzSelect">
+                        <option value="Asia/Manila">Philippines</option>
+                        <option value="Europe/Berlin">Germany</option>
+                        <option value="Europe/Brussels">Belgium</option>
+                        <option value="Europe/Paris">France</option>
+                        <option value="Europe/London">United Kingdom</option>
+                        <option value="Europe/Riga">Latvia</option>
+                    </select>
+                </div>
+                <div class="input-group col-span-2">
+                    <label>Chapter Title</label>
+                    <input type="text" id="chapTitleIn" placeholder="e.g. The Beginning">
+                </div>
+                <div class="input-group">
+                    <label>SubChapter Title</label>
+                    <input type="text" id="subChapTitleIn" placeholder="e.g. The Arrival">
+                </div>
+                <div class="input-group col-span-full">
+                    <label>Details (Markdown supported)</label>
+                    <textarea id="detailIn" rows="3" maxlength="1000" placeholder="Use **bold**, *italic*, or - lists..."></textarea>
+                </div>
+                <div class="input-group col-span-full">
+                    <label>Remarks</label>
+                    <textarea id="remarksIn" rows="2" maxlength="500" placeholder="Notes, themes, or internal comments..." style="min-height:80px;"></textarea>
+                </div>
+            </div>
+            <div class="btn-row">
+                <div class="action-group">
+                    <button id="btnAdd" class="btn-add" onclick="handleAdd()">+ Add Beat</button>
+                    <button id="btnSaveNew" style="display:none; background-color: var(--success);" onclick="saveAsNew()">+ Save as New</button>
+                    <button id="btnCancel" class="btn-cancel" onclick="cancelEdit()">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CONTINUITY SPACE -->
+    <div class="panel">
+        <div class="section-label">Continuity Space</div>
+        <div class="panel-header" onclick="toggleContinuityPanel()">
+            <span style="font-weight:700; color:var(--text-main);">Manage Tracking Elements</span>
+            <span id="cPanelIcon" style="color:var(--secondary);">➕</span>
+        </div>
+        
+        <div id="continuityContent" class="panel-content" style="display: none;">
+            <div class="filter-toggle-row">
+                <input type="checkbox" id="filterBeatsToggle" onchange="toggleFilterMode()">
+                <label for="filterBeatsToggle">Filter Beats</label>
+            </div>
+
+            <div class="c-row-70-30">
+                <div class="input-group">
+                    <label>Item Name</label>
+                    <input type="text" id="cNameIn" placeholder="e.g. Scar, Ring">
+                </div>
+                <div class="input-group">
+                    <label>Icon</label>
+                    <input type="text" id="cIconIn" placeholder="e.g. ⚡" style="text-align:center;">
+                </div>
+            </div>
+            <div class="c-row-50-50">
+                <div class="input-group">
+                    <label>Start Date (LOCAL)</label>
+                    <input type="datetime-local" id="cStartIn">
+                </div>
+                <div class="input-group">
+                    <label>End Date (LOCAL, Optional)</label>
+                    <input type="datetime-local" id="cEndIn">
+                </div>
+            </div>
+            <div class="btn-row">
+                <div class="action-group">
+                    <button id="btnCAdd" class="btn-add" onclick="addContinuityItem()">+ Add Item</button>
+                    <button id="btnCCancel" class="btn-cancel" onclick="cancelContinuityEdit()">Cancel</button>
+                </div>
+            </div>
+            <div class="continuity-list" id="continuityListArea"></div>
+        </div>
+    </div>
+
+    <!-- NAVIGATION BAR -->
+    <div class="navigation-bar">
+        <div class="nav-top-row">
+            <div class="nav-left">
+                <div class="btn-group-mobile">
+                    <button id="btnSortDate" class="btn-sort" onclick="sortData('date')">Sort Date</button>
+                    <button id="btnSortChapter" class="btn-sort" onclick="sortData('number')">Sort Chapter</button>
+                </div>
+            </div>
+            <div class="nav-right">
+                <div class="btn-group-mobile">
+                    <button class="btn-view active" id="btnLinear" onclick="toggleView('linear')">Linear</button>
+                    <button class="btn-view" id="btnMulti" onclick="toggleView('multi')">MultiTimeline</button>
+                    <button class="btn-view" id="btnTab" onclick="toggleView('table')">List</button>
+                </div>
+            </div>
+        </div>
+        <div class="nav-bottom-row">
+            <select id="tzSelect" class="tz-picker-compact" onchange="updateTzPreference()">
+                <option value="">Compare Time: Off</option>
+                <option value="UTC">UTC</option>
+                <option value="Asia/Manila">Philippines</option>
+                <option value="Europe/Paris">France</option>
+                <option value="Europe/Berlin">Germany</option>
+                <option value="Europe/Brussels">Belgium</option>
+                <option value="Europe/Riga">Latvia</option>
+                <option value="Europe/London">United Kingdom</option>
+                <option value="Asia/Tokyo">Japan</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- RESULTS -->
+    <div class="view-container">
+        <div id="viewHeaderLabel" class="view-header-label">UNSORTED</div>
+        <div id="visualArea" class="show"></div>
+        <div id="multiArea"></div>
+        <table id="tableArea">
+            <thead>
+                <tr><th></th><th>Date / Time</th><th>Chapter</th><th>Details</th><th>Action</th></tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+        </table>
+        <p id="emptyMsg" style="text-align:center; color:var(--text-muted); margin-top:2rem; font-style:italic;">The story has not yet begun...</p>
+    </div>
+
+    <!-- FILE TOOLS -->
+    <div class="panel" style="margin-top: 20px;">
+        <div class="section-label">File Tools</div>
+        <div class="file-tools">
+            <div class="file-tools-row-1">
+                <button class="btn-dl" onclick="downloadCSV()">Save CSV</button>
+                <button class="btn-print" onclick="window.print()">Print / Save PDF</button>
+            </div>
+            <input type="file" id="fileIn" accept=".csv" onchange="uploadCSV(this)">
+            <button id="btnMainReset" class="btn-reset" onclick="confirmReset()" disabled>Reset</button>
+        </div>
+    </div>
+
+    <!-- CLOUD BANNER -->
+    <div class="cloud-banner" id="cloudBanner">
+        <div>
+            ☁️ <strong>Cloud Sync:</strong> <span id="syncStatus">Initializing...</span><br>
+            <span id="userIdDisplay" style="display: none; margin-top: 5px; font-size: 0.75rem;">
+                ID: <span class="cloud-id" id="userIdText" title="Click to copy" onclick="copyId()"></span>
+            </span>
+        </div>
+        <div class="id-input-group">
+            <input type="text" id="manualIdIn" class="id-input" placeholder="Paste Device ID">
+            <button class="btn-cloud" onclick="linkExistingId()">Link</button>
+            <button class="btn-reset" onclick="resetToOriginalId()" style="border-color:#991b1b; color:#991b1b;">Unlink</button>
+        </div>
+        <div class="btn-row btn-group-mobile">
+            <button class="btn-cloud" onclick="confirmBackup()" id="btnBackup" disabled>Backup</button>
+            <button class="btn-cloud" onclick="confirmRestore()" id="btnRestore" disabled style="background-color: var(--primary);">Restore</button>
+        </div>
+    </div>
+
+    <!-- COLLAPSIBLE DOCUMENTATION -->
+    <div class="readme-footer">
+        <button class="readme-toggle-btn" onclick="toggleReadme()">📖 Read Documentation</button>
+        <div id="readmeContainer"></div>
+    </div>
+
+    <!-- MODALS -->
+    <div id="deleteModal" class="modal-overlay"><div class="modal-content"><h3>Delete Event?</h3><div class="btn-row" style="justify-content: center;"><button class="btn-reset" onclick="executeDelete()">Delete</button><button class="btn-dl" onclick="closeModal()">Cancel</button></div></div></div>
+    <div id="resetModal" class="modal-overlay"><div class="modal-content"><h3>Reset All?</h3><div class="btn-row" style="justify-content: center;"><button class="btn-reset" onclick="executeReset()">Clear All</button><button class="btn-dl" onclick="closeModal()">Cancel</button></div></div></div>
+    <div id="backupModal" class="modal-overlay"><div class="modal-content"><h3>Confirm Cloud Backup</h3><p id="backupInfo" style="text-align: left; background: #fdfbf7; padding: 15px; border-radius: 4px; border: 1px solid #e6e0d4; font-size:0.9rem;">Loading info...</p><div class="btn-row" style="justify-content: center;"><button class="btn-cloud" onclick="executeBackup()">Overwrite Cloud</button><button class="btn-dl" onclick="closeModal()">Cancel</button></div></div></div>
+    <div id="restoreModal" class="modal-overlay"><div class="modal-content"><h3>Confirm Restore</h3><p id="restoreInfo" style="text-align: left; background: #fdfbf7; padding: 15px; border-radius: 4px; border: 1px solid #e6e0d4; font-size:0.9rem; margin-top: 15px;">Loading cloud info...</p><div class="btn-row" style="justify-content: center;"><button class="btn-cloud" style="background-color: var(--primary);" onclick="executeRestore()">Yes, Restore</button><button class="btn-dl" onclick="closeModal()">Cancel</button></div></div></div>
+
+    <div id="toast"></div>
+
+    <script type="module">
+        const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js';
+        import { getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js';
+        import { getFirestore, doc, setDoc, getDoc } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js';
+
+        let firebaseConfig = null;
+        try { if (typeof __firebase_config !== 'undefined') { firebaseConfig = JSON.parse(__firebase_config); } } catch (e) {}
+        if (!firebaseConfig) { firebaseConfig = { apiKey: "AIzaSyBb7WRsC6G_tUEzbA5W22m1zmYeQFqYXL4", authDomain: "storylines-2c573.firebaseapp.com", projectId: "storylines-2c573", storageBucket: "storylines-2c573.firebasestorage.app", messagingSenderId: "1001705274556", appId: "1:1001705274556:web:29b134ef9dfa57f55224b9" }; }
+
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'storylines-public';
+        let user = null, db = null, auth = null;
+        let activeSyncId = localStorage.getItem('storylines_active_id') || null;
+
+        const initFirebase = async () => {
+            if (!firebaseConfig || !firebaseConfig.apiKey) { document.getElementById('syncStatus').innerText = "Setup Required"; return; }
+            try {
+                const app = initializeApp(firebaseConfig);
+                auth = getAuth(app);
+                db = getFirestore(app);
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) { await signInWithCustomToken(auth, __initial_auth_token); } else { await signInAnonymously(auth); }
+                onAuthStateChanged(auth, (u) => { user = u; if (user) { activeSyncId = activeSyncId || user.uid; updateCloudUI(); } });
+            } catch (err) { document.getElementById('syncStatus').innerText = "Connection Failed"; }
+        };
+
+        function updateCloudUI() {
+            document.getElementById('syncStatus').innerText = "Personal Cloud Active";
+            document.getElementById('userIdDisplay').style.display = "block";
+            document.getElementById('userIdText').innerText = activeSyncId;
+            const isBlank = activeSyncId === 'blank';
+            document.getElementById('btnBackup').disabled = isBlank;
+            document.getElementById('btnRestore').disabled = false;
+        }
+
+        window.copyId = () => { const val = activeSyncId; const el = document.createElement('textarea'); el.value = val; document.body.appendChild(el); el.select(); document.execCommand('copy'); document.body.removeChild(el); showToast("ID Copied!"); }
+        window.linkExistingId = () => { const id = document.getElementById('manualIdIn').value.trim(); if(!id) return; activeSyncId = id; localStorage.setItem('storylines_active_id', id); updateCloudUI(); showToast("Device Linked!"); }
+        window.resetToOriginalId = () => { localStorage.removeItem('storylines_active_id'); if (user) { activeSyncId = user.uid; updateCloudUI(); showToast("Unlinked"); document.getElementById('manualIdIn').value = ''; } }
+        
+        function timeAgo(date) { const seconds = Math.floor((new Date() - date) / 1000); let interval = seconds / 31536000; if (interval > 1) return Math.floor(interval) + " years ago"; interval = seconds / 2592000; if (interval > 1) return Math.floor(interval) + " months ago"; interval = seconds / 86400; if (interval > 1) return Math.floor(interval) + " days ago"; interval = seconds / 3600; if (interval > 1) return Math.floor(interval) + " hours ago"; interval = seconds / 60; if (interval > 1) return Math.floor(interval) + " minutes ago"; return Math.floor(seconds) + " seconds ago"; }
+
+        window.confirmBackup = async () => {
+            if (!user || !db || activeSyncId === "blank") return showToast("Sync not ready");
+            const btn = document.getElementById('btnBackup'), originalText = btn.innerText;
+            btn.innerText = "Checking..."; btn.disabled = true;
+            try {
+                const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'backups', activeSyncId);
+                const docSnap = await getDoc(docRef);
+                let infoHtml = "No existing backup found. <br>This will create a new cloud record.";
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    if (data.lastUpdated) {
+                        const dO = new Date(data.lastUpdated), rel = timeAgo(dO), deviceStr = data.lastDevice ? data.lastDevice.substring(0, 6) + "..." : "Unknown";
+                        infoHtml = `<strong>Last Backup:</strong> ${dO.toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true })} <br><span style="color:var(--secondary);">(${rel})</span><br><br><strong>By Device ID:</strong> ${deviceStr}`;
+                    }
+                }
+                document.getElementById('backupInfo').innerHTML = infoHtml; document.getElementById('backupModal').style.display = 'flex';
+            } catch(e) { showToast("Cloud verify failed. Permission denied."); } finally { btn.innerText = originalText; btn.disabled = false; }
+        }
+
+        window.executeBackup = async () => {
+            window.closeModal();
+            try {
+                const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'backups', activeSyncId);
+                await setDoc(docRef, { beats: events, continuity: continuityItems, lastUpdated: Date.now(), lastDevice: user.uid });
+                showToast("✅ Successfully backed up to Cloud");
+            } catch (err) { showToast("Backup failed."); }
+        };
+
+        window.confirmRestore = async () => {
+            if (!user || !db) return showToast("Sync not ready");
+            const btn = document.getElementById('btnRestore'), originalText = btn.innerText;
+            btn.innerText = "Checking..."; btn.disabled = true;
+            try {
+                const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'backups', activeSyncId);
+                const docSnap = await getDoc(docRef);
+                let infoHtml = "No existing cloud data found.";
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    const cloudBeatsCount = data.beats ? data.beats.length : 0;
+                    const localBeatsCount = events.length;
+                    
+                    if (data.lastUpdated) {
+                        const dO = new Date(data.lastUpdated), rel = timeAgo(dO), deviceStr = data.lastDevice ? data.lastDevice.substring(0, 6) + "..." : "Unknown";
+                        infoHtml = `<div style="text-align:center; padding-bottom:10px; border-bottom:1px solid #eee; margin-bottom:15px;"><strong>Conflict Check</strong></div>
+                        <strong>Cloud Version:</strong> ${dO.toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true })} <br><span style="color:var(--primary);">(${rel})</span><br><br>
+                        <strong>Beats Comparison:</strong><br>
+                        • Local: ${localBeatsCount} beats<br>
+                        • Cloud: ${cloudBeatsCount} beats<br><br>
+                        <span style="color:var(--danger); font-size:0.8rem;">* Restoring will permanently replace local beats.</span>`;
+                    }
+                }
+                document.getElementById('restoreInfo').innerHTML = infoHtml; document.getElementById('restoreModal').style.display = 'flex';
+            } catch(e) { showToast("Cloud verify failed. Permission denied."); } finally { btn.innerText = originalText; btn.disabled = false; }
+        }
+
+        window.executeRestore = async () => {
+            window.closeModal();
+            try {
+                const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'backups', activeSyncId);
+                const docSnap = await getDoc(docRef);
+                if (docSnap.exists()) { 
+                    const data = docSnap.data();
+                    events = data.beats || []; 
+                    continuityItems = data.continuity || []; 
+                    saveLocalData(); renderContinuityList(); render(); 
+                    showToast("🔄 Data restored successfully"); 
+                }
+                else { showToast("No cloud data found."); }
+            } catch (err) { showToast("Restore failed."); }
+        };
+
+        // --- CORE LOGIC ---
+        let events = [], continuityItems = [], editIndex = -1, currentSortMethod = 'unsorted', currentTz = localStorage.getItem('storylines_tz') || '', editingContinuityId = null;
+        let activeFilterIds = []; 
+        const STORAGE_KEY = 'storylines_persist';
+
+        // Markdown Configuration
+        marked.setOptions({ breaks: true, gfm: true });
+
+        window.onload = function() {
+            document.getElementById('tzSelect').value = currentTz; detectUserNearestZone(); loadLocalData(); initFirebase();
+            document.getElementById('detailIn').addEventListener('input', function() { this.style.height = 'auto'; this.style.height = (this.scrollHeight) + 'px'; });
+            document.getElementById('remarksIn').addEventListener('input', function() { this.style.height = 'auto'; this.style.height = (this.scrollHeight) + 'px'; });
+        };
+
+        function saveLocalData() { localStorage.setItem(STORAGE_KEY, JSON.stringify({ events, continuity: continuityItems })); }
+        function loadLocalData() {
+            const data = localStorage.getItem(STORAGE_KEY);
+            if(data) {
+                try {
+                    const parsed = JSON.parse(data);
+                    if (Array.isArray(parsed)) { events = parsed; continuityItems = []; } 
+                    else { events = parsed.events || []; continuityItems = parsed.continuity || []; }
+                    events.forEach(e => e.number = parseFloat(e.number)); 
+                    renderContinuityList(); render();
+                } catch(e) { console.error(e); }
+            }
+        }
+
+        window.toggleBeatPanel = () => { const content = document.getElementById('beatPanelContent'), icon = document.getElementById('beatPanelIcon'); if (content.style.display === 'none') { content.style.display = 'block'; icon.innerText = '➖'; } else { content.style.display = 'none'; icon.innerText = '➕'; } }
+        window.toggleContinuityPanel = () => { const content = document.getElementById('continuityContent'), icon = document.getElementById('cPanelIcon'); if (content.style.display === 'block') { content.style.display = 'none'; icon.innerText = '➕'; } else { content.style.display = 'block'; icon.innerText = '➖'; } }
+
+        window.toggleFilterMode = () => {
+            const isFilterOn = document.getElementById('filterBeatsToggle').checked;
+            if (!isFilterOn) activeFilterIds = []; 
+            const btnCAdd = document.getElementById('btnCAdd'), btnCCancel = document.getElementById('btnCCancel');
+            if (btnCAdd) btnCAdd.disabled = isFilterOn;
+            if (btnCCancel) btnCCancel.disabled = isFilterOn;
+            renderContinuityList(); render();
+        }
+
+        window.addContinuityItem = () => {
+            const name = document.getElementById('cNameIn').value, icon = document.getElementById('cIconIn').value || '🔹', start = document.getElementById('cStartIn').value, end = document.getElementById('cEndIn').value;
+            if(!name || !start) return showToast("Name and Start Date required");
+            if (editingContinuityId) {
+                const idx = continuityItems.findIndex(i => i.id === editingContinuityId);
+                if (idx > -1) { continuityItems[idx] = { id: editingContinuityId, name, icon, start, end, visible: continuityItems[idx].visible }; showToast("Updated"); }
+                cancelContinuityEdit();
+            } else { continuityItems.push({ id: Date.now().toString(), name, icon, start, end, visible: true }); }
+            saveLocalData(); renderContinuityList(); render();
+        }
+
+        window.handleContinuityClick = (id) => {
+            const isFilterOn = document.getElementById('filterBeatsToggle').checked;
+            if (isFilterOn) {
+                const index = activeFilterIds.indexOf(id);
+                if (index > -1) activeFilterIds.splice(index, 1);
+                else activeFilterIds.push(id);
+                renderContinuityList(); render();
+            } else {
+                editContinuityItem(id);
+            }
+        }
+
+        window.editContinuityItem = (id) => { 
+            const item = continuityItems.find(i => i.id === id); 
+            if (!item) return; 
+            editingContinuityId = id; 
+            document.getElementById('cNameIn').value = item.name; 
+            document.getElementById('cIconIn').value = item.icon; 
+            document.getElementById('cStartIn').value = item.start; 
+            document.getElementById('cEndIn').value = item.end || ''; 
+            const btn = document.getElementById('btnCAdd'); 
+            btn.innerText = "Update Item"; btn.className = "btn-update"; 
+            document.getElementById('btnCCancel').style.display = 'inline-block'; 
+            if (document.getElementById('continuityContent').style.display !== 'block') window.toggleContinuityPanel(); 
+        }
+
+        window.deleteContinuityItem = (id) => { 
+            if(confirm("Remove this item?")) { 
+                continuityItems = continuityItems.filter(i => i.id !== id); 
+                if (editingContinuityId === id) cancelContinuityEdit(); 
+                activeFilterIds = activeFilterIds.filter(fid => fid !== id);
+                saveLocalData(); renderContinuityList(); render(); 
+            } 
+        }
+
+        window.cancelContinuityEdit = () => { 
+            editingContinuityId = null; 
+            document.getElementById('cNameIn').value = ''; document.getElementById('cIconIn').value = ''; document.getElementById('cStartIn').value = ''; document.getElementById('cEndIn').value = ''; 
+            const btn = document.getElementById('btnCAdd'); btn.innerText = "+ Add Item"; btn.className = "btn-add";
+            document.getElementById('btnCCancel').style.display = 'none'; 
+        }
+
+        window.toggleContinuityVisibility = (id) => { const item = continuityItems.find(i => i.id === id); if(item) { item.visible = !item.visible; saveLocalData(); renderContinuityList(); render(); } }
+        
+        function renderContinuityList() { 
+            const container = document.getElementById('continuityListArea'); 
+            container.innerHTML = ''; 
+            const sorted = [...continuityItems].sort((a, b) => new Date(a.start) - new Date(b.start)); 
+            sorted.forEach(item => { 
+                const isFiltering = activeFilterIds.includes(item.id);
+                const el = document.createElement('div'); 
+                el.className = `c-item-tag ${!item.visible ? 'inactive' : ''} ${isFiltering ? 'filtering' : ''}`; 
+                el.innerHTML = `<span onclick="event.stopPropagation(); toggleContinuityVisibility('${item.id}')" style="cursor:pointer; margin-right:5px; opacity:0.6;">${item.visible ? '👁️' : '🔒'}</span><span onclick="handleContinuityClick('${item.id}')" style="cursor:pointer; font-weight:bold;">${item.icon} ${item.name}</span><span onclick="event.stopPropagation(); deleteContinuityItem('${item.id}')" style="cursor:pointer; color:var(--danger); font-weight:bold; margin-left:8px;">×</span>`; 
+                container.appendChild(el); 
+            }); 
+        }
+        window.renderContinuityList = renderContinuityList;
+
+        function getActiveContinuity(beatDateStr) { const beatDate = new Date(beatDateStr); return continuityItems.filter(item => { if(!item.visible) return false; const s = new Date(item.start), e = item.end ? new Date(item.end) : null; return beatDate >= s && (!e || beatDate <= e); }); }
+        function detectUserNearestZone() { const bTz = Intl.DateTimeFormat().resolvedOptions().timeZone; document.getElementById('inputTzSelect').value = bTz; }
+        
+        function convertToLocal(inputDateValue, sourceTz) { 
+            if (!inputDateValue) return null; 
+            const [datePart, timePart] = inputDateValue.split('T'), [y, m, d] = datePart.split('-').map(Number), [hh, mm] = timePart.split(':').map(Number);
+            const formatter = new Intl.DateTimeFormat('en-US', { timeZone: sourceTz, year: 'numeric', month: 'numeric', day: 'numeric', hour: 'numeric', minute: 'numeric', second: 'numeric', hour12: false }); 
+            let testDate = new Date(Date.UTC(y, m - 1, d, hh, mm)); 
+            const parts = formatter.formatToParts(testDate), getP = t => parseInt(parts.find(p => p.type === t).value);
+            const sourceWallClock = Date.UTC(getP('year'), getP('month') - 1, getP('day'), getP('hour') % 24, getP('minute')); 
+            const actualUtc = new Date(testDate.getTime() + (testDate.getTime() - sourceWallClock)); 
+            const pad = (n) => n.toString().padStart(2, '0'); 
+            return `${actualUtc.getFullYear()}-${pad(actualUtc.getMonth()+1)}-${pad(actualUtc.getDate())}T${pad(actualUtc.getHours())}:${pad(actualUtc.getMinutes())}`; 
+        }
+
+        window.updateTzPreference = () => { currentTz = document.getElementById('tzSelect').value; localStorage.setItem('storylines_tz', currentTz); render(); }
+        
+        function convertTime(dateStr, targetTz) { 
+            if (!targetTz || !dateStr) return null; 
+            try { 
+                const d = new Date(dateStr); 
+                const tF = new Intl.DateTimeFormat('en-GB', { timeZone: targetTz, hour: '2-digit', minute: '2-digit', hour12: false }); 
+                const dF = new Intl.DateTimeFormat('en-GB', { timeZone: targetTz, day: '2-digit', month: 'short', year: 'numeric' }); 
+                const wF = new Intl.DateTimeFormat('en-US', { timeZone: targetTz, weekday: 'long' }); 
+                return { time: tF.format(d), dateRaw: dF.format(d), weekday: wF.format(d) }; 
+            } catch(e) { return null; } 
+        }
+
+        window.setPreferredDisplayTz = (index, tz) => {
+            if (!tz) return;
+            const sel = document.getElementById('tzSelect');
+            const country = sel.options[sel.selectedIndex].text;
+            events[index].preferredDisplayTz = tz;
+            events[index].preferredCountry = country;
+            saveLocalData(); render(); showToast(`Display set to ${country}`);
+        }
+
+        window.handleAdd = () => {
+            const rawDate = document.getElementById('dateIn').value, sourceTz = document.getElementById('inputTzSelect').value, num = document.getElementById('numIn').value, cT = document.getElementById('chapTitleIn').value, sT = document.getElementById('subChapTitleIn').value, det = document.getElementById('detailIn').value, rem = document.getElementById('remarksIn').value;
+            if (!rawDate || num === '' || !det) return showToast("Fill all fields");
+            const date = convertToLocal(rawDate, sourceTz), beat = { date, number: parseFloat(num), chapterTitle: cT, subChapterTitle: sT, details: det, remarks: rem };
+            if (editIndex > -1) { 
+                const old = events[editIndex];
+                beat.preferredDisplayTz = old.preferredDisplayTz; beat.preferredCountry = old.preferredCountry;
+                events[editIndex] = beat; cancelEdit(); 
+            } else { events.push(beat); sortData(currentSortMethod); clearInputs(); }
+            saveLocalData(); render();
+        }
+
+        window.editEvent = (i) => {
+            editIndex = i; const e = events[i]; 
+            document.getElementById('dateIn').value = e.date; 
+            document.getElementById('numIn').value = e.number; 
+            document.getElementById('chapTitleIn').value = e.chapterTitle || ''; 
+            document.getElementById('subChapTitleIn').value = e.subChapterTitle || ''; 
+            document.getElementById('detailIn').value = e.details; 
+            document.getElementById('remarksIn').value = e.remarks || '';
+            document.getElementById('btnAdd').innerText = "Update Beat"; 
+            document.getElementById('btnAdd').className = "btn-update"; 
+            document.getElementById('btnCancel').style.display = "inline-block"; 
+            document.getElementById('btnSaveNew').style.display = "inline-block";
+            if (document.getElementById('beatPanelContent').style.display === 'none') window.toggleBeatPanel();
+        }
+
+        window.cancelEdit = () => { editIndex = -1; clearInputs(); document.getElementById('btnAdd').innerText = "+ Add Beat"; document.getElementById('btnAdd').className = "btn-add"; document.getElementById('btnCancel').style.display = "none"; document.getElementById('btnSaveNew').style.display = "none"; }
+        window.saveAsNew = () => { editIndex = -1; handleAdd(); cancelEdit(); }
+
+        function getFormattedDate(dateStr) { 
+            if (!dateStr) return ''; 
+            const parts = dateStr.split('T')[0].split('-');
+            const y = parts[0], m = parseInt(parts[1]), d = parts[2].padStart(2, '0');
+            return `${d} ${MONTHS[m-1]} ${y}`; 
+        }
+
+        window.moveBeat = (index, direction) => {
+            const to = index + direction;
+            if (to < 0 || to >= events.length) return;
+            if (Math.floor(events[index].number) !== Math.floor(events[to].number)) return showToast("Cannot move between chapters.");
+            const item = events.splice(index, 1)[0];
+            events.splice(to, 0, item);
+            const intPart = Math.floor(item.number), groupIndices = [];
+            events.forEach((ev, idx) => { if(Math.floor(ev.number) === intPart) groupIndices.push(idx); });
+            const step = groupIndices.length > 9 ? 0.01 : 0.1;
+            groupIndices.forEach((arrayIdx, k) => { events[arrayIdx].number = parseFloat((intPart + (k + 1) * step).toFixed(2)); });
+            saveLocalData(); render();
+        };
+
+        function createCardHtml(evt, i) {
+            let displayDate, displayTime, displayDay, displayBasis = "Local Browser";
+            if (evt.preferredDisplayTz) {
+                const pref = convertTime(evt.date, evt.preferredDisplayTz);
+                if (pref) { displayDate = pref.dateRaw; displayTime = pref.time; displayDay = pref.weekday; displayBasis = evt.preferredCountry || "Custom Location"; }
+            }
+            if (!displayDate) {
+                displayDate = getFormattedDate(evt.date);
+                displayTime = evt.date.split('T')[1] || '00:00';
+                const localD = new Date(evt.date);
+                displayDay = localD.toLocaleDateString('en-US', { weekday: 'long' });
+            }
+
+            const conv = convertTime(evt.date, currentTz);
+            let altTzHtml = '';
+            if (conv && currentTz) {
+                const sel = document.getElementById('tzSelect'), countryName = sel.options[sel.selectedIndex].text;
+                altTzHtml = `<div class="tz-display clickable" onclick="event.stopPropagation(); setPreferredDisplayTz(${i}, '${currentTz}')" title="Click to set as Display Date">${countryName}: ${conv.dateRaw}, ${conv.time}<br><span style="font-weight: normal;">${conv.weekday}</span></div>`;
+            }
+
+            const activeItems = getActiveContinuity(evt.date).sort((a, b) => new Date(a.start) - new Date(b.start));
+            let cHtml = ''; 
+            if(activeItems.length > 0) {
+                cHtml = '<div class="c-badges-container">';
+                activeItems.forEach(ci => {
+                    const startStr = getFormattedDate(ci.start), endStr = ci.end ? getFormattedDate(ci.end) : "Ongoing", durationText = `${startStr} - ${endStr}`;
+                    cHtml += `<span class="c-badge" data-tooltip="Duration: ${durationText}" onclick="event.stopPropagation()">${ci.icon} ${ci.name}</span>`;
+                });
+                cHtml += '</div>';
+            }
+
+            const dragAttr = currentSortMethod === 'number' ? 'draggable="true"' : '', dragClass = currentSortMethod === 'number' ? 'draggable' : '';
+            
+            // Markdown parsing for details and remarks
+            const parsedDetails = marked.parse(evt.details.replace(/{nl}/g, '\n'));
+            const parsedRemarks = evt.remarks ? marked.parse(evt.remarks.replace(/{nl}/g, '\n')) : '';
+
+            return {
+                table: `<tr class="${dragClass}" data-index="${i}" ${dragAttr}><td>${currentSortMethod === 'number' ? '☰' : ''}</td><td style="white-space: nowrap;">${displayDate} ${displayTime}<br><small>${displayDay}</small><br><span class="display-basis-tag">${displayBasis}</span>${altTzHtml}</td><td><b>${evt.number}</b><br><span style="font-weight:700;">${evt.chapterTitle || ''}</span></td><td><div class="markdown-body">${parsedDetails}</div>${evt.remarks ? `<div class="td-remarks">📝 <div class="markdown-body" style="display:inline;">${parsedRemarks}</div></div>` : ''}<div style="margin-top:4px">${cHtml}</div></td><td><div class="action-btn-group" style="display:flex; gap:4px;"><button class="action-btn" onclick="editEvent(${i})" title="Edit">✎</button>${currentSortMethod === 'number' ? `<button class="action-btn" onclick="moveBeat(${i}, -1)" title="Move Up">↑</button><button class="action-btn" onclick="moveBeat(${i}, 1)" title="Move Down">↓</button>` : ''}<button class="action-btn del-btn" onclick="askDelete(${i})" title="Delete">×</button></div></td></tr>`,
+                linear: `<div class="h-item ${dragClass}" data-index="${i}" ${dragAttr}><div class="h-date-wrap"><div class="h-date">${displayDate}</div><div class="h-day">${displayDay}</div><div class="h-time">${displayTime}<br><span class="display-basis-tag">${displayBasis}</span>${altTzHtml}</div></div><div class="h-dot-container"><div class="h-line"></div><div class="h-dot" onclick="editEvent(${i})"></div></div><div class="h-card" onclick="editEvent(${i})"><span class="card-del" onclick="event.stopPropagation(); askDelete(${i})">×</span><div class="h-val-text">Chapter ${evt.number}</div>${evt.chapterTitle ? `<div class="h-chap-title">${evt.chapterTitle}</div>` : ''}${evt.subChapterTitle ? `<div class="h-sub-title">${evt.subChapterTitle}</div>` : ''}<div class="h-divider"></div><div class="h-detail-text markdown-body">${parsedDetails}</div>${evt.remarks ? `<div class="h-remarks"><div class="markdown-body">${parsedRemarks}</div></div>` : ''}${cHtml}</div></div>`,
+                multi: `<div class="h-item"><div class="h-date-wrap" style="min-height:auto; text-align:left;"><div class="h-date" style="font-size:0.7rem; font-weight:900;">${displayDate}</div><div class="h-time" style="font-size:0.6rem; color:var(--text-muted)">${displayTime} <span class="display-basis-tag" style="font-size:0.5rem; padding:1px 3px;">${displayBasis}</span></div>${altTzHtml}</div><div class="h-card" onclick="editEvent(${i})"><span class="card-del" onclick="event.stopPropagation(); askDelete(${i})">×</span><div class="h-val-text" style="font-size:0.55rem">CH ${evt.number}</div>${evt.chapterTitle ? `<div class="h-chap-title" style="font-size:0.75rem">${evt.chapterTitle}</div>` : ''}${evt.subChapterTitle ? `<div class="h-sub-title" style="font-size:0.65rem">${evt.subChapterTitle}</div>` : ''}<div class="h-divider"></div><div class="h-detail-text markdown-body" style="font-size:0.75rem">${parsedDetails.substring(0, 150)}${evt.details.length > 150 ? '...' : ''}</div>${cHtml}</div></div>`
+            };
+        }
+
+        function render() {
+            const linear = document.getElementById('visualArea'), body = document.getElementById('tableBody'), multi = document.getElementById('multiArea'), msg = document.getElementById('emptyMsg');
+            linear.innerHTML = ''; body.innerHTML = ''; multi.innerHTML = ''; if (events.length === 0) { msg.style.display = 'block'; return; } msg.style.display = 'none';
+            const isFilterOn = document.getElementById('filterBeatsToggle').checked;
+            const displayEvents = events.map((e, idx) => ({ ...e, originalIndex: idx })).filter(evt => {
+                if (!isFilterOn || activeFilterIds.length === 0) return true;
+                const bTime = new Date(evt.date).getTime();
+                return activeFilterIds.every(fid => {
+                    const item = continuityItems.find(i => i.id === fid);
+                    if (!item) return true;
+                    const sTime = new Date(item.start).getTime(), eTime = item.end ? new Date(item.end).getTime() : Infinity;
+                    return bTime >= sTime && bTime <= eTime;
+                });
+            });
+
+            displayEvents.forEach((evt) => {
+                const parts = createCardHtml(evt, evt.originalIndex);
+                body.innerHTML += parts.table; linear.innerHTML += parts.linear;
+            });
+
+            const yearGroups = {}, activeDayNumbers = new Set();
+            displayEvents.forEach((evt) => {
+                const d = new Date(evt.date), year = d.getUTCFullYear();
+                activeDayNumbers.add(d.getUTCDate());
+                if (!yearGroups[year]) yearGroups[year] = [];
+                yearGroups[year].push(evt);
+            });
+
+            const sortedYears = Object.keys(yearGroups).sort((a, b) => b - a), sortedDayLabels = Array.from(activeDayNumbers).sort((a, b) => a - b);
+            sortedYears.forEach(year => {
+                const track = document.createElement('div');
+                track.className = 'year-track'; track.innerHTML = `<div class="year-label">${year}</div>`;
+                sortedDayLabels.forEach(dayNum => {
+                    const slotEl = document.createElement('div');
+                    slotEl.className = 'multi-day-slot';
+                    const yearDayBeats = yearGroups[year].filter(b => new Date(b.date).getUTCDate() === dayNum).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+                    if (yearDayBeats.length > 0) {
+                        const dayTag = document.createElement('div');
+                        dayTag.className = 'day-num-label'; dayTag.innerText = `DAY ${dayNum.toString().padStart(2, '0')}`;
+                        slotEl.appendChild(dayTag);
+                        
+                        // Enhanced Stacking Logic for high-density events
+                        const stacks = [];
+                        yearDayBeats.forEach(beat => {
+                            const bTime = new Date(beat.date).getTime();
+                            let stacked = false;
+                            for(let stack of stacks) {
+                                const stackRefTime = new Date(stack[stack.length-1].date).getTime();
+                                if (Math.abs(bTime - stackRefTime) <= 1.5 * 60 * 60 * 1000) { 
+                                    stack.push(beat); stacked = true; break; 
+                                }
+                            }
+                            if(!stacked) stacks.push([beat]);
+                        });
+                        stacks.forEach(stack => { 
+                            const stackContainer = document.createElement('div');
+                            stackContainer.style.display = 'flex';
+                            stackContainer.style.flexDirection = 'column';
+                            stackContainer.style.gap = '8px';
+                            stack.forEach(beat => { 
+                                const cardParts = createCardHtml(beat, beat.originalIndex); 
+                                stackContainer.innerHTML += cardParts.multi; 
+                            }); 
+                            slotEl.appendChild(stackContainer);
+                        });
+                    }
+                    track.appendChild(slotEl);
+                });
+                multi.appendChild(track);
+            });
+            if (currentSortMethod === 'number') setupDragAndDrop();
+        }
+        window.render = render;
+
+        window.sortData = (type) => { currentSortMethod = type; const label = document.getElementById('viewHeaderLabel'); if (type === 'number') { events.sort((a, b) => a.number - b.number); label.innerText = "CHAPTER"; } else if (type === 'date') { events.sort((a, b) => new Date(a.date) - new Date(b.date)); label.innerText = "CHRONOLOGICAL"; } render(); }
+        
+        window.toggleView = (v) => { 
+            const btns = document.querySelectorAll('.btn-view'); btns.forEach(b => b.classList.remove('active'));
+            if(v === 'linear') document.getElementById('btnLinear').classList.add('active');
+            if(v === 'multi') document.getElementById('btnMulti').classList.add('active');
+            if(v === 'table') document.getElementById('btnTab').classList.add('active');
+            document.getElementById('visualArea').classList.toggle('show', v === 'linear');
+            document.getElementById('multiArea').classList.toggle('show', v === 'multi');
+            document.getElementById('tableArea').classList.toggle('show', v === 'table');
+            const isMulti = v === 'multi';
+            document.getElementById('btnSortDate').disabled = isMulti;
+            document.getElementById('btnSortChapter').disabled = isMulti;
+        }
+
+        function clearInputs() { document.getElementById('dateIn').value = ''; document.getElementById('numIn').value = ''; document.getElementById('chapTitleIn').value = ''; document.getElementById('subChapTitleIn').value = ''; document.getElementById('detailIn').value = ''; document.getElementById('remarksIn').value = ''; document.getElementById('detailIn').style.height = 'auto'; }
+        function showToast(m) { const t = document.getElementById("toast"); t.innerText = m; t.className = "show"; setTimeout(() => t.className = "", 3000); }
+        window.askDelete = (i) => { if(confirm("Delete this event?")) { events.splice(i, 1); saveLocalData(); render(); } }
+        window.closeModal = () => { document.querySelectorAll('.modal-overlay').forEach(m => m.style.display = 'none'); }
+
+        window.downloadCSV = () => { 
+            if (events.length === 0) return showToast("No data to save."); 
+            let csv = "Date,Chapter,ChapterTitle,SubChapterTitle,Details,Remarks,PrefTz,PrefCountry\n"; 
+            events.forEach(e => { csv += `${e.date},${e.number},${(e.chapterTitle || '').replace(/,/g, '{com}')},${(e.subChapterTitle || '').replace(/,/g, '{com}')},${e.details.replace(/\n/g, '{nl}').replace(/,/g, '{com}')},${(e.remarks || '').replace(/\n/g, '{nl}').replace(/,/g, '{com}')},${e.preferredDisplayTz || ''},${e.preferredCountry || ''}\n`; }); 
+            if(continuityItems.length > 0) { 
+                csv += "\n[CONTINUITY_DATA_START]\nID,Name,Icon,Start,End,Visible\n"; 
+                continuityItems.forEach(ci => { csv += `${ci.id},${ci.name},${ci.icon},${ci.start},${ci.end || ''},${ci.visible}\n`; }); 
+                csv += "[CONTINUITY_DATA_END]\n"; 
+            } 
+            const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' })); a.download = 'storylines.csv'; a.click(); 
+        }
+
+        window.uploadCSV = (input) => { 
+            if (!input.files[0]) return; 
+            const reader = new FileReader(); 
+            reader.onload = (e) => { 
+                const text = e.target.result;
+                const continuitySplit = text.split('[CONTINUITY_DATA_START]');
+                const beatsData = continuitySplit[0].trim(), continuityData = continuitySplit[1] ? continuitySplit[1].split('[CONTINUITY_DATA_END]')[0].trim() : null;
+                const lines = beatsData.split('\n'); 
+                let newEvents = []; 
+                for(let i=1; i<lines.length; i++) { 
+                    const p = lines[i].trim().split(','); 
+                    if(p.length >= 3) { 
+                        const d = p[0], n = parseFloat(p[1]); 
+                        if(!isNaN(n)) newEvents.push({ date: d, number: n, chapterTitle: p[2]?.replace(/{com}/g,','), subChapterTitle: p[3]?.replace(/{com}/g,','), details: p[4]?.replace(/{nl}/g,'\n').replace(/{com}/g,','), remarks: p[5]?.replace(/{nl}/g,'\n').replace(/{com}/g,','), preferredDisplayTz: p[6] || '', preferredCountry: p[7] || '' }); 
+                    } 
+                } 
+                let newContinuity = [];
+                if(continuityData) {
+                    const cLines = continuityData.split('\n');
+                    for(let i=1; i<cLines.length; i++) {
+                        const c = cLines[i].trim().split(',');
+                        if(c.length >= 4) newContinuity.push({ id: c[0], name: c[1], icon: c[2], start: c[3], end: c[4] || '', visible: c[5] === 'true' });
+                    }
+                }
+                if(newEvents.length > 0) { events = newEvents; if(newContinuity.length > 0) continuityItems = newContinuity; saveLocalData(); renderContinuityList(); render(); showToast("Data imported successfully"); } 
+            }; 
+            reader.readAsText(input.files[0]); 
+        }
+        
+        function setupDragAndDrop() { 
+            if (currentSortMethod !== 'number') return;
+            document.querySelectorAll('.draggable').forEach(el => { 
+                el.ondragstart = (e) => { e.dataTransfer.setData('idx', el.dataset.index); el.classList.add('dragging'); }; 
+                el.ondragover = (e) => { e.preventDefault(); e.currentTarget.classList.add('drag-over'); }; 
+                el.ondragleave = (e) => { e.currentTarget.classList.remove('drag-over'); }; 
+                el.ondrop = (e) => { 
+                    e.preventDefault(); 
+                    e.currentTarget.classList.remove('drag-over'); 
+                    const from = parseInt(e.dataTransfer.getData('idx')), to = parseInt(el.dataset.index); 
+                    if (isNaN(from) || from === to) return; 
+                    if (Math.floor(events[from].number) !== Math.floor(events[to].number)) return showToast("Movement restricted to within the same Chapter.");
+                    const item = events.splice(from, 1)[0]; 
+                    events.splice(to, 0, item); 
+                    const intPart = Math.floor(item.number), groupIndices = [];
+                    events.forEach((ev, idx) => { if(Math.floor(ev.number) === intPart) groupIndices.push(idx); });
+                    const step = groupIndices.length > 9 ? 0.01 : 0.1;
+                    groupIndices.forEach((arrayIdx, k) => { events[arrayIdx].number = parseFloat((intPart + (k + 1) * step).toFixed(2)); });
+                    saveLocalData(); render(); 
+                }; 
+            }); 
+        }
+
+        window.confirmReset = () => { document.getElementById('resetModal').style.display = 'flex'; }
+        window.executeReset = () => { /* Logic disabled as requested */ closeModal(); showToast("Reset disabled by policy."); }
+        window.executeDelete = () => {}
+
+        const README_URL = 'https://thordnel.github.io/nonlineartimeline/README.md';
+        window.toggleReadme = async () => {
+            const container = document.getElementById('readmeContainer');
+            if (container.style.display === 'block') { container.style.display = 'none'; return; }
+            if (!container.innerHTML) {
+                container.innerHTML = '<div style="text-align:center; padding:20px; color:#64748b;">Loading documentation...</div>';
+                try {
+                    const response = await fetch(README_URL); if (!response.ok) throw new Error("Could not load README");
+                    const text = await response.text(); 
+                    
+                    // Improved Markdown Parsing with URL detection
+                    let htmlContent = marked.parse(text);
+                    
+                    // Make naked URLs clickable
+                    const urlRegex = /(?<!href=['"])(https?:\/\/[^\s<]+[^<.,:;"')\]\s])/gi;
+                    htmlContent = htmlContent.replace(urlRegex, '<a href="$1" target="_blank">$1</a>');
+                    
+                    container.innerHTML = htmlContent;
+                } catch (e) { 
+                    container.innerHTML = `<div style="text-align:center; color:#ef4444;">Failed to load documentation.<br><a href="${README_URL}" target="_blank">Click here to view README on GitHub</a></div>`; 
+                }
+            }
+            container.style.display = 'block'; 
+            container.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        // Global exposure
+        window.toggleBeatPanel = window.toggleBeatPanel;
+        window.toggleContinuityPanel = window.toggleContinuityPanel;
+        window.sortData = window.sortData;
+        window.toggleView = window.toggleView;
+        window.toggleFilterMode = window.toggleFilterMode;
+        window.render = window.render;
+        window.renderContinuityList = window.renderContinuityList;
+        window.handleContinuityClick = window.handleContinuityClick;
+        window.editContinuityItem = window.editContinuityItem;
+        window.deleteContinuityItem = window.deleteContinuityItem;
+        window.cancelContinuityEdit = window.cancelContinuityEdit;
+        window.toggleContinuityVisibility = window.toggleContinuityVisibility;
+        window.handleAdd = window.handleAdd;
+        window.editEvent = window.editEvent;
+        window.cancelEdit = window.cancelEdit;
+        window.saveAsNew = window.saveAsNew;
+        window.askDelete = window.askDelete;
+        window.confirmReset = window.confirmReset;
+        window.executeReset = window.executeReset;
+        window.executeDelete = window.executeDelete;
+        window.closeModal = window.closeModal;
+        window.downloadCSV = window.downloadCSV;
+        window.uploadCSV = window.uploadCSV;
+        window.copyId = window.copyId;
+        window.linkExistingId = window.linkExistingId;
+        window.resetToOriginalId = window.resetToOriginalId;
+        window.confirmBackup = window.confirmBackup;
+        window.executeBackup = window.executeBackup;
+        window.confirmRestore = window.confirmRestore;
+        window.executeRestore = window.executeRestore;
+        window.updateTzPreference = window.updateTzPreference;
+        window.setPreferredDisplayTz = window.setPreferredDisplayTz;
+        window.addContinuityItem = window.addContinuityItem;
+        window.moveBeat = window.moveBeat;
+        window.toggleReadme = window.toggleReadme;
+
+    </script>
+</body>
+</html>
