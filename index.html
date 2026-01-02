@@ -19,6 +19,9 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@300;400;700;900&display=swap" rel="stylesheet">
     
+    <!-- Markdown Support -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/4.3.0/marked.min.js"></script>
+
     <style>
         :root {
             /* Parchment Palette */
@@ -50,7 +53,6 @@
             padding-bottom: 80px;
             background-color: var(--bg);
             color: var(--text-main);
-            /* iOS Font Rendering Optimizations */
             font-synthesis: none;
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
@@ -177,6 +179,11 @@
         
         .btn-cloud { background-color: var(--info); }
         .btn-print { background-color: #4a5568; }
+
+        .action-btn { background: #f0f0f0; color: #555; padding: 6px 10px; margin: 0 2px; font-size: 0.9rem; }
+        .action-btn:hover { background: #e0e0e0; color: var(--primary); }
+        .del-btn { color: #555; }
+        .del-btn:hover { background: var(--danger); color: white; }
 
         .tz-picker-compact {
             padding: 8px 12px;
@@ -333,8 +340,16 @@
         th:nth-child(1) { width: 40px; } 
         th:nth-child(2) { width: 180px; } 
         th:nth-child(3) { width: 160px; } 
-        th:nth-child(5) { width: 100px; } 
+        th:nth-child(5) { width: 120px; } 
         td:nth-child(4) { font-size: 0.95rem; font-weight: 300; line-height: 1.6; white-space: pre-wrap; word-wrap: break-word; }
+
+        /* Markdown Styling within Details */
+        .markdown-body { font-size: 0.95rem; }
+        .markdown-body p { margin: 0 0 8px 0; }
+        .markdown-body p:last-child { margin-bottom: 0; }
+        .markdown-body b, .markdown-body strong { font-weight: 700; color: var(--primary); }
+        .markdown-body ul, .markdown-body ol { margin: 8px 0; padding-left: 20px; }
+        .markdown-body li { margin-bottom: 4px; }
 
         .td-remarks { font-size: 0.85rem; color: var(--text-muted); font-style: italic; margin-top: 8px; padding-top: 8px; border-top: 1px dashed #d4cdc3; display: block; }
         .tz-display { font-family: var(--font-ui); font-size: 0.7rem; color: var(--info); font-weight: bold; margin-top: 6px; line-height: 1.4; }
@@ -407,12 +422,12 @@
         .h-card { margin-top: 15px; background: #fff; border: 1px solid #e6e0d4; border-top: 3px solid var(--primary); border-radius: 2px; padding: 15px; width: 190px; margin-left: 15px; margin-right: 15px; white-space: normal; text-align: left; position: relative; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); transition: transform 0.2s; cursor: pointer; }
         .multi-day-slot .h-card { margin: 0; width: 160px; padding: 12px; }
         .h-card:hover { transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
-        .h-detail-text { font-size: 0.85rem; font-weight: 300; color: var(--text-main); line-height: 1.4; white-space: pre-wrap; }
+        .h-detail-text { font-size: 0.85rem; font-weight: 300; color: var(--text-main); line-height: 1.4; white-space: normal; }
         .h-val-text { font-family: var(--font-ui); font-size: 0.65rem; color: var(--secondary); margin-top: 0; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
         .h-chap-title { font-size: 0.95rem; font-weight: 700; color: var(--text-main); margin-top: 4px; line-height: 1.2; font-family: var(--font-main); }
         .h-sub-title { font-size: 0.8rem; font-style: italic; color: var(--text-muted); margin-bottom: 8px; line-height: 1.3; }
         .h-divider { border-bottom: 1px solid #f0ebe4; margin-bottom: 12px; }
-        .h-remarks { margin-top: 12px; padding-top: 8px; border-top: 1px dashed #d4cdc3; font-size: 0.8rem; color: var(--text-muted); font-style: italic; line-height: 1.4; white-space: pre-wrap; }
+        .h-remarks { margin-top: 12px; padding-top: 8px; border-top: 1px dashed #d4cdc3; font-size: 0.8rem; color: var(--text-muted); font-style: italic; line-height: 1.4; white-space: normal; }
 
         .card-del { position: absolute; top: 5px; right: 8px; font-size: 1.1rem; color: var(--secondary); cursor: pointer; opacity: 0.5; }
         .card-del:hover { color: var(--danger); opacity: 1; }
@@ -439,29 +454,19 @@
             .controls { grid-template-columns: 1fr; gap: 15px; }
             .col-span-2, .col-span-full { grid-column: span 1 !important; }
             .c-row-70-30, .c-row-50-50 { grid-template-columns: 1fr; gap: 15px; }
-            .c-row-50-50 { margin-top: 15px; }
             .header-branding { width: 95%; max-width: none; }
-            #multiArea { max-height: 60vh; }
             .action-group { display: flex; flex-direction: row; width: 100%; gap: 10px; }
             .action-group button { flex: 1; padding: 12px 5px; font-size: 0.75rem; }
-            
-            /* 3-Line Mobile Navigation Layout */
             .navigation-bar { display: flex; flex-direction: column; gap: 12px; padding: 0; }
             .nav-top-row { flex-direction: column; gap: 12px; width: 100%; }
             .nav-bottom-row { width: 100%; display: flex; justify-content: flex-end; }
-            
             .nav-left, .nav-right { width: 100%; display: flex; }
             .nav-left .btn-group-mobile, .nav-right .btn-group-mobile { width: 100%; display: flex; gap: 8px; }
-            .navigation-bar .btn-group-mobile button { flex: 1; width: auto; }
-            
             .tz-picker-compact { width: 100% !important; max-width: none !important; min-width: 0; text-align-last: right; }
-
-            /* Cloud Sync Mobile Optimization */
             .cloud-banner { flex-direction: column; align-items: stretch; padding: 15px; }
             .id-input-group { width: 100%; display: flex; gap: 5px; }
             .id-input-group input { flex-grow: 1; min-width: 0; }
             .cloud-banner .btn-row { width: 100%; display: flex; gap: 10px; margin: 0; margin-top: 10px; }
-            .cloud-banner .btn-row button { flex: 1; }
         }
     </style>
 </head>
@@ -510,8 +515,8 @@
                     <input type="text" id="subChapTitleIn" placeholder="e.g. The Arrival">
                 </div>
                 <div class="input-group col-span-full">
-                    <label>Details</label>
-                    <textarea id="detailIn" rows="3" maxlength="1000" placeholder="Write your story beat here..."></textarea>
+                    <label>Details (Markdown supported)</label>
+                    <textarea id="detailIn" rows="3" maxlength="1000" placeholder="Use **bold**, *italic*, or - lists..."></textarea>
                 </div>
                 <div class="input-group col-span-full">
                     <label>Remarks</label>
@@ -627,7 +632,7 @@
                 <button class="btn-print" onclick="window.print()">Print / Save PDF</button>
             </div>
             <input type="file" id="fileIn" accept=".csv" onchange="uploadCSV(this)">
-            <button id="btnMainReset" class="btn-reset" onclick="confirmReset()" disabled>Reset</button>
+            <button id="btnMainReset" class="btn-reset" onclick="confirmReset()" disabled>Reset (Disabled)</button>
         </div>
     </div>
 
@@ -737,9 +742,17 @@
                 let infoHtml = "No existing cloud data found.";
                 if (docSnap.exists()) {
                     const data = docSnap.data();
+                    const cloudBeatsCount = data.beats ? data.beats.length : 0;
+                    const localBeatsCount = events.length;
+                    
                     if (data.lastUpdated) {
                         const dO = new Date(data.lastUpdated), rel = timeAgo(dO), deviceStr = data.lastDevice ? data.lastDevice.substring(0, 6) + "..." : "Unknown";
-                        infoHtml = `<strong>Cloud Version:</strong> ${dO.toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true })} <br><span style="color:var(--primary);">(${rel})</span><br><br><strong>From device:</strong> ${deviceStr}`;
+                        infoHtml = `<div style="text-align:center; padding-bottom:10px; border-bottom:1px solid #eee; margin-bottom:15px;"><strong>Conflict Check</strong></div>
+                        <strong>Cloud Version:</strong> ${dO.toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true })} <br><span style="color:var(--primary);">(${rel})</span><br><br>
+                        <strong>Beats Comparison:</strong><br>
+                        • Local: ${localBeatsCount} beats<br>
+                        • Cloud: ${cloudBeatsCount} beats<br><br>
+                        <span style="color:var(--danger); font-size:0.8rem;">* Restoring will permanently replace local beats.</span>`;
                     }
                 }
                 document.getElementById('restoreInfo').innerHTML = infoHtml; document.getElementById('restoreModal').style.display = 'flex';
@@ -767,6 +780,9 @@
         let activeFilterIds = []; 
         const STORAGE_KEY = 'storylines_persist';
 
+        // Markdown Configuration
+        marked.setOptions({ breaks: true, gfm: true });
+
         window.onload = function() {
             document.getElementById('tzSelect').value = currentTz; detectUserNearestZone(); loadLocalData(); initFirebase();
             document.getElementById('detailIn').addEventListener('input', function() { this.style.height = 'auto'; this.style.height = (this.scrollHeight) + 'px'; });
@@ -793,13 +809,9 @@
         window.toggleFilterMode = () => {
             const isFilterOn = document.getElementById('filterBeatsToggle').checked;
             if (!isFilterOn) activeFilterIds = []; 
-            
-            const btnCAdd = document.getElementById('btnCAdd');
-            const btnCCancel = document.getElementById('btnCCancel');
-            
+            const btnCAdd = document.getElementById('btnCAdd'), btnCCancel = document.getElementById('btnCCancel');
             if (btnCAdd) btnCAdd.disabled = isFilterOn;
             if (btnCCancel) btnCCancel.disabled = isFilterOn;
-
             renderContinuityList(); render();
         }
 
@@ -835,8 +847,7 @@
             document.getElementById('cStartIn').value = item.start; 
             document.getElementById('cEndIn').value = item.end || ''; 
             const btn = document.getElementById('btnCAdd'); 
-            btn.innerText = "Update Item"; 
-            btn.className = "btn-update"; 
+            btn.innerText = "Update Item"; btn.className = "btn-update"; 
             document.getElementById('btnCCancel').style.display = 'inline-block'; 
             if (document.getElementById('continuityContent').style.display !== 'block') window.toggleContinuityPanel(); 
         }
@@ -852,13 +863,8 @@
 
         window.cancelContinuityEdit = () => { 
             editingContinuityId = null; 
-            document.getElementById('cNameIn').value = ''; 
-            document.getElementById('cIconIn').value = ''; 
-            document.getElementById('cStartIn').value = ''; 
-            document.getElementById('cEndIn').value = ''; 
-            const btn = document.getElementById('btnCAdd');
-            btn.innerText = "+ Add Item"; 
-            btn.className = "btn-add";
+            document.getElementById('cNameIn').value = ''; document.getElementById('cIconIn').value = ''; document.getElementById('cStartIn').value = ''; document.getElementById('cEndIn').value = ''; 
+            const btn = document.getElementById('btnCAdd'); btn.innerText = "+ Add Item"; btn.className = "btn-add";
             document.getElementById('btnCCancel').style.display = 'none'; 
         }
 
@@ -879,7 +885,6 @@
         window.renderContinuityList = renderContinuityList;
 
         function getActiveContinuity(beatDateStr) { const beatDate = new Date(beatDateStr); return continuityItems.filter(item => { if(!item.visible) return false; const s = new Date(item.start), e = item.end ? new Date(item.end) : null; return beatDate >= s && (!e || beatDate <= e); }); }
-
         function detectUserNearestZone() { const bTz = Intl.DateTimeFormat().resolvedOptions().timeZone; document.getElementById('inputTzSelect').value = bTz; }
         
         function convertToLocal(inputDateValue, sourceTz) { 
@@ -913,8 +918,7 @@
             const country = sel.options[sel.selectedIndex].text;
             events[index].preferredDisplayTz = tz;
             events[index].preferredCountry = country;
-            saveLocalData(); render();
-            showToast(`Display set to ${country}`);
+            saveLocalData(); render(); showToast(`Display set to ${country}`);
         }
 
         window.handleAdd = () => {
@@ -930,8 +934,17 @@
         }
 
         window.editEvent = (i) => {
-            editIndex = i; const e = events[i]; document.getElementById('dateIn').value = e.date; document.getElementById('numIn').value = e.number; document.getElementById('chapTitleIn').value = e.chapterTitle || ''; document.getElementById('subChapTitleIn').value = e.subChapterTitle || ''; document.getElementById('detailIn').value = e.details; document.getElementById('remarksIn').value = e.remarks || '';
-            document.getElementById('btnAdd').innerText = "Update Beat"; document.getElementById('btnAdd').className = "btn-update"; document.getElementById('btnCancel').style.display = "inline-block"; document.getElementById('btnSaveNew').style.display = "inline-block";
+            editIndex = i; const e = events[i]; 
+            document.getElementById('dateIn').value = e.date; 
+            document.getElementById('numIn').value = e.number; 
+            document.getElementById('chapTitleIn').value = e.chapterTitle || ''; 
+            document.getElementById('subChapTitleIn').value = e.subChapterTitle || ''; 
+            document.getElementById('detailIn').value = e.details; 
+            document.getElementById('remarksIn').value = e.remarks || '';
+            document.getElementById('btnAdd').innerText = "Update Beat"; 
+            document.getElementById('btnAdd').className = "btn-update"; 
+            document.getElementById('btnCancel').style.display = "inline-block"; 
+            document.getElementById('btnSaveNew').style.display = "inline-block";
             if (document.getElementById('beatPanelContent').style.display === 'none') window.toggleBeatPanel();
         }
 
@@ -941,11 +954,22 @@
         function getFormattedDate(dateStr) { 
             if (!dateStr) return ''; 
             const parts = dateStr.split('T')[0].split('-');
-            const y = parts[0];
-            const m = parseInt(parts[1]);
-            const d = parts[2].padStart(2, '0');
+            const y = parts[0], m = parseInt(parts[1]), d = parts[2].padStart(2, '0');
             return `${d} ${MONTHS[m-1]} ${y}`; 
         }
+
+        window.moveBeat = (index, direction) => {
+            const to = index + direction;
+            if (to < 0 || to >= events.length) return;
+            if (Math.floor(events[index].number) !== Math.floor(events[to].number)) return showToast("Cannot move between chapters.");
+            const item = events.splice(index, 1)[0];
+            events.splice(to, 0, item);
+            const intPart = Math.floor(item.number), groupIndices = [];
+            events.forEach((ev, idx) => { if(Math.floor(ev.number) === intPart) groupIndices.push(idx); });
+            const step = groupIndices.length > 9 ? 0.01 : 0.1;
+            groupIndices.forEach((arrayIdx, k) => { events[arrayIdx].number = parseFloat((intPart + (k + 1) * step).toFixed(2)); });
+            saveLocalData(); render();
+        };
 
         function createCardHtml(evt, i) {
             let displayDate, displayTime, displayDay, displayBasis = "Local Browser";
@@ -963,8 +987,7 @@
             const conv = convertTime(evt.date, currentTz);
             let altTzHtml = '';
             if (conv && currentTz) {
-                const sel = document.getElementById('tzSelect');
-                const countryName = sel.options[sel.selectedIndex].text;
+                const sel = document.getElementById('tzSelect'), countryName = sel.options[sel.selectedIndex].text;
                 altTzHtml = `<div class="tz-display clickable" onclick="event.stopPropagation(); setPreferredDisplayTz(${i}, '${currentTz}')" title="Click to set as Display Date">${countryName}: ${conv.dateRaw}, ${conv.time}<br><span style="font-weight: normal;">${conv.weekday}</span></div>`;
             }
 
@@ -973,91 +996,90 @@
             if(activeItems.length > 0) {
                 cHtml = '<div class="c-badges-container">';
                 activeItems.forEach(ci => {
-                    const startStr = getFormattedDate(ci.start);
-                    const endStr = ci.end ? getFormattedDate(ci.end) : "Ongoing";
-                    const durationText = `${startStr} - ${endStr}`;
+                    const startStr = getFormattedDate(ci.start), endStr = ci.end ? getFormattedDate(ci.end) : "Ongoing", durationText = `${startStr} - ${endStr}`;
                     cHtml += `<span class="c-badge" data-tooltip="Duration: ${durationText}" onclick="event.stopPropagation()">${ci.icon} ${ci.name}</span>`;
                 });
                 cHtml += '</div>';
             }
 
             const dragAttr = currentSortMethod === 'number' ? 'draggable="true"' : '', dragClass = currentSortMethod === 'number' ? 'draggable' : '';
+            
+            // Markdown parsing for details and remarks
+            const parsedDetails = marked.parse(evt.details.replace(/{nl}/g, '\n'));
+            const parsedRemarks = evt.remarks ? marked.parse(evt.remarks.replace(/{nl}/g, '\n')) : '';
 
             return {
-                table: `<tr class="${dragClass}" data-index="${i}" ${dragAttr}><td>${currentSortMethod === 'number' ? '☰' : ''}</td><td style="white-space: nowrap;">${displayDate} ${displayTime}<br><small>${displayDay}</small><br><span class="display-basis-tag">${displayBasis}</span>${altTzHtml}</td><td><b>${evt.number}</b><br><span style="font-weight:700;">${evt.chapterTitle || ''}</span></td><td>${evt.details}${evt.remarks ? `<div class="td-remarks">📝 ${evt.remarks}</div>` : ''}<div style="margin-top:8px">${cHtml}</div></td><td><button class="action-btn" onclick="editEvent(${i})">✎</button><button class="action-btn del-btn" onclick="askDelete(${i})">×</button></td></tr>`,
-                linear: `<div class="h-item ${dragClass}" data-index="${i}" ${dragAttr}><div class="h-date-wrap"><div class="h-date">${displayDate}</div><div class="h-day">${displayDay}</div><div class="h-time">${displayTime}<br><span class="display-basis-tag">${displayBasis}</span>${altTzHtml}</div></div><div class="h-dot-container"><div class="h-line"></div><div class="h-dot" onclick="editEvent(${i})"></div></div><div class="h-card" onclick="editEvent(${i})"><span class="card-del" onclick="event.stopPropagation(); askDelete(${i})">×</span><div class="h-val-text">Chapter ${evt.number}</div>${evt.chapterTitle ? `<div class="h-chap-title">${evt.chapterTitle}</div>` : ''}${evt.subChapterTitle ? `<div class="h-sub-title">${evt.subChapterTitle}</div>` : ''}<div class="h-divider"></div><div class="h-detail-text">${evt.details}</div>${evt.remarks ? `<div class="h-remarks">${evt.remarks}</div>` : ''}${cHtml}</div></div>`,
-                multi: `<div class="h-item"><div class="h-date-wrap" style="min-height:auto; text-align:left;"><div class="h-date" style="font-size:0.7rem; font-weight:900;">${displayDate}</div><div class="h-time" style="font-size:0.6rem; color:var(--text-muted)">${displayTime} <span class="display-basis-tag" style="font-size:0.5rem; padding:1px 3px;">${displayBasis}</span></div>${altTzHtml}</div><div class="h-card" onclick="editEvent(${i})"><span class="card-del" onclick="event.stopPropagation(); askDelete(${i})">×</span><div class="h-val-text" style="font-size:0.55rem">CH ${evt.number}</div>${evt.chapterTitle ? `<div class="h-chap-title" style="font-size:0.75rem">${evt.chapterTitle}</div>` : ''}${evt.subChapterTitle ? `<div class="h-sub-title" style="font-size:0.65rem">${evt.subChapterTitle}</div>` : ''}<div class="h-divider"></div><div class="h-detail-text" style="font-size:0.75rem">${evt.details.substring(0, 80)}${evt.details.length > 80 ? '...' : ''}</div>${cHtml}</div></div>`
+                table: `<tr class="${dragClass}" data-index="${i}" ${dragAttr}><td>${currentSortMethod === 'number' ? '☰' : ''}</td><td style="white-space: nowrap;">${displayDate} ${displayTime}<br><small>${displayDay}</small><br><span class="display-basis-tag">${displayBasis}</span>${altTzHtml}</td><td><b>${evt.number}</b><br><span style="font-weight:700;">${evt.chapterTitle || ''}</span></td><td><div class="markdown-body">${parsedDetails}</div>${evt.remarks ? `<div class="td-remarks">📝 <div class="markdown-body" style="display:inline;">${parsedRemarks}</div></div>` : ''}<div style="margin-top:8px">${cHtml}</div></td><td><div class="action-btn-group" style="display:flex; gap:4px;"><button class="action-btn" onclick="editEvent(${i})" title="Edit">✎</button>${currentSortMethod === 'number' ? `<button class="action-btn" onclick="moveBeat(${i}, -1)" title="Move Up">↑</button><button class="action-btn" onclick="moveBeat(${i}, 1)" title="Move Down">↓</button>` : ''}<button class="action-btn del-btn" onclick="askDelete(${i})" title="Delete">×</button></div></td></tr>`,
+                linear: `<div class="h-item ${dragClass}" data-index="${i}" ${dragAttr}><div class="h-date-wrap"><div class="h-date">${displayDate}</div><div class="h-day">${displayDay}</div><div class="h-time">${displayTime}<br><span class="display-basis-tag">${displayBasis}</span>${altTzHtml}</div></div><div class="h-dot-container"><div class="h-line"></div><div class="h-dot" onclick="editEvent(${i})"></div></div><div class="h-card" onclick="editEvent(${i})"><span class="card-del" onclick="event.stopPropagation(); askDelete(${i})">×</span><div class="h-val-text">Chapter ${evt.number}</div>${evt.chapterTitle ? `<div class="h-chap-title">${evt.chapterTitle}</div>` : ''}${evt.subChapterTitle ? `<div class="h-sub-title">${evt.subChapterTitle}</div>` : ''}<div class="h-divider"></div><div class="h-detail-text markdown-body">${parsedDetails}</div>${evt.remarks ? `<div class="h-remarks"><div class="markdown-body">${parsedRemarks}</div></div>` : ''}${cHtml}</div></div>`,
+                multi: `<div class="h-item"><div class="h-date-wrap" style="min-height:auto; text-align:left;"><div class="h-date" style="font-size:0.7rem; font-weight:900;">${displayDate}</div><div class="h-time" style="font-size:0.6rem; color:var(--text-muted)">${displayTime} <span class="display-basis-tag" style="font-size:0.5rem; padding:1px 3px;">${displayBasis}</span></div>${altTzHtml}</div><div class="h-card" onclick="editEvent(${i})"><span class="card-del" onclick="event.stopPropagation(); askDelete(${i})">×</span><div class="h-val-text" style="font-size:0.55rem">CH ${evt.number}</div>${evt.chapterTitle ? `<div class="h-chap-title" style="font-size:0.75rem">${evt.chapterTitle}</div>` : ''}${evt.subChapterTitle ? `<div class="h-sub-title" style="font-size:0.65rem">${evt.subChapterTitle}</div>` : ''}<div class="h-divider"></div><div class="h-detail-text markdown-body" style="font-size:0.75rem">${parsedDetails.substring(0, 150)}${evt.details.length > 150 ? '...' : ''}</div>${cHtml}</div></div>`
             };
         }
 
         function render() {
             const linear = document.getElementById('visualArea'), body = document.getElementById('tableBody'), multi = document.getElementById('multiArea'), msg = document.getElementById('emptyMsg');
             linear.innerHTML = ''; body.innerHTML = ''; multi.innerHTML = ''; if (events.length === 0) { msg.style.display = 'block'; return; } msg.style.display = 'none';
-            
             const isFilterOn = document.getElementById('filterBeatsToggle').checked;
-            
             const displayEvents = events.map((e, idx) => ({ ...e, originalIndex: idx })).filter(evt => {
                 if (!isFilterOn || activeFilterIds.length === 0) return true;
                 const bTime = new Date(evt.date).getTime();
                 return activeFilterIds.every(fid => {
                     const item = continuityItems.find(i => i.id === fid);
                     if (!item) return true;
-                    const sTime = new Date(item.start).getTime();
-                    const eTime = item.end ? new Date(item.end).getTime() : Infinity;
+                    const sTime = new Date(item.start).getTime(), eTime = item.end ? new Date(item.end).getTime() : Infinity;
                     return bTime >= sTime && bTime <= eTime;
                 });
             });
 
             displayEvents.forEach((evt) => {
                 const parts = createCardHtml(evt, evt.originalIndex);
-                body.innerHTML += parts.table;
-                linear.innerHTML += parts.linear;
+                body.innerHTML += parts.table; linear.innerHTML += parts.linear;
             });
 
-            const yearGroups = {};
-            const activeDayNumbers = new Set();
+            const yearGroups = {}, activeDayNumbers = new Set();
             displayEvents.forEach((evt) => {
-                const d = new Date(evt.date);
-                const year = d.getUTCFullYear();
+                const d = new Date(evt.date), year = d.getUTCFullYear();
                 activeDayNumbers.add(d.getUTCDate());
                 if (!yearGroups[year]) yearGroups[year] = [];
                 yearGroups[year].push(evt);
             });
 
-            const sortedYears = Object.keys(yearGroups).sort((a, b) => b - a);
-            const sortedDayLabels = Array.from(activeDayNumbers).sort((a, b) => a - b);
-
+            const sortedYears = Object.keys(yearGroups).sort((a, b) => b - a), sortedDayLabels = Array.from(activeDayNumbers).sort((a, b) => a - b);
             sortedYears.forEach(year => {
                 const track = document.createElement('div');
-                track.className = 'year-track';
-                track.innerHTML = `<div class="year-label">${year}</div>`;
+                track.className = 'year-track'; track.innerHTML = `<div class="year-label">${year}</div>`;
                 sortedDayLabels.forEach(dayNum => {
                     const slotEl = document.createElement('div');
                     slotEl.className = 'multi-day-slot';
-                    const yearDayBeats = yearGroups[year].filter(b => new Date(b.date).getUTCDate() === dayNum)
-                        .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+                    const yearDayBeats = yearGroups[year].filter(b => new Date(b.date).getUTCDate() === dayNum).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
                     if (yearDayBeats.length > 0) {
                         const dayTag = document.createElement('div');
-                        dayTag.className = 'day-num-label';
-                        dayTag.innerText = `DAY ${dayNum.toString().padStart(2, '0')}`;
+                        dayTag.className = 'day-num-label'; dayTag.innerText = `DAY ${dayNum.toString().padStart(2, '0')}`;
                         slotEl.appendChild(dayTag);
+                        
+                        // Enhanced Stacking Logic for high-density events
                         const stacks = [];
                         yearDayBeats.forEach(beat => {
                             const bTime = new Date(beat.date).getTime();
                             let stacked = false;
                             for(let stack of stacks) {
-                                const stackRefTime = new Date(stack[0].date).getTime();
-                                if (Math.abs(bTime - stackRefTime) <= 3 * 60 * 60 * 1000) { 
-                                    stack.push(beat); stacked = true; break;
+                                const stackRefTime = new Date(stack[stack.length-1].date).getTime();
+                                // Reduce stacking window to 1.5 hours for better density handling
+                                if (Math.abs(bTime - stackRefTime) <= 1.5 * 60 * 60 * 1000) { 
+                                    stack.push(beat); stacked = true; break; 
                                 }
                             }
                             if(!stacked) stacks.push([beat]);
                         });
-                        stacks.forEach(stack => {
-                            stack.forEach(beat => {
-                                const cardParts = createCardHtml(beat, beat.originalIndex);
-                                slotEl.innerHTML += cardParts.multi;
-                            });
+                        stacks.forEach(stack => { 
+                            const stackContainer = document.createElement('div');
+                            stackContainer.style.display = 'flex';
+                            stackContainer.style.flexDirection = 'column';
+                            stackContainer.style.gap = '8px';
+                            stack.forEach(beat => { 
+                                const cardParts = createCardHtml(beat, beat.originalIndex); 
+                                stackContainer.innerHTML += cardParts.multi; 
+                            }); 
+                            slotEl.appendChild(stackContainer);
                         });
                     }
                     track.appendChild(slotEl);
@@ -1106,8 +1128,7 @@
             reader.onload = (e) => { 
                 const text = e.target.result;
                 const continuitySplit = text.split('[CONTINUITY_DATA_START]');
-                const beatsData = continuitySplit[0].trim();
-                const continuityData = continuitySplit[1] ? continuitySplit[1].split('[CONTINUITY_DATA_END]')[0].trim() : null;
+                const beatsData = continuitySplit[0].trim(), continuityData = continuitySplit[1] ? continuitySplit[1].split('[CONTINUITY_DATA_END]')[0].trim() : null;
                 const lines = beatsData.split('\n'); 
                 let newEvents = []; 
                 for(let i=1; i<lines.length; i++) { 
@@ -1141,7 +1162,7 @@
                     e.currentTarget.classList.remove('drag-over'); 
                     const from = parseInt(e.dataTransfer.getData('idx')), to = parseInt(el.dataset.index); 
                     if (isNaN(from) || from === to) return; 
-                    if (Math.floor(events[from].number) !== Math.floor(events[to].number)) return showToast("Cannot move between chapters.");
+                    if (Math.floor(events[from].number) !== Math.floor(events[to].number)) return showToast("Movement restricted to within the same Chapter.");
                     const item = events.splice(from, 1)[0]; 
                     events.splice(to, 0, item); 
                     const intPart = Math.floor(item.number), groupIndices = [];
@@ -1154,10 +1175,10 @@
         }
 
         window.confirmReset = () => { document.getElementById('resetModal').style.display = 'flex'; }
-        window.executeReset = () => { events = []; continuityItems = []; saveLocalData(); render(); closeModal(); }
-        window.executeDelete = () => {} // Kept for legacy compatibility
+        window.executeReset = () => { /* Logic disabled as requested */ closeModal(); showToast("Reset disabled by policy."); }
+        window.executeDelete = () => {}
 
-        // Cleanup: Assign to window for module availability
+        // Global exposure
         window.toggleBeatPanel = window.toggleBeatPanel;
         window.toggleContinuityPanel = window.toggleContinuityPanel;
         window.sortData = window.sortData;
@@ -1191,6 +1212,7 @@
         window.updateTzPreference = window.updateTzPreference;
         window.setPreferredDisplayTz = window.setPreferredDisplayTz;
         window.addContinuityItem = window.addContinuityItem;
+        window.moveBeat = window.moveBeat;
 
     </script>
 </body>
