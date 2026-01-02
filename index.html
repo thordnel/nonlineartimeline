@@ -53,6 +53,7 @@
             padding-bottom: 80px;
             background-color: var(--bg);
             color: var(--text-main);
+            /* iOS Font Rendering Optimizations */
             font-synthesis: none;
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
@@ -94,6 +95,9 @@
             text-transform: uppercase;
             letter-spacing: 1px;
         }
+
+        /* Print Header - Hidden on screen */
+        #printHeader { display: none; }
 
         .panel {
             background: var(--panel);
@@ -452,10 +456,10 @@
         #toast { visibility: hidden; min-width: 250px; background-color: var(--text-main); color: #fff; text-align: center; border-radius: 4px; padding: 12px 16px; position: fixed; z-index: 2000; left: 50%; bottom: 30px; transform: translateX(-50%); opacity: 0; transition: opacity 0.3s, bottom 0.3s; font-family: var(--font-ui); font-size: 0.9rem; }
         #toast.show { visibility: visible; opacity: 1; bottom: 50px; }
 
-        .file-tools { display: flex; flex-direction: column; gap: 10px; }
-        .file-tools-row-1 { display: flex; gap: 10px; width: 100%; }
+        .file-tools { display: flex; flex-direction: row; gap: 10px; flex-wrap: wrap; align-items: center; }
+        .file-tools-row-1 { display: flex; gap: 10px; }
         .file-tools-row-1 button { flex: 1; }
-        #fileIn { width: 100%; padding: 8px; border: 1px dashed var(--secondary); border-radius: 3px; }
+        #fileIn { flex: 1; min-width: 200px; padding: 8px; border: 1px dashed var(--secondary); border-radius: 3px; width: auto; }
 
         /* --- README Documentation Style --- */
         .readme-footer { margin-top: 50px; border-top: 1px solid #e6e0d4; padding-top: 30px; text-align: center; }
@@ -465,6 +469,92 @@
         #readmeContainer h1, #readmeContainer h2 { color: var(--primary); border-bottom: 1px solid #f0ebe4; padding-bottom: 10px; margin-top: 30px; }
         #readmeContainer code { background: #f4f1ea; padding: 2px 6px; border-radius: 3px; font-family: monospace; color: var(--primary); }
         #readmeContainer a { color: var(--info); text-decoration: underline; }
+
+        @media print {
+            body { padding: 0; background: white; color: black; }
+            .panel, .navigation-bar, .header-branding, .cloud-banner, .readme-footer, 
+            .section-label, .view-header-label, .file-tools, .modal-overlay, .action-btn-group,
+            .h-item, #visualArea, #multiArea, #emptyMsg, #toast, .btn-row { 
+                display: none !important; 
+            }
+            
+            .view-container {
+                box-shadow: none;
+                border: none;
+                padding: 0;
+                margin: 0;
+                background: white;
+                display: block !important;
+            }
+
+            #tableArea {
+                display: table !important;
+                width: 100%;
+                border-collapse: collapse;
+            }
+
+            /* Hide Drag Handle (col 1) and Action (col 5) */
+            #tableArea th:nth-child(1), #tableArea td:nth-child(1),
+            #tableArea th:nth-child(5), #tableArea td:nth-child(5) {
+                display: none;
+            }
+
+            #printHeader {
+                display: block !important;
+                text-align: center;
+                margin-bottom: 2rem;
+                border-bottom: 2px solid #000;
+                padding-bottom: 1rem;
+            }
+            
+            .print-title {
+                font-size: 2.5rem;
+                font-weight: 900;
+                margin: 0;
+                color: #000;
+                letter-spacing: 0.05em;
+                text-transform: uppercase;
+                font-family: var(--font-main);
+            }
+            
+            .print-subtitle {
+                font-size: 1rem;
+                font-weight: 300;
+                margin-top: 0.5rem;
+                color: #444;
+                font-family: var(--font-ui);
+                text-transform: uppercase;
+                letter-spacing: 0.1em;
+            }
+
+            /* Table Styling for Print */
+            #tableArea th {
+                border-bottom: 2px solid #000;
+                color: #000;
+                font-size: 0.8rem;
+                text-transform: uppercase;
+                padding: 8px 0;
+                font-family: var(--font-ui);
+            }
+            
+            #tableArea td {
+                border-bottom: 1px solid #ddd;
+                padding: 10px 0;
+                font-size: 0.85rem;
+                page-break-inside: avoid;
+            }
+            
+            /* Ensure Remarks look good in print */
+            .td-remarks {
+                color: #444;
+                font-size: 0.75rem;
+                border-top: 1px dotted #ccc;
+                margin-top: 5px;
+                padding-top: 2px;
+            }
+            
+            .c-item-tag { border: 1px solid #999; color: #000; }
+        }
 
         @media (max-width: 768px) {
             body { padding: 10px; padding-bottom: 100px; }
@@ -512,11 +602,22 @@
             .id-input-group input { flex-grow: 1; min-width: 0; }
             .cloud-banner .btn-row { width: 100%; display: flex; gap: 10px; margin: 0; margin-top: 10px; }
             .cloud-banner .btn-row button { flex: 1; }
+
+            /* Restore File Tools Stacked Layout on Mobile */
+            .file-tools { flex-direction: column; align-items: stretch; }
+            .file-tools-row-1 { width: 100%; }
+            #fileIn { width: 100%; flex: none; }
+
             #readmeContainer { padding: 20px; }
         }
     </style>
 </head>
 <body>
+
+    <div id="printHeader">
+        <h1 class="print-title">Storylines</h1>
+        <h2 id="printSubtitle" class="print-subtitle">Sorted by: Chapter</h2>
+    </div>
 
     <div class="header-branding">
         <h2 class="main-title">STORYLINES</h2>
@@ -605,11 +706,11 @@
             </div>
             <div class="c-row-50-50">
                 <div class="input-group">
-                    <label>Start Date (LOCAL)</label>
+                    <label>Start Date</label>
                     <input type="datetime-local" id="cStartIn">
                 </div>
                 <div class="input-group">
-                    <label>End Date (LOCAL, Optional)</label>
+                    <label>End Date (Optional)</label>
                     <input type="datetime-local" id="cEndIn">
                 </div>
             </div>
@@ -1061,7 +1162,7 @@
             const parsedRemarks = evt.remarks ? marked.parse(evt.remarks.replace(/{nl}/g, '\n')) : '';
 
             return {
-                table: `<tr class="${dragClass}" data-index="${i}" ${dragAttr}><td>${currentSortMethod === 'number' ? '☰' : ''}</td><td style="white-space: nowrap;">${displayDate} ${displayTime}<br><small>${displayDay}</small><br><span class="display-basis-tag">${displayBasis}</span>${altTzHtml}</td><td><b>${evt.number}</b><br><span style="font-weight:700;">${evt.chapterTitle || ''}</span></td><td><div class="markdown-body">${parsedDetails}</div>${evt.remarks ? `<div class="td-remarks">📝 <div class="markdown-body" style="display:inline;">${parsedRemarks}</div></div>` : ''}<div style="margin-top:4px">${cHtml}</div></td><td><div class="action-btn-group" style="display:flex; gap:4px;"><button class="action-btn" onclick="editEvent(${i})" title="Edit">✎</button>${currentSortMethod === 'number' ? `<button class="action-btn" onclick="moveBeat(${i}, -1)" title="Move Up">↑</button><button class="action-btn" onclick="moveBeat(${i}, 1)" title="Move Down">↓</button>` : ''}<button class="action-btn del-btn" onclick="askDelete(${i})" title="Delete">×</button></div></td></tr>`,
+                table: `<tr class="${dragClass}" data-index="${i}" ${dragAttr}><td>${currentSortMethod === 'number' ? '☰' : ''}</td><td style="white-space: nowrap;">${displayDate} ${displayTime}<br><small>${displayDay}</small><br><span class="display-basis-tag">${displayBasis}</span>${altTzHtml}</td><td><b>${evt.number}</b><br><span style="font-weight:700;">${evt.chapterTitle || ''}</span>${evt.subChapterTitle ? `<br><span style="font-size:0.8rem; font-style:italic; color:var(--text-muted);">${evt.subChapterTitle}</span>` : ''}</td><td><div class="markdown-body">${parsedDetails}</div>${evt.remarks ? `<div class="td-remarks">📝 <div class="markdown-body" style="display:inline;">${parsedRemarks}</div></div>` : ''}<div style="margin-top:4px">${cHtml}</div></td><td><div class="action-btn-group" style="display:flex; gap:4px;"><button class="action-btn" onclick="editEvent(${i})" title="Edit">✎</button>${currentSortMethod === 'number' ? `<button class="action-btn" onclick="moveBeat(${i}, -1)" title="Move Up">↑</button><button class="action-btn" onclick="moveBeat(${i}, 1)" title="Move Down">↓</button>` : ''}<button class="action-btn del-btn" onclick="askDelete(${i})" title="Delete">×</button></div></td></tr>`,
                 linear: `<div class="h-item ${dragClass}" data-index="${i}" ${dragAttr}><div class="h-date-wrap"><div class="h-date">${displayDate}</div><div class="h-day">${displayDay}</div><div class="h-time">${displayTime}<br><span class="display-basis-tag">${displayBasis}</span>${altTzHtml}</div></div><div class="h-dot-container"><div class="h-line"></div><div class="h-dot" onclick="editEvent(${i})"></div></div><div class="h-card" onclick="editEvent(${i})"><span class="card-del" onclick="event.stopPropagation(); askDelete(${i})">×</span><div class="h-val-text">Chapter ${evt.number}</div>${evt.chapterTitle ? `<div class="h-chap-title">${evt.chapterTitle}</div>` : ''}${evt.subChapterTitle ? `<div class="h-sub-title">${evt.subChapterTitle}</div>` : ''}<div class="h-divider"></div><div class="h-detail-text markdown-body">${parsedDetails}</div>${evt.remarks ? `<div class="h-remarks"><div class="markdown-body">${parsedRemarks}</div></div>` : ''}${cHtml}</div></div>`,
                 multi: `<div class="h-item"><div class="h-date-wrap" style="min-height:auto; text-align:left;"><div class="h-date" style="font-size:0.7rem; font-weight:900;">${displayDate}</div><div class="h-time" style="font-size:0.6rem; color:var(--text-muted)">${displayTime} <span class="display-basis-tag" style="font-size:0.5rem; padding:1px 3px;">${displayBasis}</span></div>${altTzHtml}</div><div class="h-card" onclick="editEvent(${i})"><span class="card-del" onclick="event.stopPropagation(); askDelete(${i})">×</span><div class="h-val-text" style="font-size:0.55rem">CH ${evt.number}</div>${evt.chapterTitle ? `<div class="h-chap-title" style="font-size:0.75rem">${evt.chapterTitle}</div>` : ''}${evt.subChapterTitle ? `<div class="h-sub-title" style="font-size:0.65rem">${evt.subChapterTitle}</div>` : ''}<div class="h-divider"></div><div class="h-detail-text markdown-body" style="font-size:0.75rem">${parsedDetails.substring(0, 150)}${evt.details.length > 150 ? '...' : ''}</div>${cHtml}</div></div>`
             };
@@ -1141,7 +1242,23 @@
         }
         window.render = render;
 
-        window.sortData = (type) => { currentSortMethod = type; const label = document.getElementById('viewHeaderLabel'); if (type === 'number') { events.sort((a, b) => a.number - b.number); label.innerText = "CHAPTER"; } else if (type === 'date') { events.sort((a, b) => new Date(a.date) - new Date(b.date)); label.innerText = "CHRONOLOGICAL"; } render(); }
+        window.sortData = (type) => { 
+            currentSortMethod = type; 
+            const label = document.getElementById('viewHeaderLabel'); 
+            const printSub = document.getElementById('printSubtitle');
+
+            if (type === 'number') {
+                events.sort((a, b) => a.number - b.number); 
+                label.innerText = "CHAPTER"; 
+                if(printSub) printSub.innerText = "Sorted by: Chapter";
+            } else if (type === 'date') { 
+                events.sort((a, b) => new Date(a.date) - new Date(b.date)); 
+                label.innerText = "CHRONOLOGICAL"; 
+                if(printSub) printSub.innerText = "Sorted by: Chronological";
+            } 
+            
+            render(); 
+        }
         
         window.toggleView = (v) => { 
             const btns = document.querySelectorAll('.btn-view'); btns.forEach(b => b.classList.remove('active'));
@@ -1213,7 +1330,7 @@
                     e.currentTarget.classList.remove('drag-over'); 
                     const from = parseInt(e.dataTransfer.getData('idx')), to = parseInt(el.dataset.index); 
                     if (isNaN(from) || from === to) return; 
-                    if (Math.floor(events[from].number) !== Math.floor(events[to].number)) return showToast("Movement restricted to within the same Chapter.");
+                    if (Math.floor(events[from].number) !== Math.floor(events[to].number)) return showToast("Cannot move between chapters.");
                     const item = events.splice(from, 1)[0]; 
                     events.splice(to, 0, item); 
                     const intPart = Math.floor(item.number), groupIndices = [];
