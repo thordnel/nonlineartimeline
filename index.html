@@ -350,6 +350,7 @@
         .markdown-body b, .markdown-body strong { font-weight: 700; color: var(--primary); }
         .markdown-body ul, .markdown-body ol { margin: 8px 0; padding-left: 20px; }
         .markdown-body li { margin-bottom: 4px; }
+        .markdown-body a { color: var(--info); text-decoration: underline; }
 
         .td-remarks { font-size: 0.85rem; color: var(--text-muted); font-style: italic; margin-top: 8px; padding-top: 8px; border-top: 1px dashed #d4cdc3; display: block; }
         .tz-display { font-family: var(--font-ui); font-size: 0.7rem; color: var(--info); font-weight: bold; margin-top: 6px; line-height: 1.4; }
@@ -448,6 +449,15 @@
         .file-tools-row-1 button { flex: 1; }
         #fileIn { width: 100%; padding: 8px; border: 1px dashed var(--secondary); border-radius: 3px; }
 
+        /* --- README Documentation Style --- */
+        .readme-footer { margin-top: 50px; border-top: 1px solid #e6e0d4; padding-top: 30px; text-align: center; }
+        .readme-toggle-btn { background: transparent; border: 1px solid var(--secondary); color: var(--secondary); padding: 8px 20px; border-radius: 20px; font-family: var(--font-ui); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; transition: all 0.2s; }
+        .readme-toggle-btn:hover { border-color: var(--primary); color: var(--primary); background: rgba(140, 107, 93, 0.05); }
+        #readmeContainer { display: none; margin-top: 30px; text-align: left; background: #fff; padding: 40px; border-radius: 2px; border: 1px solid #e6e0d4; line-height: 1.8; color: var(--text-main); max-width: 800px; margin-left: auto; margin-right: auto; font-family: var(--font-main); }
+        #readmeContainer h1, #readmeContainer h2 { color: var(--primary); border-bottom: 1px solid #f0ebe4; padding-bottom: 10px; margin-top: 30px; }
+        #readmeContainer code { background: #f4f1ea; padding: 2px 6px; border-radius: 3px; font-family: monospace; color: var(--primary); }
+        #readmeContainer a { color: var(--info); text-decoration: underline; }
+
         @media (max-width: 768px) {
             body { padding: 10px; padding-bottom: 100px; }
             .panel { padding: 15px; border-radius: 0; margin-left: -10px; margin-right: -10px; border-left: none; border-right: none; }
@@ -467,6 +477,7 @@
             .id-input-group { width: 100%; display: flex; gap: 5px; }
             .id-input-group input { flex-grow: 1; min-width: 0; }
             .cloud-banner .btn-row { width: 100%; display: flex; gap: 10px; margin: 0; margin-top: 10px; }
+            #readmeContainer { padding: 20px; }
         }
     </style>
 </head>
@@ -653,6 +664,12 @@
             <button class="btn-cloud" onclick="confirmBackup()" id="btnBackup" disabled>Backup</button>
             <button class="btn-cloud" onclick="confirmRestore()" id="btnRestore" disabled style="background-color: var(--primary);">Restore</button>
         </div>
+    </div>
+
+    <!-- COLLAPSIBLE DOCUMENTATION -->
+    <div class="readme-footer">
+        <button class="readme-toggle-btn" onclick="toggleReadme()">📖 Read Documentation</button>
+        <div id="readmeContainer"></div>
     </div>
 
     <!-- MODALS -->
@@ -1063,7 +1080,6 @@
                             let stacked = false;
                             for(let stack of stacks) {
                                 const stackRefTime = new Date(stack[stack.length-1].date).getTime();
-                                // Reduce stacking window to 1.5 hours for better density handling
                                 if (Math.abs(bTime - stackRefTime) <= 1.5 * 60 * 60 * 1000) { 
                                     stack.push(beat); stacked = true; break; 
                                 }
@@ -1178,6 +1194,32 @@
         window.executeReset = () => { /* Logic disabled as requested */ closeModal(); showToast("Reset disabled by policy."); }
         window.executeDelete = () => {}
 
+        const README_URL = 'https://thordnel.github.io/nonlineartimeline/README.md';
+        window.toggleReadme = async () => {
+            const container = document.getElementById('readmeContainer');
+            if (container.style.display === 'block') { container.style.display = 'none'; return; }
+            if (!container.innerHTML) {
+                container.innerHTML = '<div style="text-align:center; padding:20px; color:#64748b;">Loading documentation...</div>';
+                try {
+                    const response = await fetch(README_URL); if (!response.ok) throw new Error("Could not load README");
+                    const text = await response.text(); 
+                    
+                    // Improved Markdown Parsing with URL detection
+                    let htmlContent = marked.parse(text);
+                    
+                    // Make naked URLs clickable
+                    const urlRegex = /(?<!href=['"])(https?:\/\/[^\s<]+[^<.,:;"')\]\s])/gi;
+                    htmlContent = htmlContent.replace(urlRegex, '<a href="$1" target="_blank">$1</a>');
+                    
+                    container.innerHTML = htmlContent;
+                } catch (e) { 
+                    container.innerHTML = `<div style="text-align:center; color:#ef4444;">Failed to load documentation.<br><a href="${README_URL}" target="_blank">Click here to view README on GitHub</a></div>`; 
+                }
+            }
+            container.style.display = 'block'; 
+            container.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
         // Global exposure
         window.toggleBeatPanel = window.toggleBeatPanel;
         window.toggleContinuityPanel = window.toggleContinuityPanel;
@@ -1213,6 +1255,7 @@
         window.setPreferredDisplayTz = window.setPreferredDisplayTz;
         window.addContinuityItem = window.addContinuityItem;
         window.moveBeat = window.moveBeat;
+        window.toggleReadme = window.toggleReadme;
 
     </script>
 </body>
