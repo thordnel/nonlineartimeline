@@ -1,4 +1,4 @@
-const CACHE_NAME = 'storylines-v3';
+const CACHE_NAME = 'storylines-v4-mobile-reorder'; // Increment version to force update
 const ASSETS = [
   './index.html',
   './manifest.json',
