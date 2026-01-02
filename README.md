@@ -10,6 +10,8 @@ A small single-file web app (index.html) for creating, editing, reordering, and 
 * **MultiTimeline**: A high-density grid grouped by year and day.  
 * **List**: A traditional table view with advanced controls.
 
+This page works offline (simply open index.html) without cloud sync, or it can be hosted on a local or remote server. To enable cloud synchronization, you must set up Firebase Storage. Configuration settings are found within the index file.
+
 Data is stored in browser localStorage so your timeline persists between sessions.
 
 Live demo: [https://thordnel.github.io/nonlineartimeline/](https://thordnel.github.io/nonlineartimeline/)
