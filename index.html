@@ -1422,14 +1422,14 @@
                     events = data.beats || []; 
                     continuityItems = data.continuity || []; 
                     chekhovItems = data.chekhov || [];
-                    characterItems = data.characters || []; // <--- ADD THIS LINE
+                    characterItems = data.characters || []; // Fix 1: Load characters
                     
                     saveLocalData(); 
                     renderContinuityList(); 
                     renderChekhovList(); 
-                    renderCharList();        // <--- ADD THIS LINE
+                    renderCharList();        // Fix 2: Render character table
                     populateChekhovSelect();
-                    populateCharSelect();    // <--- ADD THIS LINE
+                    populateCharSelect();    // Fix 3: Refresh dropdowns
                     render(); 
                     showToast("🔄 Data restored successfully"); 
                 }
