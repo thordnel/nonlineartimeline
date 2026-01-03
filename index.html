@@ -1871,8 +1871,6 @@
             const reader = new FileReader(); 
             reader.onload = (e) => { 
                 const text = e.target.result;
-                
-                // Parse sections
                 const continuitySplit = text.split('[CONTINUITY_DATA_START]');
                 let beatsData = continuitySplit[0].trim();
                 let continuityData = null;
@@ -1884,54 +1882,26 @@
                      if(chekhovSplit[1]) {
                          chekhovData = chekhovSplit[1].split('[CHEKHOV_DATA_END]')[0].trim();
                      }
-                } else {
-                    // Fallback for older CSVs without continuity data but maybe chekhov (unlikely order but safe)
-                    const chekhovSplit = text.split('[CHEKHOV_DATA_START]');
-                    if (chekhovSplit[1]) {
-                        beatsData = chekhovSplit[0].trim();
-                        chekhovData = chekhovSplit[1].split('[CHEKHOV_DATA_END]')[0].trim();
-                    }
                 }
 
                 const lines = beatsData.split('\n'); 
                 let newEvents = []; 
                 for(let i=1; i<lines.length; i++) { 
-                    // Simple CSV parsing that handles quoted JSON for tags roughly
-                    // For robustness with "ChekhovTags" being the last column and potentially containing commas in JSON
-                    // We'll use a regex or split carefully. Given strict format above:
                     const row = lines[i].trim();
                     if(!row) continue;
-                    
-                    // Regex to split by comma but ignore commas inside quotes
-                    const p = row.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g) || [];
-                    // Fallback simple split if regex fails or simple structure
                     const pSimple = row.split(',');
-
                     if(pSimple.length >= 3) { 
                         const d = pSimple[0], n = parseFloat(pSimple[1]); 
                         let chekhovTags = {};
-                        
-                        // Try to extract chekhov tags from end of line if present
-                        // It requires finding the JSON string at the end
                         const jsonMatch = row.match(/"({.*})"$/);
                         if (jsonMatch) {
                             try { chekhovTags = JSON.parse(jsonMatch[1].replace(/""/g, '"')); } catch(e){}
                         }
-
                         if(!isNaN(n)) newEvents.push({ 
-                            date: d, 
-                            number: n, 
-                            chapterTitle: pSimple[2]?.replace(/{com}/g,','), 
-                            subChapterTitle: pSimple[3]?.replace(/{com}/g,','), 
-                            details: pSimple[4]?.replace(/{nl}/g,'\n').replace(/{com}/g,','), 
-                            remarks: pSimple[5]?.replace(/{nl}/g,'\n').replace(/{com}/g,','), 
-                            preferredDisplayTz: pSimple[6] || '', 
-                            preferredCountry: pSimple[7] || '',
-                            chekhovTags: chekhovTags
+                            date: d, number: n, chapterTitle: pSimple[2]?.replace(/{com}/g,','), subChapterTitle: pSimple[3]?.replace(/{com}/g,','), details: pSimple[4]?.replace(/{nl}/g,'\n').replace(/{com}/g,','), remarks: pSimple[5]?.replace(/{nl}/g,'\n').replace(/{com}/g,','), preferredDisplayTz: pSimple[6] || '', preferredCountry: pSimple[7] || '', chekhovTags: chekhovTags
                         }); 
                     } 
                 } 
-                
                 let newContinuity = [];
                 if(continuityData) {
                     const cLines = continuityData.split('\n');
@@ -1940,7 +1910,6 @@
                         if(c.length >= 4) newContinuity.push({ id: c[0], name: c[1], icon: c[2], start: c[3], end: c[4] || '', visible: c[5] === 'true' });
                     }
                 }
-
                 let newChekhov = [];
                 if(chekhovData) {
                     const cLines = chekhovData.split('\n');
@@ -1949,17 +1918,11 @@
                         if(c.length >= 3) newChekhov.push({ id: c[0], name: c[1], icon: c[2] });
                     }
                 }
-
                 if(newEvents.length > 0) { 
                     events = newEvents; 
                     if(newContinuity.length > 0) continuityItems = newContinuity; 
                     if(newChekhov.length > 0) chekhovItems = newChekhov;
-                    saveLocalData(); 
-                    renderContinuityList(); 
-                    renderChekhovList(); 
-                    populateChekhovSelect();
-                    render(); 
-                    showToast("Data imported successfully"); 
+                    saveLocalData(); renderContinuityList(); renderChekhovList(); populateChekhovSelect(); render(); showToast("Data imported successfully"); 
                 } 
             }; 
             reader.readAsText(input.files[0]); 
@@ -2001,14 +1964,9 @@
                 try {
                     const response = await fetch(README_URL); if (!response.ok) throw new Error("Could not load README");
                     const text = await response.text(); 
-                    
-                    // Improved Markdown Parsing with URL detection
                     let htmlContent = marked.parse(text);
-                    
-                    // Make naked URLs clickable
                     const urlRegex = /(?<!href=['"])(https?:\/\/[^\s<]+[^<.,:;"')\]\s])/gi;
                     htmlContent = htmlContent.replace(urlRegex, '<a href="$1" target="_blank">$1</a>');
-                    
                     container.innerHTML = htmlContent;
                 } catch (e) { 
                     container.innerHTML = `<div style="text-align:center; color:#ef4444;">Failed to load documentation.<br><a href="${README_URL}" target="_blank">Click here to view README on GitHub</a></div>`; 
@@ -2021,7 +1979,7 @@
         // Global exposure
         window.toggleBeatPanel = window.toggleBeatPanel;
         window.toggleContinuityPanel = window.toggleContinuityPanel;
-        window.toggleChekhovPanel = window.toggleChekhovPanel; // New
+        window.toggleChekhovPanel = window.toggleChekhovPanel; 
         window.sortData = window.sortData;
         window.toggleView = window.toggleView;
         window.toggleFilterMode = window.toggleFilterMode;
@@ -2032,11 +1990,11 @@
         window.deleteContinuityItem = window.deleteContinuityItem;
         window.cancelContinuityEdit = window.cancelContinuityEdit;
         window.toggleContinuityVisibility = window.toggleContinuityVisibility;
-        window.addChekhovItem = window.addChekhovItem; // New
-        window.editChekhovItem = window.editChekhovItem; // New
-        window.deleteChekhovItem = window.deleteChekhovItem; // New
-        window.cancelChekhovEdit = window.cancelChekhovEdit; // New
-        window.markChekhov = window.markChekhov; // New
+        window.addChekhovItem = window.addChekhovItem; 
+        window.editChekhovItem = window.editChekhovItem; 
+        window.deleteChekhovItem = window.deleteChekhovItem; 
+        window.cancelChekhovEdit = window.cancelChekhovEdit; 
+        window.markChekhov = window.markChekhov; 
         window.handleAdd = window.handleAdd;
         window.editEvent = window.editEvent;
         window.cancelEdit = window.cancelEdit;
@@ -2060,6 +2018,45 @@
         window.addContinuityItem = window.addContinuityItem;
         window.moveBeat = window.moveBeat;
         window.toggleReadme = window.toggleReadme;
+
+        // Register Service Worker for PWA functionality (Improved for iOS reliability)
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then(registration => {
+                        console.log('ServiceWorker registration successful with scope: ', registration.scope);
+                        
+                        // Check for updates
+                        registration.onupdatefound = () => {
+                            const installingWorker = registration.installing;
+                            installingWorker.onstatechange = () => {
+                                if (installingWorker.state === 'installed') {
+                                    if (navigator.serviceWorker.controller) {
+                                        // New content is available; please refresh.
+                                        console.log('New content is available; please refresh.');
+                                        showToast("New version available. Refreshing...");
+                                        setTimeout(() => window.location.reload(), 1500);
+                                    } else {
+                                        // Content is cached for offline use.
+                                        console.log('Content is cached for offline use.');
+                                    }
+                                }
+                            };
+                        };
+                    })
+                    .catch(err => {
+                        console.log('ServiceWorker registration failed: ', err);
+                    });
+            });
+
+            // Handle controller change (force reload to use new SW)
+            let refreshing = false;
+            navigator.serviceWorker.addEventListener('controllerchange', () => {
+                if (refreshing) return;
+                refreshing = true;
+                window.location.reload();
+            });
+        }
 
     </script>
 </body>
