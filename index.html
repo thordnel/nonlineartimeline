@@ -202,6 +202,46 @@
             height: 38px;
             font-family: var(--font-ui);
         }
+/* --- Search Bar Styling --- */
+        .search-container {
+            width: 100%;
+            margin-bottom: 15px;
+            position: relative;
+        }
+        
+        #searchInput {
+            width: 100%;
+            padding: 12px 15px;
+            padding-right: 40px; /* Space for the X button */
+            border: 2px solid #d4cdc3;
+            border-radius: 4px;
+            font-family: var(--font-main);
+            font-size: 1rem;
+            background-color: #fff;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
+            transition: all 0.2s;
+        }
+
+        #searchInput:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(140, 107, 93, 0.1);
+        }
+
+        #btnSearchClear {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 1.2rem;
+            cursor: pointer;
+            padding: 0 5px;
+            display: none; /* Hidden by default */
+        }
+        
+        #btnSearchClear:hover { color: var(--danger); }
 
         /* --- Navigation Bar Layout --- */
         .navigation-bar {
@@ -371,7 +411,34 @@
             align-items: center;
             gap: 8px;
         }
+        /* --- Character Space Styles --- */
+        .char-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            color: #fff; /* Text is always white for contrast */
+            font-weight: 600;
+            margin-right: 4px;
+            margin-top: 4px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+            text-shadow: 0 1px 1px rgba(0,0,0,0.3);
+        }
 
+        /* Character Input Row in Beat Panel */
+        .char-tag-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            margin-top: 8px;
+            padding: 8px;
+            background: #fdfbf7;
+            border: 1px dashed #d4cdc3;
+            border-radius: 4px;
+            min-height: 40px;
+        }
         /* Reuse generic table styles for Continuity */
         .continuity-table { width: 100%; border-collapse: collapse; margin-top: 10px; display: table !important; }
         .continuity-table th {
@@ -973,6 +1040,17 @@
                     <label>Remarks</label>
                     <textarea id="remarksIn" rows="2" maxlength="500" placeholder="Notes, themes, or internal comments..." style="min-height:80px;"></textarea>
                 </div>
+                <!-- ADD: Character Presence in Beat Space -->
+                <div class="input-group col-span-full" style="padding-top: 10px; border-top: 1px dashed #d4cdc3;">
+                    <label>Characters Present</label>
+                    <div style="display:flex; gap:10px; align-items:center;">
+                        <select id="charSelect" style="flex:2;">
+                            <option value="">-- Select Character --</option>
+                        </select>
+                        <button class="action-btn" onclick="tagCharacterToBeat()" title="Add Character">➕ Add</button>
+                    </div>
+                    <div id="currentCharTags" class="char-tag-row"></div>
+                </div>
 
                 <!-- ADD: Chekhov's Gun selection in Beat Space -->
                 <div class="input-group col-span-full" style="padding-top: 10px; border-top: 1px dashed #d4cdc3;">
@@ -1084,8 +1162,63 @@
         </div>
     </div>
 
+    <!-- CHARACTER SPACE -->
+    <div class="panel">
+        <div class="section-label">Character Database</div>
+        <div class="panel-header" onclick="toggleCharPanel()">
+            <span style="font-weight:700; color:var(--text-main);">Manage Cast</span>
+            <span id="charPanelIcon" style="color:var(--secondary);">➕</span>
+        </div>
+        
+        <div id="charContent" class="panel-content" style="display: none;">
+            <div class="c-row-70-30">
+                <div class="input-group">
+                    <label>Character Name</label>
+                    <input type="text" id="charNameIn" placeholder="e.g. Sherlock Holmes">
+                </div>
+                <div class="input-group">
+                    <label>Role / Archetype</label>
+                    <input type="text" id="charRoleIn" placeholder="e.g. Protagonist">
+                </div>
+            </div>
+            <div class="c-row-50-50" style="margin-top:15px;">
+                 <div class="input-group">
+                    <label>Color Tag</label>
+                    <div style="display:flex; gap:10px; align-items:center;">
+                        <input type="color" id="charColorIn" value="#8c6b5d" style="height:40px; width:60px; padding:2px;">
+                        <span style="font-size:0.8rem; color:var(--text-muted);">Pick a unique color</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="btn-row">
+                <div class="action-group">
+                    <button id="btnCharAdd" class="btn-add" onclick="addCharacter()">+ Add Character</button>
+                    <button id="btnCharCancel" class="btn-cancel" onclick="cancelCharEdit()">Cancel</button>
+                </div>
+            </div>
+            
+            <table class="chekhov-table" style="margin-top:20px;">
+                <thead>
+                    <tr>
+                        <th style="width:40px;">Color</th>
+                        <th>Name</th>
+                        <th style="width:120px;">Role</th>
+                        <th style="width:80px;">Scenes</th>
+                        <th style="width:90px;">ACTION</th>
+                    </tr>
+                </thead>
+                <tbody id="charListArea"></tbody>
+            </table>
+        </div>
+    </div>
+
     <!-- NAVIGATION BAR -->
     <div class="navigation-bar">
+        <div class="search-container">
+            <input type="text" id="searchInput" placeholder="🔍 Search details, titles, remarks..." oninput="handleSearch(this.value)">
+            <button id="btnSearchClear" onclick="clearSearch()" title="Clear Search">×</button>
+        </div>
         <div class="nav-top-row">
             <div class="nav-left">
                 <div class="btn-group-mobile">
@@ -1241,7 +1374,14 @@
             try {
                 const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'backups', activeSyncId);
                 // Updated to include chekhov items
-                await setDoc(docRef, { beats: events, continuity: continuityItems, chekhov: chekhovItems, lastUpdated: Date.now(), lastDevice: user.uid });
+                await setDoc(docRef, { 
+                    beats: events, 
+                    continuity: continuityItems, 
+                    chekhov: chekhovItems, 
+                    characters: characterItems, // <--- ADD THIS
+                    lastUpdated: Date.now(), 
+                    lastDevice: user.uid 
+                });
                 showToast("✅ Successfully backed up to Cloud");
             } catch (err) { showToast("Backup failed."); }
         };
@@ -1297,8 +1437,10 @@
 
         // --- CORE LOGIC ---
         let events = [], continuityItems = [], chekhovItems = [], editIndex = -1, currentSortMethod = 'unsorted', currentTz = localStorage.getItem('storylines_tz') || '', editingContinuityId = null, editingChekhovId = null;
+        let currentSearchTerm = '';
         let activeFilterIds = []; 
         const STORAGE_KEY = 'storylines_persist';
+        
         
         // Temp storage for chekhov tagging in edit mode
         let currentBeatChekhovTags = {}; // { itemId: 'setup' | 'payoff' }
@@ -1306,26 +1448,168 @@
         // Markdown Configuration
         marked.setOptions({ breaks: true, gfm: true });
 
+        window.handleSearch = (val) => {
+            currentSearchTerm = val.toLowerCase().trim();
+            const clearBtn = document.getElementById('btnSearchClear');
+            clearBtn.style.display = currentSearchTerm ? 'block' : 'none';
+            render();
+        };
+
+        window.clearSearch = () => {
+            document.getElementById('searchInput').value = '';
+            handleSearch('');
+        };
+
+        /* --- CHARACTER LOGIC --- */
+        let characterItems = []; 
+        let editingCharId = null;
+        let currentBeatCharIds = []; // Temporary array for the beat currently being edited
+
+        window.toggleCharPanel = () => { const content = document.getElementById('charContent'), icon = document.getElementById('charPanelIcon'); if (content.style.display === 'block') { content.style.display = 'none'; icon.innerText = '➕'; } else { content.style.display = 'block'; icon.innerText = '➖'; } }
+
+        window.addCharacter = () => {
+            const name = document.getElementById('charNameIn').value;
+            const role = document.getElementById('charRoleIn').value;
+            const color = document.getElementById('charColorIn').value;
+
+            if(!name) return showToast("Name required");
+
+            if (editingCharId) {
+                const idx = characterItems.findIndex(i => i.id === editingCharId);
+                if (idx > -1) { 
+                    characterItems[idx] = { ...characterItems[idx], name, role, color }; 
+                    showToast("Updated Character"); 
+                }
+                cancelCharEdit();
+            } else { 
+                characterItems.push({ id: Date.now().toString(), name, role, color }); 
+            }
+            saveLocalData(); renderCharList(); populateCharSelect(); render();
+        }
+
+        window.editCharacter = (id) => {
+            const item = characterItems.find(i => i.id === id); if(!item) return;
+            editingCharId = id;
+            document.getElementById('charNameIn').value = item.name;
+            document.getElementById('charRoleIn').value = item.role || '';
+            document.getElementById('charColorIn').value = item.color || '#8c6b5d';
+            
+            const btn = document.getElementById('btnCharAdd'); 
+            btn.innerText = "Update Character"; btn.className = "btn-update"; 
+            document.getElementById('btnCharCancel').style.display = 'inline-block';
+        }
+
+        window.cancelCharEdit = () => {
+            editingCharId = null;
+            document.getElementById('charNameIn').value = ''; 
+            document.getElementById('charRoleIn').value = '';
+            document.getElementById('charColorIn').value = '#8c6b5d';
+            const btn = document.getElementById('btnCharAdd'); btn.innerText = "+ Add Character"; btn.className = "btn-add";
+            document.getElementById('btnCharCancel').style.display = 'none';
+        }
+
+        window.deleteCharacter = (id) => {
+            if(confirm("Delete this character? (Will disappear from all beats)")) {
+                characterItems = characterItems.filter(i => i.id !== id);
+                if (editingCharId === id) cancelCharEdit();
+                saveLocalData(); renderCharList(); populateCharSelect(); render();
+            }
+        }
+
+        function renderCharList() {
+            const tbody = document.getElementById('charListArea'); tbody.innerHTML = '';
+            characterItems.forEach(item => {
+                // Count appearances
+                const count = events.filter(e => e.charTags && e.charTags.includes(item.id)).length;
+                
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td><div style="width:20px; height:20px; border-radius:50%; background-color:${item.color}; border:1px solid #ccc;"></div></td>
+                    <td style="font-weight:bold;">${item.name}</td>
+                    <td>${item.role || '-'}</td>
+                    <td>${count}</td>
+                    <td>
+                        <div style="display:flex; gap:8px; justify-content:center; align-items:center;">
+                            <button class="action-btn" onclick="editCharacter('${item.id}')" title="Edit">✎</button> 
+                            <button class="action-btn del-btn" onclick="deleteCharacter('${item.id}')" title="Delete">×</button>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function populateCharSelect() {
+            const sel = document.getElementById('charSelect');
+            sel.innerHTML = '<option value="">-- Select Character --</option>';
+            characterItems.forEach(i => {
+                const opt = document.createElement('option');
+                opt.value = i.id; opt.text = i.name;
+                sel.appendChild(opt);
+            });
+        }
+
+        // Logic for adding a character to the CURRENT beat input form
+        window.tagCharacterToBeat = () => {
+            const sel = document.getElementById('charSelect');
+            const id = sel.value;
+            if(!id) return;
+            if(!currentBeatCharIds.includes(id)) {
+                currentBeatCharIds.push(id);
+                updateBeatCharDisplay();
+            }
+        }
+
+        window.removeCharFromBeat = (id) => {
+            currentBeatCharIds = currentBeatCharIds.filter(cid => cid !== id);
+            updateBeatCharDisplay();
+        }
+
+        function updateBeatCharDisplay() {
+            const div = document.getElementById('currentCharTags');
+            div.innerHTML = '';
+            if(currentBeatCharIds.length === 0) {
+                div.innerHTML = '<span style="font-size:0.8rem; color:#aaa; font-style:italic;">No characters tagged</span>';
+                return;
+            }
+            currentBeatCharIds.forEach(cid => {
+                const char = characterItems.find(c => c.id === cid);
+                if(char) {
+                    const tag = document.createElement('span');
+                    tag.className = 'char-badge';
+                    tag.style.backgroundColor = char.color;
+                    tag.style.cursor = 'pointer';
+                    tag.title = 'Click to Remove';
+                    tag.innerHTML = `${char.name} <span style="margin-left:4px; opacity:0.7;">×</span>`;
+                    tag.onclick = () => removeCharFromBeat(cid);
+                    div.appendChild(tag);
+                }
+            });
+        }
         window.onload = function() {
             document.getElementById('tzSelect').value = currentTz; detectUserNearestZone(); loadLocalData(); initFirebase();
             document.getElementById('detailIn').addEventListener('input', function() { this.style.height = 'auto'; this.style.height = (this.scrollHeight) + 'px'; });
             document.getElementById('remarksIn').addEventListener('input', function() { this.style.height = 'auto'; this.style.height = (this.scrollHeight) + 'px'; });
         };
 
-        function saveLocalData() { localStorage.setItem(STORAGE_KEY, JSON.stringify({ events, continuity: continuityItems, chekhov: chekhovItems })); }
+        function saveLocalData() { localStorage.setItem(STORAGE_KEY, JSON.stringify({ events, continuity: continuityItems, chekhov: chekhovItems, characters: characterItems })); }
+
         function loadLocalData() {
             const data = localStorage.getItem(STORAGE_KEY);
             if(data) {
                 try {
                     const parsed = JSON.parse(data);
-                    if (Array.isArray(parsed)) { events = parsed; continuityItems = []; chekhovItems = []; } 
+                    if (Array.isArray(parsed)) { events = parsed; continuityItems = []; chekhovItems = []; characterItems = []; } 
                     else { 
                         events = parsed.events || []; 
                         continuityItems = parsed.continuity || []; 
                         chekhovItems = parsed.chekhov || [];
+                        characterItems = parsed.characters || []; // NEW
                     }
                     events.forEach(e => e.number = parseFloat(e.number)); 
-                    renderContinuityList(); renderChekhovList(); render(); populateChekhovSelect();
+                    renderContinuityList(); renderChekhovList(); renderCharList(); // NEW
+                    populateChekhovSelect(); populateCharSelect(); // NEW
+                    render();
                 } catch(e) { console.error(e); }
             }
         }
@@ -1627,13 +1911,21 @@
         window.handleAdd = () => {
             const rawDate = document.getElementById('dateIn').value, sourceTz = document.getElementById('inputTzSelect').value, num = document.getElementById('numIn').value, cT = document.getElementById('chapTitleIn').value, sT = document.getElementById('subChapTitleIn').value, det = document.getElementById('detailIn').value, rem = document.getElementById('remarksIn').value;
             if (!rawDate || num === '' || !det) return showToast("Fill all fields");
-            const date = convertToLocal(rawDate, sourceTz), beat = { date, number: parseFloat(num), chapterTitle: cT, subChapterTitle: sT, details: det, remarks: rem, chekhovTags: { ...currentBeatChekhovTags } };
+            const date = convertToLocal(rawDate, sourceTz);
+            
+            // UPDATED OBJECT CONSTRUCTION
+            const beat = { 
+                date, number: parseFloat(num), chapterTitle: cT, subChapterTitle: sT, details: det, remarks: rem, 
+                chekhovTags: { ...currentBeatChekhovTags },
+                charTags: [ ...currentBeatCharIds ] // 
+            };
+            
             if (editIndex > -1) { 
                 const old = events[editIndex];
                 beat.preferredDisplayTz = old.preferredDisplayTz; beat.preferredCountry = old.preferredCountry;
                 events[editIndex] = beat; cancelEdit(); 
             } else { events.push(beat); sortData(currentSortMethod); clearInputs(); }
-            saveLocalData(); renderChekhovList(); render();
+            saveLocalData(); renderChekhovList(); renderCharList(); render(); // Updated render calls
         }
 
         window.editEvent = (i) => {
@@ -1649,6 +1941,10 @@
             currentBeatChekhovTags = e.chekhovTags ? { ...e.chekhovTags } : {};
             updateChekhovTagDisplay();
 
+            // NEW: Load Character Tags
+            currentBeatCharIds = e.charTags ? [ ...e.charTags ] : [];
+            updateBeatCharDisplay();
+
             document.getElementById('btnAdd').innerText = "Update Beat"; 
             document.getElementById('btnAdd').className = "btn-update"; 
             document.getElementById('btnCancel').style.display = "inline-block"; 
@@ -1656,7 +1952,12 @@
             if (document.getElementById('beatPanelContent').style.display === 'none') window.toggleBeatPanel();
         }
 
-        window.cancelEdit = () => { editIndex = -1; clearInputs(); currentBeatChekhovTags = {}; updateChekhovTagDisplay(); document.getElementById('btnAdd').innerText = "+ Add Beat"; document.getElementById('btnAdd').className = "btn-add"; document.getElementById('btnCancel').style.display = "none"; document.getElementById('btnSaveNew').style.display = "none"; }
+        window.cancelEdit = () => { 
+            editIndex = -1; clearInputs(); 
+            currentBeatChekhovTags = {}; updateChekhovTagDisplay(); 
+            currentBeatCharIds = []; updateBeatCharDisplay(); // NEW
+            document.getElementById('btnAdd').innerText = "+ Add Beat"; document.getElementById('btnAdd').className = "btn-add"; document.getElementById('btnCancel').style.display = "none"; document.getElementById('btnSaveNew').style.display = "none"; 
+        }
         window.saveAsNew = () => { editIndex = -1; handleAdd(); cancelEdit(); }
 
         function getFormattedDate(dateStr) { 
@@ -1725,7 +2026,17 @@
                 }
                 cHtml += '</div>';
             }
-
+            // Character Badges
+            if (evt.charTags && evt.charTags.length > 0) {
+                cHtml += '<div style="margin-top:5px; padding-top:4px; border-top:1px dashed #eee;">';
+                evt.charTags.forEach(cid => {
+                    const char = characterItems.find(c => c.id === cid);
+                    if (char) {
+                        cHtml += `<span class="char-badge" style="background-color:${char.color};" title="${char.role || ''}">${char.name}</span>`;
+                    }
+                });
+                cHtml += '</div>';
+            }
             const dragAttr = currentSortMethod === 'number' ? 'draggable="true"' : '', dragClass = currentSortMethod === 'number' ? 'draggable' : '';
             
             // Markdown parsing for details and remarks
@@ -1743,15 +2054,37 @@
             const linear = document.getElementById('visualArea'), body = document.getElementById('tableBody'), multi = document.getElementById('multiArea'), msg = document.getElementById('emptyMsg');
             linear.innerHTML = ''; body.innerHTML = ''; multi.innerHTML = ''; if (events.length === 0) { msg.style.display = 'block'; return; } msg.style.display = 'none';
             const isFilterOn = document.getElementById('filterBeatsToggle').checked;
+// Filter logic: Checks both Continuity Filters AND Search Term
             const displayEvents = events.map((e, idx) => ({ ...e, originalIndex: idx })).filter(evt => {
-                if (!isFilterOn || activeFilterIds.length === 0) return true;
-                const bTime = new Date(evt.date).getTime();
-                return activeFilterIds.every(fid => {
-                    const item = continuityItems.find(i => i.id === fid);
-                    if (!item) return true;
-                    const sTime = new Date(item.start).getTime(), eTime = item.end ? new Date(item.end).getTime() : Infinity;
-                    return bTime >= sTime && bTime <= eTime;
-                });
+                
+                // 1. Check Continuity Filters
+                let matchesFilter = true;
+                if (isFilterOn && activeFilterIds.length > 0) {
+                    const bTime = new Date(evt.date).getTime();
+                    matchesFilter = activeFilterIds.every(fid => {
+                        const item = continuityItems.find(i => i.id === fid);
+                        if (!item) return true;
+                        const sTime = new Date(item.start).getTime(), eTime = item.end ? new Date(item.end).getTime() : Infinity;
+                        return bTime >= sTime && bTime <= eTime;
+                    });
+                }
+
+                if (!matchesFilter) return false;
+
+                // 2. Check Search Term (Global Search Option A)
+                if (currentSearchTerm) {
+                    const searchStr = (
+                        (evt.chapterTitle || '') + ' ' + 
+                        (evt.subChapterTitle || '') + ' ' + 
+                        (evt.details || '') + ' ' + 
+                        (evt.remarks || '') + ' ' +
+                        (evt.number || '')
+                    ).toLowerCase();
+                    
+                    if (!searchStr.includes(currentSearchTerm)) return false;
+                }
+
+                return true;
             });
 
             displayEvents.forEach((evt) => {
@@ -1854,8 +2187,9 @@
             let csv = "Date,Chapter,ChapterTitle,SubChapterTitle,Details,Remarks,PrefTz,PrefCountry,ChekhovTags\n"; 
             events.forEach(e => { 
                 const chekhovStr = e.chekhovTags ? JSON.stringify(e.chekhovTags).replace(/"/g, '""') : '{}';
-                csv += `${e.date},${e.number},${(e.chapterTitle || '').replace(/,/g, '{com}')},${(e.subChapterTitle || '').replace(/,/g, '{com}')},${e.details.replace(/\n/g, '{nl}').replace(/,/g, '{com}')},${(e.remarks || '').replace(/\n/g, '{nl}').replace(/,/g, '{com}')},${e.preferredDisplayTz || ''},${e.preferredCountry || ''},"${chekhovStr}"\n`; 
-            }); 
+                const charStr = e.charTags ? JSON.stringify(e.charTags).replace(/"/g, '""') : '[]'; // NEW
+                csv += `${e.date},${e.number},"${(e.chapterTitle||'').replace(/,/g,'{com}')}","${(e.subChapterTitle||'').replace(/,/g,'{com}')}","${(e.details||'').replace(/\n/g,'{nl}').replace(/,/g,'{com}')}","${(e.remarks||'').replace(/\n/g,'{nl}').replace(/,/g,'{com}')}","${e.preferredDisplayTz||''}","${e.preferredCountry||''}","${chekhovStr}","${charStr}"\n`;
+            });
             
             // Append Continuity Data
             if(continuityItems.length > 0) { 
@@ -1870,6 +2204,11 @@
                  chekhovItems.forEach(ci => { csv += `${ci.id},${ci.name},${ci.icon}\n`; });
                  csv += "[CHEKHOV_DATA_END]\n";
             }
+            if(characterItems.length > 0) {
+                csv += "\n[CHARACTER_DATA_START]\nID,Name,Role,Color\n";
+                characterItems.forEach(c => { csv += `${c.id},${c.name},${c.role || ''},${c.color}\n`; });
+                csv += "[CHARACTER_DATA_END]\n";
+            }
 
             const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' })); a.download = 'storylines.csv'; a.click(); 
         }
@@ -1879,37 +2218,67 @@
             const reader = new FileReader(); 
             reader.onload = (e) => { 
                 const text = e.target.result;
-                const continuitySplit = text.split('[CONTINUITY_DATA_START]');
-                let beatsData = continuitySplit[0].trim();
-                let continuityData = null;
-                let chekhovData = null;
+                
+                // 1. Split Sections (Characters are at the very bottom)
+                const charSplit = text.split('[CHARACTER_DATA_START]');
+                let mainContent = charSplit[0];
+                const charData = charSplit[1] ? charSplit[1].split('[CHARACTER_DATA_END]')[0].trim() : null;
 
-                if (continuitySplit[1]) {
-                     const chekhovSplit = continuitySplit[1].split('[CHEKHOV_DATA_START]');
-                     continuityData = chekhovSplit[0].split('[CONTINUITY_DATA_END]')[0].trim();
-                     if(chekhovSplit[1]) {
-                         chekhovData = chekhovSplit[1].split('[CHEKHOV_DATA_END]')[0].trim();
-                     }
-                }
+                const chekhovSplit = mainContent.split('[CHEKHOV_DATA_START]');
+                mainContent = chekhovSplit[0];
+                const chekhovData = chekhovSplit[1] ? chekhovSplit[1].split('[CHEKHOV_DATA_END]')[0].trim() : null;
 
+                const contSplit = mainContent.split('[CONTINUITY_DATA_START]');
+                const beatsData = contSplit[0].trim();
+                const continuityData = contSplit[1] ? contSplit[1].split('[CONTINUITY_DATA_END]')[0].trim() : null;
+
+                // 2. Parse Beats
                 const lines = beatsData.split('\n'); 
                 let newEvents = []; 
                 for(let i=1; i<lines.length; i++) { 
                     const row = lines[i].trim();
                     if(!row) continue;
-                    const pSimple = row.split(',');
-                    if(pSimple.length >= 3) { 
-                        const d = pSimple[0], n = parseFloat(pSimple[1]); 
-                        let chekhovTags = {};
-                        const jsonMatch = row.match(/"({.*})"$/);
-                        if (jsonMatch) {
-                            try { chekhovTags = JSON.parse(jsonMatch[1].replace(/""/g, '"')); } catch(e){}
-                        }
+
+                    let chekhovTags = {};
+                    let charTags = [];
+
+                    // Regex to find the JSON columns at the end of the CSV row
+                    // Matches pattern: ...,"{...}","[...]" (Both exist) OR ...,"{...}" (Only Chekhov exists)
+                    const dualMatch = row.match(/,"({.*})","(\[.*\])"$/);
+                    const singleMatch = row.match(/,"({.*})"$/);
+                    
+                    if (dualMatch) {
+                        try { chekhovTags = JSON.parse(dualMatch[1].replace(/""/g, '"')); } catch(e){}
+                        try { charTags = JSON.parse(dualMatch[2].replace(/""/g, '"')); } catch(e){}
+                    } else if (singleMatch) {
+                        try { chekhovTags = JSON.parse(singleMatch[1].replace(/""/g, '"')); } catch(e){}
+                    }
+
+                    // Clean the row string to split the simple fields safely
+                    let cleanRow = row;
+                    if (dualMatch) cleanRow = row.substring(0, row.indexOf(dualMatch[0]));
+                    else if (singleMatch) cleanRow = row.substring(0, row.indexOf(singleMatch[0]));
+
+                    const pSimple = cleanRow.split(',');
+
+                    if(pSimple.length >= 2) { 
+                        const n = parseFloat(pSimple[1]); 
                         if(!isNaN(n)) newEvents.push({ 
-                            date: d, number: n, chapterTitle: pSimple[2]?.replace(/{com}/g,','), subChapterTitle: pSimple[3]?.replace(/{com}/g,','), details: pSimple[4]?.replace(/{nl}/g,'\n').replace(/{com}/g,','), remarks: pSimple[5]?.replace(/{nl}/g,'\n').replace(/{com}/g,','), preferredDisplayTz: pSimple[6] || '', preferredCountry: pSimple[7] || '', chekhovTags: chekhovTags
+                            date: pSimple[0], 
+                            number: n, 
+                            chapterTitle: pSimple[2]?.replace(/{com}/g,',') || '', 
+                            subChapterTitle: pSimple[3]?.replace(/{com}/g,',') || '', 
+                            details: pSimple[4]?.replace(/{nl}/g,'\n').replace(/{com}/g,',') || '', 
+                            remarks: pSimple[5]?.replace(/{nl}/g,'\n').replace(/{com}/g,',') || '', 
+                            preferredDisplayTz: pSimple[6] || '', 
+                            preferredCountry: pSimple[7] || '', 
+                            chekhovTags: chekhovTags,
+                            charTags: charTags // Load the parsed character tags
                         }); 
                     } 
                 } 
+
+                // 3. Parse Continuity
                 let newContinuity = [];
                 if(continuityData) {
                     const cLines = continuityData.split('\n');
@@ -1918,6 +2287,8 @@
                         if(c.length >= 4) newContinuity.push({ id: c[0], name: c[1], icon: c[2], start: c[3], end: c[4] || '', visible: c[5] === 'true' });
                     }
                 }
+
+                // 4. Parse Chekhov
                 let newChekhov = [];
                 if(chekhovData) {
                     const cLines = chekhovData.split('\n');
@@ -1926,11 +2297,32 @@
                         if(c.length >= 3) newChekhov.push({ id: c[0], name: c[1], icon: c[2] });
                     }
                 }
+
+                // 5. Parse Characters (NEW)
+                let newChars = [];
+                if(charData) {
+                    const cLines = charData.split('\n');
+                    for(let i=1; i<cLines.length; i++) {
+                        const c = cLines[i].trim().split(',');
+                        if(c.length >= 4) newChars.push({ id: c[0], name: c[1], role: c[2], color: c[3] });
+                    }
+                }
+
+                // 6. Update State
                 if(newEvents.length > 0) { 
                     events = newEvents; 
                     if(newContinuity.length > 0) continuityItems = newContinuity; 
                     if(newChekhov.length > 0) chekhovItems = newChekhov;
-                    saveLocalData(); renderContinuityList(); renderChekhovList(); populateChekhovSelect(); render(); showToast("Data imported successfully"); 
+                    if(newChars.length > 0) characterItems = newChars; // Save characters
+                    
+                    saveLocalData(); 
+                    renderContinuityList(); 
+                    renderChekhovList(); 
+                    renderCharList(); // Render character table
+                    populateChekhovSelect(); 
+                    populateCharSelect(); // Update dropdowns
+                    render(); 
+                    showToast("Data imported successfully"); 
                 } 
             }; 
             reader.readAsText(input.files[0]); 
