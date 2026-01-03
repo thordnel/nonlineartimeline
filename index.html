@@ -619,6 +619,28 @@
             .file-tools-row-1 { width: 100%; }
             #fileIn { width: 100%; flex: none; }
 
+            /* Rotate Year Label on Mobile for MultiTimeline */
+            .year-track {
+                position: relative; /* Ensure stacking context */
+            }
+            .year-label {
+                writing-mode: vertical-rl;
+                text-orientation: mixed;
+                transform: rotate(180deg);
+                padding: 20px 5px;
+                font-size: 1.5rem;
+                width: 40px;
+                justify-content: center;
+                border-right: 1px solid #ebe5dc;
+                height: auto; /* Let it grow with content */
+                min-height: 100%; /* Ensure it spans the track height */
+                position: sticky; /* Keep sticky behavior */
+                left: 0;
+                top: 0;
+                background: rgba(253, 251, 247, 0.95);
+                z-index: 20;
+            }
+
             /* --- RESPONSIVE TABLE (LIST VIEW) FOR MOBILE --- */
             /* Force table to display as blocks (cards) instead of rows */
             #tableArea, #tableArea tbody, #tableArea tr, #tableArea td {
