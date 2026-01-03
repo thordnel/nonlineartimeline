@@ -1373,12 +1373,11 @@
             window.closeModal();
             try {
                 const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'backups', activeSyncId);
-                // Updated to include chekhov items
                 await setDoc(docRef, { 
                     beats: events, 
                     continuity: continuityItems, 
                     chekhov: chekhovItems, 
-                    characters: characterItems, // <--- ADD THIS
+                    characters: characterItems, // Included correctly in your file
                     lastUpdated: Date.now(), 
                     lastDevice: user.uid 
                 });
@@ -1422,12 +1421,15 @@
                     const data = docSnap.data();
                     events = data.beats || []; 
                     continuityItems = data.continuity || []; 
-                    // Retrieve Chekhov items
                     chekhovItems = data.chekhov || [];
+                    characterItems = data.characters || []; // <--- ADD THIS LINE
+                    
                     saveLocalData(); 
                     renderContinuityList(); 
                     renderChekhovList(); 
+                    renderCharList();        // <--- ADD THIS LINE
                     populateChekhovSelect();
+                    populateCharSelect();    // <--- ADD THIS LINE
                     render(); 
                     showToast("🔄 Data restored successfully"); 
                 }
