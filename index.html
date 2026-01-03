@@ -642,8 +642,19 @@
             }
 
             /* --- RESPONSIVE TABLE (LIST VIEW) FOR MOBILE --- */
-            /* Force table to display as blocks (cards) instead of rows */
-            #tableArea, #tableArea tbody, #tableArea tr, #tableArea td {
+            
+            /* Fix: Ensure table is hidden by default on mobile unless .show is active */
+            #tableArea {
+                display: none;
+            }
+            
+            #tableArea.show {
+                display: block;
+                width: 100%;
+            }
+
+            /* Force internal table elements to display as blocks (cards) */
+            #tableArea tbody, #tableArea tr, #tableArea td {
                 display: block;
                 width: 100%;
             }
