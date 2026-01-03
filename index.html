@@ -14,7 +14,7 @@
     <meta name="theme-color" content="#f4f1ea">
     <link rel="apple-touch-icon" href="https://placehold.co/180x180/8c6b5d/ffffff?text=SL">
     
-    <!-- Updated Google Fonts to include Italic weights -->
+    <!-- Reverted to Google Fonts for reliability across iOS/Android -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,300;0,400;0,700;0,900;1,300;1,400;1,700;1,900&display=swap" rel="stylesheet">
@@ -53,6 +53,7 @@
             padding-bottom: 80px;
             background-color: var(--bg);
             color: var(--text-main);
+            /* iOS Font Rendering Optimizations */
             font-synthesis: none;
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
@@ -946,7 +947,8 @@
             window.closeModal();
             try {
                 const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'backups', activeSyncId);
-                await setDoc(docRef, { beats: events, continuity: continuityItems, lastUpdated: Date.now(), lastDevice: user.uid });
+                // Updated to include chekhov items
+                await setDoc(docRef, { beats: events, continuity: continuityItems, chekhov: chekhovItems, lastUpdated: Date.now(), lastDevice: user.uid });
                 showToast("✅ Successfully backed up to Cloud");
             } catch (err) { showToast("Backup failed."); }
         };
@@ -987,7 +989,13 @@
                     const data = docSnap.data();
                     events = data.beats || []; 
                     continuityItems = data.continuity || []; 
-                    saveLocalData(); renderContinuityList(); render(); 
+                    // Retrieve Chekhov items
+                    chekhovItems = data.chekhov || [];
+                    saveLocalData(); 
+                    renderContinuityList(); 
+                    renderChekhovList(); 
+                    populateChekhovSelect();
+                    render(); 
                     showToast("🔄 Data restored successfully"); 
                 }
                 else { showToast("No cloud data found."); }
