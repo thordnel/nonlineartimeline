@@ -1024,11 +1024,11 @@
             </div>
             <div class="c-row-50-50">
                 <div class="input-group">
-                    <label>Start Date</label>
+                    <label>Start Date (UTC)</label>
                     <input type="datetime-local" id="cStartIn">
                 </div>
                 <div class="input-group">
-                    <label>End Date (Optional)</label>
+                    <label>End Date (UTC, Optional)</label>
                     <input type="datetime-local" id="cEndIn">
                 </div>
             </div>
@@ -1347,11 +1347,16 @@
         window.addContinuityItem = () => {
             const name = document.getElementById('cNameIn').value, icon = document.getElementById('cIconIn').value || '🔹', start = document.getElementById('cStartIn').value, end = document.getElementById('cEndIn').value;
             if(!name || !start) return showToast("Name and Start Date required");
+            
+            // Append 'Z' to treat input as UTC
+            const startUTC = start.endsWith('Z') ? start : start + 'Z';
+            const endUTC = (end && !end.endsWith('Z')) ? end + 'Z' : end;
+
             if (editingContinuityId) {
                 const idx = continuityItems.findIndex(i => i.id === editingContinuityId);
-                if (idx > -1) { continuityItems[idx] = { id: editingContinuityId, name, icon, start, end, visible: continuityItems[idx].visible }; showToast("Updated"); }
+                if (idx > -1) { continuityItems[idx] = { id: editingContinuityId, name, icon, start: startUTC, end: endUTC, visible: continuityItems[idx].visible }; showToast("Updated"); }
                 cancelContinuityEdit();
-            } else { continuityItems.push({ id: Date.now().toString(), name, icon, start, end, visible: true }); }
+            } else { continuityItems.push({ id: Date.now().toString(), name, icon, start: startUTC, end: endUTC, visible: true }); }
             saveLocalData(); renderContinuityList(); render();
         }
 
@@ -1373,8 +1378,11 @@
             editingContinuityId = id; 
             document.getElementById('cNameIn').value = item.name; 
             document.getElementById('cIconIn').value = item.icon; 
-            document.getElementById('cStartIn').value = item.start; 
-            document.getElementById('cEndIn').value = item.end || ''; 
+            
+            // Remove 'Z' for the input field to accept the value
+            document.getElementById('cStartIn').value = item.start ? item.start.replace('Z', '') : ''; 
+            document.getElementById('cEndIn').value = item.end ? item.end.replace('Z', '') : ''; 
+            
             const btn = document.getElementById('btnCAdd'); 
             btn.innerText = "Update Item"; btn.className = "btn-update"; 
             document.getElementById('btnCCancel').style.display = 'inline-block'; 
@@ -1699,7 +1707,7 @@
                 cHtml += '<div class="c-badges-container">';
                 activeItems.forEach(ci => {
                     const startStr = getFormattedDate(ci.start), endStr = ci.end ? getFormattedDate(ci.end) : "Ongoing", durationText = `${startStr} - ${endStr}`;
-                    cHtml += `<span class="c-badge" data-tooltip="Duration: ${durationText}" onclick="event.stopPropagation()">${ci.icon} ${ci.name}</span>`;
+                    cHtml += `<span class="c-badge" data-tooltip="Duration (UTC): ${durationText}" onclick="event.stopPropagation()">${ci.icon} ${ci.name}</span>`;
                 });
                 cHtml += '</div>';
             }
