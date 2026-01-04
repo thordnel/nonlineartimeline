@@ -1245,7 +1245,7 @@
                 <thead>
                     <tr>
                         <th style="width:50px; text-align:center;">Status</th>
-                        <th style="width:150px;">Rule</th>
+                        <th style="width:100px;">Rule</th>
                         <th>Details</th>
                         <th style="width:100px;">Chapters</th>
                         <th style="width:60px; text-align:center;">Count</th>
@@ -1540,7 +1540,7 @@
         // --- CORE LOGIC ---
         let events = [], continuityItems = [], chekhovItems = [], editIndex = -1, currentSortMethod = 'unsorted', currentTz = localStorage.getItem('storylines_tz') || '', editingContinuityId = null, editingChekhovId = null;
         let currentSearchTerm = '';
-        let activeFilterIds = [], activeCharFilterIds = [];
+        let activeFilterIds = [], activeCharFilterIds = [], activeChekhovFilterIds = [];
         const STORAGE_KEY = 'storylines_persist';
         
         
@@ -2009,6 +2009,7 @@
             if(confirm("Remove this Chekhov Item?")) {
                 chekhovItems = chekhovItems.filter(i => i.id !== id);
                 if (editingChekhovId === id) cancelChekhovEdit();
+                activeChekhovFilterIds = activeChekhovFilterIds.filter(fid => fid !== id);
                 saveLocalData(); renderChekhovList(); populateChekhovSelect(); render();
             }
         }
@@ -2089,6 +2090,20 @@
                 }
             }
             display.innerText = tags.length > 0 ? tags.join(', ') : '';
+        }
+
+        window.toggleChekhovFilter = (id) => {
+            const { setupCh, payoffCh } = calculateChekhovStatus(id);
+            // Only allow filtering if Fulfilled (Setup + Payoff exist)
+            if (setupCh !== null && payoffCh !== null) {
+                const idx = activeChekhovFilterIds.indexOf(id);
+                if (idx > -1) activeChekhovFilterIds = [];
+                else activeChekhovFilterIds = [id];
+                render();
+            } else {
+                let status = (setupCh === null && payoffCh !== null) ? "Paradox" : "Pending";
+                showToast(`Cannot filter: Gun is ${status}`);
+            }
         }
 
         function getActiveContinuity(beatDateStr) { const beatDate = new Date(beatDateStr); return continuityItems.filter(item => { if(!item.visible) return false; const s = new Date(item.start), e = item.end ? new Date(item.end) : null; return beatDate >= s && (!e || beatDate <= e); }); }
@@ -2245,9 +2260,12 @@
                 for (const [id, type] of Object.entries(evt.chekhovTags)) {
                     const item = chekhovItems.find(it => it.id === id);
                     if (item) {
+                        const isActive = activeChekhovFilterIds.includes(id);
+                        const activeStyle = isActive ? 'border:2px solid #444; box-shadow:0 0 2px rgba(0,0,0,0.5);' : '';
+                        const check = isActive ? '✓ ' : '';
                         const styleClass = type === 'setup' ? 'color:var(--success); border-color:var(--success);' : 'color:var(--danger); border-color:var(--danger);';
                         const dot = type === 'setup' ? '🟢' : '🔴';
-                        cHtml += `<span class="c-badge" style="${styleClass}" onclick="event.stopPropagation()">${dot} ${item.name}</span>`;
+                        cHtml += `<span class="c-badge" style="${styleClass} cursor:pointer; ${activeStyle}" onclick="event.stopPropagation(); toggleChekhovFilter('${id}')" title="Filter by ${item.name}">${check}${dot} ${item.name}</span>`;
                     }
                 }
                 cHtml += '</div>';
@@ -2311,9 +2329,11 @@
 
             // Update Active Filter Display
             const filterDisp = document.getElementById('activeCharFilterDisplay');
-            if (activeCharFilterIds.length > 0) {
+            if (activeCharFilterIds.length > 0 || activeChekhovFilterIds.length > 0) {
                 filterDisp.style.display = 'flex';
                 filterDisp.innerHTML = '<span style="font-size:0.8rem; align-self:center; color:var(--text-muted); margin-right:5px;">Filtered by:</span>';
+                
+                // Characters
                 activeCharFilterIds.forEach(id => {
                     const char = characterItems.find(c => c.id === id);
                     if (char) {
@@ -2326,11 +2346,25 @@
                         filterDisp.appendChild(tag);
                     }
                 });
-                if (activeCharFilterIds.length > 1) {
+                
+                // Chekhov Guns
+                activeChekhovFilterIds.forEach(id => {
+                    const item = chekhovItems.find(i => i.id === id);
+                    if (item) {
+                        const tag = document.createElement('span');
+                        tag.className = 'char-badge'; // Reuse style
+                        tag.style.cssText = 'background-color:#fff; color:var(--text-main); border:1px solid var(--secondary); cursor:pointer;';
+                        tag.innerHTML = `${item.icon} ${item.name} <span style="margin-left:4px;">×</span>`;
+                        tag.onclick = () => toggleChekhovFilter(id);
+                        filterDisp.appendChild(tag);
+                    }
+                });
+
+                if (activeCharFilterIds.length + activeChekhovFilterIds.length > 1) {
                      const clearAll = document.createElement('span');
                      clearAll.style.cssText = 'font-size:0.8rem; text-decoration:underline; cursor:pointer; color:var(--danger); align-self:center; margin-left:5px;';
                      clearAll.innerText = 'Clear All';
-                     clearAll.onclick = () => { activeCharFilterIds = []; render(); };
+                     clearAll.onclick = () => { activeCharFilterIds = []; activeChekhovFilterIds = []; render(); };
                      filterDisp.appendChild(clearAll);
                 }
             } else {
@@ -2362,6 +2396,13 @@
                     if (!evt.charTags || evt.charTags.length === 0) return false;
                     const hasAllChars = activeCharFilterIds.every(id => evt.charTags.includes(id));
                     if (!hasAllChars) return false;
+                }
+
+                // 3. Check Chekhov Filters (AND Logic)
+                if (activeChekhovFilterIds.length > 0) {
+                    if (!evt.chekhovTags) return false;
+                    const hasAllGuns = activeChekhovFilterIds.every(id => evt.chekhovTags[id]);
+                    if (!hasAllGuns) return false;
                 }
 
                 // 2. Check Search Term (Global Search Option A)
@@ -2759,6 +2800,7 @@
         window.addContinuityItem = window.addContinuityItem;
         window.moveBeat = window.moveBeat;
         window.toggleCharFilter = window.toggleCharFilter;
+        window.toggleChekhovFilter = window.toggleChekhovFilter;
         window.loadBeatByNumber = () => {
             const val = parseFloat(document.getElementById('numIn').value);
             if (isNaN(val)) return showToast("Enter a number");
