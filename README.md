@@ -4,11 +4,12 @@
 
 Visualize story beats in chronological order or in chapter sequence (linear or non-linear timeline).
 
-A small single-file web app (index.html) for creating, editing, reordering, and exporting story events ("beats"). Three distinct views are provided:
+A small single-file web app (index.html) for creating, editing, reordering, and exporting story events ("beats"). Four distinct views and multiple tracking "Spaces" are provided to manage complex narratives.
 
 * **Linear**: A horizontal scrollable timeline.  
 * **MultiTimeline**: A high-density grid grouped by year and day.  
-* **List**: A traditional table view with advanced controls.
+* **Card List**: A traditional table view with advanced controls, optimized for mobile.  
+* **Documentation**: An integrated viewer for this README.
 
 This page works offline (simply open index.html) without cloud sync, or it can be hosted on a local or remote server. To enable cloud synchronization, you must set up Firebase Storage. Configuration settings are found within the index file.
 
@@ -20,68 +21,52 @@ Live demo: [https://thordnel.github.io/nonlineartimeline/](https://thordnel.gith
 
 ## **Overview**
 
-This repository contains a single-page web app that helps you manage complex story architectures. You can:
+This repository contains a single-page web app that helps you manage complex story architectures.
 
-* **Manage Beats**: Add beats with date/time, chapter/sub-chapter titles, and rich details.  
-* **Markdown Support**: Use standard Markdown syntax (\*\*bold\*\*, \*italic\*, \- lists) in your beat details and remarks.  
+### **Key Spaces**
+
+* **Beat Space**: The core engine. Add beats with date/time, chapter/sub-chapter titles, and rich details. Supports Markdown syntax (**bold**, *italic*, \- lists) and deep tagging.  
+* **Character Database**: Manage your cast. Assign unique colors and roles. Beats track character presence, and the database automatically counts appearances across your story.  
 * **Continuity Space**: Track objects, scars, or character states across specific time ranges. These appear as badges on your story beats automatically.  
-* **Timezone Intelligence**: Enter events in their local timezone and compare them against other global zones.  
-* **Reordering**: Drag-and-drop (desktop) or use Up/Down arrows (mobile) to sequence beats within a chapter.  
-* **Cloud Sync**: Link multiple devices using a personal ID to backup and restore your timeline with built-in conflict checking.
+* **Chekhov's Gun Space**: Manage foreshadowing. Tag items as "Setup" (🟢) or "Payoff" (🔴). The app automatically identifies "Pending" setups, "Fulfilled" arcs, or "Paradoxes" (payoffs with no setup).  
+* **World Logic Tracker**: Define the rules of your world. Tag beats where rules are "Upheld" (✅) or "Broken" (⚠️) to identify plotholes and inconsistencies.
 
-## **Features (current implementation)**
+### **Features**
 
-* **Add/Edit Events**:  
-  * Date & Time (input type datetime-local)  
-  * Chapter number (numeric, accepts decimals for sub-beats)  
-  * Chapter & Sub-Chapter Titles  
-  * Details & Remarks (supports Markdown)  
-  * Input event timezone selector  
-* **Sorting & Filtering**:  
-  * Sort by Date (Chronological) or Chapter (Linear)  
-  * **Filter Mode**: Select tracking elements in the Continuity Space to show only the beats that occur while those elements are active.  
-* **Smart Reordering**:  
-  * Manual reordering via drag-and-drop or mobile buttons.  
-  * **Safety Guard**: Movement is restricted to within the same integer chapter to prevent accidental timeline corruption.  
-  * Automatic decimal recalculation (increments of 0.1 or 0.01 based on group size).  
-* **MultiTimeline View**:  
-  * Visualizes beats in vertical stacks grouped by Year and Day.  
-  * Optimized for high-density storytelling (1.5-hour event stacking).  
-* **File Tools**:  
-  * **Export to CSV**: Encodes newlines and commas for a perfect round-trip. Now includes Continuity Data and Timezone preferences.  
-  * **Import from CSV**: Seamlessly restores beats and tracking elements.  
-  * **Print / PDF**: A dedicated print view that forces a clean table format and hides UI controls.
+* **Search & Filter**:  
+  * **Global Search**: Instantly filter beats by details, titles, or remarks.  
+  * **Tag Filtering**: Click character or item badges to filter the timeline to only show beats involving those specific elements (supports AND logic for multiple tags).  
+* **Timezone Intelligence**: Enter events in their local timezone and compare them against global zones. Set a "Preferred Display" timezone per beat for international narratives.  
+* **Smart Reordering**: Drag-and-drop (desktop) or use Up/Down arrows (mobile) to sequence beats. Movement is restricted to within the same chapter to maintain data integrity.  
+* **Cloud Sync**: Link multiple devices using a personal ID. The "Restore" process includes conflict checking, showing local vs. cloud beat counts before overwriting.
 
-## **Cloud (Backup / Restore)**
+## **CSV Format**
 
-* **Personal ID**: Every user is assigned a unique UID. Click the ID to copy it.  
-* **Device Linking**: Paste a Device ID from another machine to link them and share the same cloud record.  
-* **Conflict Prevention**: The "Restore" process now shows a comparison summary (local beat count vs. cloud beat count and timestamp) before performing an overwrite.
+The app utilizes an extended CSV format to preserve all metadata:
 
-## **CSV format**
-
-The app utilizes an extended CSV format to preserve all metadata:  
-Date,Chapter,ChapterTitle,SubChapterTitle,Details,Remarks,PrefTz,PrefCountry
+Date,Chapter,ChapterTitle,SubChapterTitle,Details,Remarks,PrefTz,PrefCountry,ChekhovTags,CharTags,PlotholeTags
 
 * **Details/Remarks**: Newlines are encoded as {nl} and commas as {com}.  
-* **Continuity Data**: Stored at the end of the file within \[CONTINUITY\_DATA\_START\] blocks.
+* **JSON Metadata**: Complex tags are stored as escaped JSON strings within the CSV columns.  
+* **Data Blocks**: Continuity, Chekhov, Character, and Plothole definitions are stored in dedicated \[DATA\_START\] blocks at the end of the file.
 
-## **Limitations / Known issues**
+## **Limitations / Known Issues**
 
-* **Reset All**: The Reset button is visible but intentionally disabled to prevent accidental data loss.  
-* **Cross-Chapter Moves**: To maintain data integrity, you cannot drag or move a beat from Chapter 1 into Chapter 2 manually; you must edit the Chapter number field instead.  
-* **Browser Requirements**: Requires a modern browser with ES modules and Intl.DateTimeFormat support.
+* **Reset All**: The Reset button is intentionally disabled in the standard build to prevent accidental data loss.  
+* **Cross-Chapter Moves**: You cannot drag a beat into a different chapter; you must edit the Chapter number field.  
+* **Browser Requirements**: Requires a modern browser with ES modules, Service Worker support, and Intl.DateTimeFormat support.
 
-## **Implementation notes**
+## **Implementation Notes**
 
-* **Single-File Architecture**: The entire application logic, styling, and Markdown parsing is contained within index.html.  
-* **Markdown Engine**: Uses [marked.js](https://www.google.com/search?q=https://cdnjs.cloudflare.com/ajax/libs/marked/4.3.0/marked.min.js) for high-performance rendering.  
-* **Storage**: The primary local key is storylines\_persist.  
-* **Cloud Path**: Data is stored in Firestore at /artifacts/storylines-public/users/\<activeId\>/data/main\_record.
+* **Single-File Architecture**: Application logic, styling, and Markdown parsing are contained within index.html.  
+* **Markdown Engine**: Uses [marked.js](https://cdnjs.cloudflare.com/ajax/libs/marked/4.3.0/marked.min.js) for rendering.  
+* **Storage**: Primary local key is storylines\_persist.  
+* **PWA**: Includes a Service Worker (sw.js) for offline reliability and update notifications.
 
 ## **Changelog**
 
+* **v16.0**: Added World Logic Tracker and enhanced Global Search with tag-based filtering.  
+* **v5.0**: Integrated Character Database and Chekhov's Gun management.  
 * **v4.0**: Added Markdown support for Beat Details/Remarks.  
 * **v3.5**: Introduced Continuity Space for tracking items/states over time.  
-* **v3.0**: Added MultiTimeline view and mobile-friendly reordering buttons.  
-* **v2.5**: Integrated Cloud Backup/Restore with conflict check summaries.
+* **v3.0**: Added MultiTimeline view and mobile-friendly reordering.
