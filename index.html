@@ -1048,7 +1048,11 @@
                 </div>
                 <div class="input-group">
                     <label>Chapter No.</label>
-                    <input type="number" id="numIn" placeholder="e.g. 1.1" step="0.01">
+                    <div style="display:flex;">
+                        <input type="number" id="numIn" placeholder="e.g. 1.1" step="0.01" list="chapterList" style="border-radius: 3px 0 0 3px; border-right: none; flex: 1; min-width: 0;">
+                        <button class="action-btn" onclick="loadBeatByNumber()" title="Load Beat Details" style="padding: 0 12px; border: 1px solid #d4cdc3; background: #f0f0f0; border-radius: 0 3px 3px 0; cursor: pointer;">➔</button>
+                    </div>
+                    <datalist id="chapterList"></datalist>
                 </div>
                 <div class="input-group">
                     <label>Event Location</label>
@@ -2105,6 +2109,22 @@
         }
 
         function render() {
+            // Populate Chapter Datalist
+            const chList = document.getElementById('chapterList');
+            if (chList) {
+                chList.innerHTML = '';
+                const map = new Map();
+                events.forEach(e => {
+                    if (!map.has(e.number)) map.set(e.number, e.chapterTitle || '');
+                    else if (!map.get(e.number) && e.chapterTitle) map.set(e.number, e.chapterTitle);
+                });
+                Array.from(map.keys()).sort((a,b)=>a-b).forEach(num => {
+                    const opt = document.createElement('option');
+                    opt.value = num; opt.innerHTML = map.get(num) || 'Untitled';
+                    chList.appendChild(opt);
+                });
+            }
+
             // Update Active Filter Display
             const filterDisp = document.getElementById('activeCharFilterDisplay');
             if (activeCharFilterIds.length > 0) {
@@ -2523,6 +2543,17 @@
         window.addContinuityItem = window.addContinuityItem;
         window.moveBeat = window.moveBeat;
         window.toggleCharFilter = window.toggleCharFilter;
+        window.loadBeatByNumber = () => {
+            const val = parseFloat(document.getElementById('numIn').value);
+            if (isNaN(val)) return showToast("Enter a number");
+            const idx = events.findIndex(e => e.number === val);
+            if (idx !== -1) {
+                editEvent(idx);
+                showToast(`Loaded Chapter ${val}`);
+            } else {
+                showToast("Chapter not found");
+            }
+        };
         window.moveCharacter = window.moveCharacter;
         window.toggleReadme = window.toggleReadme;
 
