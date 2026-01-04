@@ -1108,12 +1108,13 @@
 
                 <!-- ADD: Plothole Tagging in Beat Space -->
                 <div class="input-group col-span-full" style="padding-top: 10px; border-top: 1px dashed #d4cdc3;">
-                    <label>Plotholes / Logic Breaks</label>
+                    <label>World Logic & Rules</label>
                     <div style="display:flex; gap:10px; align-items:center;">
                         <select id="plotholeSelect" style="flex:2;">
-                            <option value="">-- Select Rule Violated --</option>
+                            <option value="">-- Select Rule --</option>
                         </select>
-                        <button class="action-btn" onclick="tagPlotholeToBeat()" title="Mark as Plothole">⚠️ Mark</button>
+                        <button class="action-btn" onclick="tagPlotholeToBeat('violation')" title="Mark as Broken/Plothole">⚠️ Broken</button>
+                        <button class="action-btn" onclick="tagPlotholeToBeat('adherence')" title="Mark as Upheld/Established">✅ Upheld</button>
                     </div>
                     <div id="currentPlotholeTags" class="char-tag-row" style="border-color:var(--danger); background:#fff5f5;"></div>
                 </div>
@@ -1189,7 +1190,7 @@
                 </div>
                 <div class="input-group">
                     <label>Icon</label>
-                    <input type="text" id="cgIconIn" placeholder="e.g. 📜" style="text-align:center;">
+                    <input type="text" id="cgIconIn" placeholder="e.g. 🌱" style="text-align:center;">
                 </div>
             </div>
             <div class="btn-row">
@@ -1217,9 +1218,9 @@
 
     <!-- PLOTHOLE TRACKER SPACE -->
     <div class="panel">
-        <div class="section-label">Plothole Tracker</div>
+        <div class="section-label">World Logic Tracker</div>
         <div class="panel-header" onclick="togglePlotholePanel()">
-            <span style="font-weight:700; color:var(--text-main);">Manage Logic Gaps</span>
+            <span style="font-weight:700; color:var(--text-main);">Manage World Rules</span>
             <span id="plotholePanelIcon" style="color:var(--secondary);">➕</span>
         </div>
         
@@ -1246,9 +1247,8 @@
                     <tr>
                         <th style="width:50px; text-align:center;">Status</th>
                         <th style="width:100px;">Rule</th>
-                        <th>Details</th>
-                        <th style="width:100px;">Chapters</th>
-                        <th style="width:60px; text-align:center;">Count</th>
+                        <th style="text-align:left;">Details</th>
+                        <th style="width:180px;">Track Record</th>
                         <th style="width:90px; text-align:center;">ACTION</th>
                     </tr>
                 </thead>
@@ -1568,7 +1568,7 @@
         let currentBeatCharIds = []; // Temporary array for the beat currently being edited
         let plotholeItems = [];
         let editingPlotholeId = null;
-        let currentBeatPlotholeIds = [];
+        let currentBeatPlotholeTags = {}; // Changed from array to object { id: 'violation'|'adherence' }
 
         window.toggleCharPanel = () => { const content = document.getElementById('charContent'), icon = document.getElementById('charPanelIcon'); if (content.style.display === 'block') { content.style.display = 'none'; icon.innerText = '➕'; } else { content.style.display = 'block'; icon.innerText = '➖'; } }
 
@@ -1748,18 +1748,30 @@
         function renderPlotholeList() {
             const tbody = document.getElementById('plotholeListArea'); tbody.innerHTML = '';
             plotholeItems.forEach(item => {
-                const affectedBeats = events.filter(e => e.plotholeTags && e.plotholeTags.includes(item.id));
-                const count = affectedBeats.length;
-                const chapters = [...new Set(affectedBeats.map(e => e.number))].sort((a,b)=>a-b).join(', ');
-                const statusIcon = count === 0 ? '✅' : '⚠️';
+                // Normalize tags for calculation
+                const affectedBeats = events.filter(e => {
+                    if (!e.plotholeTags) return false;
+                    if (Array.isArray(e.plotholeTags)) return e.plotholeTags.includes(item.id);
+                    return e.plotholeTags[item.id];
+                });
+
+                let violations = [], adherences = [];
+                affectedBeats.forEach(e => {
+                    const tag = Array.isArray(e.plotholeTags) ? 'violation' : e.plotholeTags[item.id];
+                    if (tag === 'violation') violations.push(e.number);
+                    else if (tag === 'adherence') adherences.push(e.number);
+                });
+
+                const statusIcon = violations.length > 0 ? '⚠️' : (adherences.length > 0 ? '✅' : '⚪');
+                const vStr = violations.length > 0 ? `<div style="color:var(--danger); font-size:0.8rem;">⚠️ ${[...new Set(violations)].sort((a,b)=>a-b).join(', ')}</div>` : '';
+                const aStr = adherences.length > 0 ? `<div style="color:var(--success); font-size:0.8rem;">✅ ${[...new Set(adherences)].sort((a,b)=>a-b).join(', ')}</div>` : '';
                 
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
                     <td style="font-size:1.2rem; text-align:center;">${statusIcon}</td>
                     <td style="font-weight:bold;">${item.rule}</td>
-                    <td>${item.detail || '-'}</td>
-                    <td>${chapters || '-'}</td>
-                    <td style="text-align:center;">${count}</td>
+                    <td style="text-align: left;">${item.detail || '-'}</td>
+                    <td style="text-align:left;">${vStr}${aStr}</td>
                     <td>
                         <div style="display:flex; gap:8px; justify-content:center; align-items:center;">
                             <button class="action-btn" onclick="editPlotholeItem('${item.id}')" title="Edit">✎</button> 
@@ -1773,7 +1785,7 @@
 
         function populatePlotholeSelect() {
             const sel = document.getElementById('plotholeSelect');
-            sel.innerHTML = '<option value="">-- Select Rule Violated --</option>';
+            sel.innerHTML = '<option value="">-- Select Rule --</option>';
             plotholeItems.forEach(i => {
                 const opt = document.createElement('option');
                 opt.value = i.id; opt.text = i.rule;
@@ -1781,27 +1793,30 @@
             });
         }
 
-        window.tagPlotholeToBeat = () => {
+        window.tagPlotholeToBeat = (type) => {
             const sel = document.getElementById('plotholeSelect');
             const id = sel.value; if(!id) return;
-            if(!currentBeatPlotholeIds.includes(id)) { currentBeatPlotholeIds.push(id); updateBeatPlotholeDisplay(); }
+            currentBeatPlotholeTags[id] = type; 
+            updateBeatPlotholeDisplay();
         }
         window.removePlotholeFromBeat = (id) => {
-            currentBeatPlotholeIds = currentBeatPlotholeIds.filter(pid => pid !== id); updateBeatPlotholeDisplay();
+            delete currentBeatPlotholeTags[id]; 
+            updateBeatPlotholeDisplay();
         }
         function updateBeatPlotholeDisplay() {
             const div = document.getElementById('currentPlotholeTags'); div.innerHTML = '';
-            if(currentBeatPlotholeIds.length === 0) { div.innerHTML = '<span style="font-size:0.8rem; color:#aaa; font-style:italic;">No plotholes marked</span>'; return; }
-            currentBeatPlotholeIds.forEach(pid => {
+            if(Object.keys(currentBeatPlotholeTags).length === 0) { div.innerHTML = '<span style="font-size:0.8rem; color:#aaa; font-style:italic;">No rules tagged</span>'; return; }
+            for (const [pid, type] of Object.entries(currentBeatPlotholeTags)) {
                 const item = plotholeItems.find(i => i.id === pid);
                 if(item) {
                     const tag = document.createElement('span'); tag.className = 'char-badge';
-                    tag.style.cssText = 'background-color:var(--danger); cursor:pointer; color:white;';
-                    tag.innerHTML = `⚠️ ${item.rule} <span style="margin-left:4px; opacity:0.7;">×</span>`;
+                    const isBroken = type === 'violation';
+                    tag.style.cssText = `background-color:${isBroken ? 'var(--danger)' : 'var(--success)'}; cursor:pointer; color:white;`;
+                    tag.innerHTML = `${isBroken ? '⚠️' : '✅'} ${item.rule} <span style="margin-left:4px; opacity:0.7;">×</span>`;
                     tag.onclick = () => removePlotholeFromBeat(pid);
                     div.appendChild(tag);
                 }
-            });
+            }
         }
 
         window.onload = function() {
@@ -1826,6 +1841,12 @@
                         characterItems = parsed.characters || [];
                         plotholeItems = parsed.plotholes || [];
                     }
+                    // Normalize Plothole Tags (Array -> Object)
+                    events.forEach(e => {
+                        if (e.plotholeTags && Array.isArray(e.plotholeTags)) {
+                            const obj = {}; e.plotholeTags.forEach(id => obj[id] = 'violation'); e.plotholeTags = obj;
+                        }
+                    });
                     events.forEach(e => e.number = parseFloat(e.number)); 
                     renderContinuityList(); renderChekhovList(); renderCharList(); renderPlotholeList();
                     populateChekhovSelect(); populateCharSelect(); populatePlotholeSelect();
@@ -2153,7 +2174,7 @@
                 date, number: parseFloat(num), chapterTitle: cT, subChapterTitle: sT, details: det, remarks: rem, 
                 chekhovTags: { ...currentBeatChekhovTags },
                 charTags: [ ...currentBeatCharIds ],
-                plotholeTags: [ ...currentBeatPlotholeIds ]
+                plotholeTags: { ...currentBeatPlotholeTags }
             };
             
             if (editIndex > -1) { 
@@ -2182,7 +2203,13 @@
             updateBeatCharDisplay();
 
             // NEW: Load Plothole Tags
-            currentBeatPlotholeIds = e.plotholeTags ? [ ...e.plotholeTags ] : [];
+            if (e.plotholeTags) {
+                if (Array.isArray(e.plotholeTags)) {
+                    currentBeatPlotholeTags = {}; e.plotholeTags.forEach(id => currentBeatPlotholeTags[id] = 'violation');
+                } else {
+                    currentBeatPlotholeTags = { ...e.plotholeTags };
+                }
+            } else { currentBeatPlotholeTags = {}; }
             updateBeatPlotholeDisplay();
 
             document.getElementById('btnAdd').innerText = "Update Beat"; 
@@ -2196,7 +2223,7 @@
             editIndex = -1; clearInputs(); 
             currentBeatChekhovTags = {}; updateChekhovTagDisplay(); 
             currentBeatCharIds = []; updateBeatCharDisplay();
-            currentBeatPlotholeIds = []; updateBeatPlotholeDisplay();
+            currentBeatPlotholeTags = {}; updateBeatPlotholeDisplay();
             document.getElementById('btnAdd').innerText = "+ Add Beat"; document.getElementById('btnAdd').className = "btn-add"; document.getElementById('btnCancel').style.display = "none"; document.getElementById('btnSaveNew').style.display = "none"; 
         }
         window.saveAsNew = () => { editIndex = -1; handleAdd(); cancelEdit(); }
@@ -2271,11 +2298,16 @@
                 cHtml += '</div>';
             }
             // Plothole Badges
-            if (evt.plotholeTags && evt.plotholeTags.length > 0) {
+            const phTags = evt.plotholeTags || {};
+            const phKeys = Array.isArray(phTags) ? phTags : Object.keys(phTags);
+            if (phKeys.length > 0) {
                 cHtml += '<div style="margin-top:2px; padding-top:0; display:flex; flex-wrap:wrap;">';
-                evt.plotholeTags.forEach(pid => {
+                phKeys.forEach(pid => {
                     const item = plotholeItems.find(i => i.id === pid);
-                    if(item) cHtml += `<span class="c-badge" style="color:white; background-color:var(--danger); border-color:var(--danger);" onclick="event.stopPropagation()">⚠️ ${item.rule}</span>`;
+                    if(item) {
+                        const isBroken = Array.isArray(phTags) ? true : (phTags[pid] === 'violation');
+                        cHtml += `<span class="c-badge" style="color:white; background-color:${isBroken?'var(--danger)':'var(--success)'}; border-color:${isBroken?'var(--danger)':'var(--success)'};" onclick="event.stopPropagation()">${isBroken?'⚠️':'✅'} ${item.rule}</span>`;
+                    }
                 });
                 cHtml += '</div>';
             }
@@ -2529,7 +2561,7 @@
             events.forEach(e => { 
                 const chekhovStr = e.chekhovTags ? JSON.stringify(e.chekhovTags).replace(/"/g, '""') : '{}';
                 const charStr = e.charTags ? JSON.stringify(e.charTags).replace(/"/g, '""') : '[]';
-                const phStr = e.plotholeTags ? JSON.stringify(e.plotholeTags).replace(/"/g, '""') : '[]';
+                const phStr = e.plotholeTags ? JSON.stringify(e.plotholeTags).replace(/"/g, '""') : '{}';
                 csv += `${e.date},${e.number},"${(e.chapterTitle||'').replace(/,/g,'{com}')}","${(e.subChapterTitle||'').replace(/,/g,'{com}')}","${(e.details||'').replace(/\n/g,'{nl}').replace(/,/g,'{com}')}","${(e.remarks||'').replace(/\n/g,'{nl}').replace(/,/g,'{com}')}","${e.preferredDisplayTz||''}","${e.preferredCountry||''}","${chekhovStr}","${charStr}","${phStr}"\n`;
             });
             
@@ -2598,7 +2630,7 @@
 
                     let chekhovTags = {};
                     let charTags = [];
-                    let plotholeTags = [];
+                    let plotholeTags = {};
 
                     // Regex to find the JSON columns at the end of the CSV row (Chekhov, Char, Plothole)
                     const tripleMatch = row.match(/,"({.*})","(\[.*\])","(\[.*\])"$/);
@@ -2608,7 +2640,14 @@
                     if (tripleMatch) {
                         try { chekhovTags = JSON.parse(tripleMatch[1].replace(/""/g, '"')); } catch(e){}
                         try { charTags = JSON.parse(tripleMatch[2].replace(/""/g, '"')); } catch(e){}
-                        try { plotholeTags = JSON.parse(tripleMatch[3].replace(/""/g, '"')); } catch(e){}
+                        try { 
+                            const rawPh = JSON.parse(tripleMatch[3].replace(/""/g, '"')); 
+                            if(Array.isArray(rawPh)) {
+                                rawPh.forEach(id => plotholeTags[id] = 'violation');
+                            } else {
+                                plotholeTags = rawPh;
+                            }
+                        } catch(e){}
                     } else if (dualMatch) {
                         try { chekhovTags = JSON.parse(dualMatch[1].replace(/""/g, '"')); } catch(e){}
                         try { charTags = JSON.parse(dualMatch[2].replace(/""/g, '"')); } catch(e){}
