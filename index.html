@@ -1049,7 +1049,7 @@
                 <div class="input-group">
                     <label>Chapter No.</label>
                     <div style="display:flex;">
-                        <input type="number" id="numIn" placeholder="e.g. 1.1" step="0.01" list="chapterList" style="border-radius: 3px 0 0 3px; border-right: none; flex: 1; min-width: 0;">
+                        <input type="number" id="numIn" placeholder="e.g. 1.1" step="0.01" list="chapterList" style="border-radius: 3px 0 0 3px; border-right: none; flex: 1; min-width: 0;" onfocus="this.dataset.old=this.value; this.value='';" onblur="if(!this.value) this.value=this.dataset.old||'';">
                         <button class="action-btn" onclick="loadBeatByNumber()" title="Load Beat Details" style="padding: 0 12px; border: 1px solid #d4cdc3; background: #f0f0f0; border-radius: 0 3px 3px 0; cursor: pointer;">➔</button>
                     </div>
                     <datalist id="chapterList"></datalist>
@@ -1104,6 +1104,18 @@
                         <button id="btnMarkPayoff" class="action-btn" onclick="markChekhov('payoff')" title="Mark as Payoff (Used)">🔴 Payoff</button>
                     </div>
                     <div id="currentChekhovTag" style="font-size:0.8rem; margin-top:5px; color:var(--info); font-style:italic;"></div>
+                </div>
+
+                <!-- ADD: Plothole Tagging in Beat Space -->
+                <div class="input-group col-span-full" style="padding-top: 10px; border-top: 1px dashed #d4cdc3;">
+                    <label>Plotholes / Logic Breaks</label>
+                    <div style="display:flex; gap:10px; align-items:center;">
+                        <select id="plotholeSelect" style="flex:2;">
+                            <option value="">-- Select Rule Violated --</option>
+                        </select>
+                        <button class="action-btn" onclick="tagPlotholeToBeat()" title="Mark as Plothole">⚠️ Mark</button>
+                    </div>
+                    <div id="currentPlotholeTags" class="char-tag-row" style="border-color:var(--danger); background:#fff5f5;"></div>
                 </div>
 
             </div>
@@ -1199,6 +1211,48 @@
                     </tr>
                 </thead>
                 <tbody id="chekhovListArea"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- PLOTHOLE TRACKER SPACE -->
+    <div class="panel">
+        <div class="section-label">Plothole Tracker</div>
+        <div class="panel-header" onclick="togglePlotholePanel()">
+            <span style="font-weight:700; color:var(--text-main);">Manage Logic Gaps</span>
+            <span id="plotholePanelIcon" style="color:var(--secondary);">➕</span>
+        </div>
+        
+        <div id="plotholeContent" class="panel-content" style="display: none;">
+            <div class="controls">
+                <div class="input-group">
+                    <label>Rule (Short)</label>
+                    <input type="text" id="phRuleIn" placeholder="e.g. Magic Cost">
+                </div>
+                <div class="input-group col-span-2">
+                    <label>Rule Details</label>
+                    <input type="text" id="phDetailIn" placeholder="e.g. Magic requires blood sacrifice">
+                </div>
+            </div>
+            <div class="btn-row">
+                <div class="action-group">
+                    <button id="btnPhAdd" class="btn-add" onclick="addPlotholeItem()">+ Add Rule</button>
+                    <button id="btnPhCancel" class="btn-cancel" onclick="cancelPlotholeEdit()">Cancel</button>
+                </div>
+            </div>
+            
+            <table class="chekhov-table">
+                <thead>
+                    <tr>
+                        <th style="width:50px; text-align:center;">Status</th>
+                        <th style="width:150px;">Rule</th>
+                        <th>Details</th>
+                        <th style="width:100px;">Chapters</th>
+                        <th style="width:60px; text-align:center;">Count</th>
+                        <th style="width:90px; text-align:center;">ACTION</th>
+                    </tr>
+                </thead>
+                <tbody id="plotholeListArea"></tbody>
             </table>
         </div>
     </div>
@@ -1417,7 +1471,8 @@
                     beats: events, 
                     continuity: continuityItems, 
                     chekhov: chekhovItems, 
-                    characters: characterItems, // Included correctly in your file
+                    characters: characterItems,
+                    plotholes: plotholeItems,
                     lastUpdated: Date.now(), 
                     lastDevice: user.uid 
                 });
@@ -1465,13 +1520,16 @@
                     continuityItems = data.continuity || []; 
                     chekhovItems = data.chekhov || [];
                     characterItems = data.characters || []; // Fix 1: Load characters
+                    plotholeItems = data.plotholes || [];
                     
                     saveLocalData(); 
                     renderContinuityList(); 
                     renderChekhovList(); 
                     renderCharList();        // Fix 2: Render character table
+                    renderPlotholeList();
                     populateChekhovSelect();
                     populateCharSelect();    // Fix 3: Refresh dropdowns
+                    populatePlotholeSelect();
                     render(); 
                     showToast("🔄 Data restored successfully"); 
                 }
@@ -1508,6 +1566,9 @@
         let characterItems = []; 
         let editingCharId = null;
         let currentBeatCharIds = []; // Temporary array for the beat currently being edited
+        let plotholeItems = [];
+        let editingPlotholeId = null;
+        let currentBeatPlotholeIds = [];
 
         window.toggleCharPanel = () => { const content = document.getElementById('charContent'), icon = document.getElementById('charPanelIcon'); if (content.style.display === 'block') { content.style.display = 'none'; icon.innerText = '➕'; } else { content.style.display = 'block'; icon.innerText = '➖'; } }
 
@@ -1641,6 +1702,108 @@
                 }
             });
         }
+
+        /* --- PLOTHOLE LOGIC --- */
+        window.togglePlotholePanel = () => { const content = document.getElementById('plotholeContent'), icon = document.getElementById('plotholePanelIcon'); if (content.style.display === 'block') { content.style.display = 'none'; icon.innerText = '➕'; } else { content.style.display = 'block'; icon.innerText = '➖'; } }
+
+        window.addPlotholeItem = () => {
+            const rule = document.getElementById('phRuleIn').value;
+            const detail = document.getElementById('phDetailIn').value;
+            if(!rule) return showToast("Rule Name required");
+
+            if (editingPlotholeId) {
+                const idx = plotholeItems.findIndex(i => i.id === editingPlotholeId);
+                if (idx > -1) { plotholeItems[idx] = { ...plotholeItems[idx], rule, detail }; showToast("Updated Rule"); }
+                cancelPlotholeEdit();
+            } else {
+                plotholeItems.push({ id: Date.now().toString(), rule, detail });
+            }
+            saveLocalData(); renderPlotholeList(); populatePlotholeSelect(); render();
+        }
+
+        window.editPlotholeItem = (id) => {
+            const item = plotholeItems.find(i => i.id === id); if(!item) return;
+            editingPlotholeId = id;
+            document.getElementById('phRuleIn').value = item.rule;
+            document.getElementById('phDetailIn').value = item.detail || '';
+            const btn = document.getElementById('btnPhAdd'); btn.innerText = "Update Rule"; btn.className = "btn-update";
+            document.getElementById('btnPhCancel').style.display = 'inline-block';
+        }
+
+        window.cancelPlotholeEdit = () => {
+            editingPlotholeId = null;
+            document.getElementById('phRuleIn').value = ''; document.getElementById('phDetailIn').value = '';
+            const btn = document.getElementById('btnPhAdd'); btn.innerText = "+ Add Rule"; btn.className = "btn-add";
+            document.getElementById('btnPhCancel').style.display = 'none';
+        }
+
+        window.deletePlotholeItem = (id) => {
+            if(confirm("Delete this rule?")) {
+                plotholeItems = plotholeItems.filter(i => i.id !== id);
+                if (editingPlotholeId === id) cancelPlotholeEdit();
+                saveLocalData(); renderPlotholeList(); populatePlotholeSelect(); render();
+            }
+        }
+
+        function renderPlotholeList() {
+            const tbody = document.getElementById('plotholeListArea'); tbody.innerHTML = '';
+            plotholeItems.forEach(item => {
+                const affectedBeats = events.filter(e => e.plotholeTags && e.plotholeTags.includes(item.id));
+                const count = affectedBeats.length;
+                const chapters = [...new Set(affectedBeats.map(e => e.number))].sort((a,b)=>a-b).join(', ');
+                const statusIcon = count === 0 ? '✅' : '⚠️';
+                
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td style="font-size:1.2rem; text-align:center;">${statusIcon}</td>
+                    <td style="font-weight:bold;">${item.rule}</td>
+                    <td>${item.detail || '-'}</td>
+                    <td>${chapters || '-'}</td>
+                    <td style="text-align:center;">${count}</td>
+                    <td>
+                        <div style="display:flex; gap:8px; justify-content:center; align-items:center;">
+                            <button class="action-btn" onclick="editPlotholeItem('${item.id}')" title="Edit">✎</button> 
+                            <button class="action-btn del-btn" onclick="deletePlotholeItem('${item.id}')" title="Delete">×</button>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function populatePlotholeSelect() {
+            const sel = document.getElementById('plotholeSelect');
+            sel.innerHTML = '<option value="">-- Select Rule Violated --</option>';
+            plotholeItems.forEach(i => {
+                const opt = document.createElement('option');
+                opt.value = i.id; opt.text = i.rule;
+                sel.appendChild(opt);
+            });
+        }
+
+        window.tagPlotholeToBeat = () => {
+            const sel = document.getElementById('plotholeSelect');
+            const id = sel.value; if(!id) return;
+            if(!currentBeatPlotholeIds.includes(id)) { currentBeatPlotholeIds.push(id); updateBeatPlotholeDisplay(); }
+        }
+        window.removePlotholeFromBeat = (id) => {
+            currentBeatPlotholeIds = currentBeatPlotholeIds.filter(pid => pid !== id); updateBeatPlotholeDisplay();
+        }
+        function updateBeatPlotholeDisplay() {
+            const div = document.getElementById('currentPlotholeTags'); div.innerHTML = '';
+            if(currentBeatPlotholeIds.length === 0) { div.innerHTML = '<span style="font-size:0.8rem; color:#aaa; font-style:italic;">No plotholes marked</span>'; return; }
+            currentBeatPlotholeIds.forEach(pid => {
+                const item = plotholeItems.find(i => i.id === pid);
+                if(item) {
+                    const tag = document.createElement('span'); tag.className = 'char-badge';
+                    tag.style.cssText = 'background-color:var(--danger); cursor:pointer; color:white;';
+                    tag.innerHTML = `⚠️ ${item.rule} <span style="margin-left:4px; opacity:0.7;">×</span>`;
+                    tag.onclick = () => removePlotholeFromBeat(pid);
+                    div.appendChild(tag);
+                }
+            });
+        }
+
         window.onload = function() {
             document.getElementById('tzSelect').value = currentTz; detectUserNearestZone(); loadLocalData(); initFirebase();
             document.getElementById('detailIn').addEventListener('input', function() { this.style.height = 'auto'; this.style.height = (this.scrollHeight) + 'px'; });
@@ -1648,23 +1811,24 @@
             document.getElementById('charRoleIn').addEventListener('input', function() { this.style.height = 'auto'; this.style.height = (this.scrollHeight) + 'px'; });
         };
 
-        function saveLocalData() { localStorage.setItem(STORAGE_KEY, JSON.stringify({ events, continuity: continuityItems, chekhov: chekhovItems, characters: characterItems })); }
+        function saveLocalData() { localStorage.setItem(STORAGE_KEY, JSON.stringify({ events, continuity: continuityItems, chekhov: chekhovItems, characters: characterItems, plotholes: plotholeItems })); }
 
         function loadLocalData() {
             const data = localStorage.getItem(STORAGE_KEY);
             if(data) {
                 try {
                     const parsed = JSON.parse(data);
-                    if (Array.isArray(parsed)) { events = parsed; continuityItems = []; chekhovItems = []; characterItems = []; } 
+                    if (Array.isArray(parsed)) { events = parsed; continuityItems = []; chekhovItems = []; characterItems = []; plotholeItems = []; } 
                     else { 
                         events = parsed.events || []; 
                         continuityItems = parsed.continuity || []; 
                         chekhovItems = parsed.chekhov || [];
-                        characterItems = parsed.characters || []; // NEW
+                        characterItems = parsed.characters || [];
+                        plotholeItems = parsed.plotholes || [];
                     }
                     events.forEach(e => e.number = parseFloat(e.number)); 
-                    renderContinuityList(); renderChekhovList(); renderCharList(); // NEW
-                    populateChekhovSelect(); populateCharSelect(); // NEW
+                    renderContinuityList(); renderChekhovList(); renderCharList(); renderPlotholeList();
+                    populateChekhovSelect(); populateCharSelect(); populatePlotholeSelect();
                     render();
                 } catch(e) { console.error(e); }
             }
@@ -1973,7 +2137,8 @@
             const beat = { 
                 date, number: parseFloat(num), chapterTitle: cT, subChapterTitle: sT, details: det, remarks: rem, 
                 chekhovTags: { ...currentBeatChekhovTags },
-                charTags: [ ...currentBeatCharIds ] // 
+                charTags: [ ...currentBeatCharIds ],
+                plotholeTags: [ ...currentBeatPlotholeIds ]
             };
             
             if (editIndex > -1) { 
@@ -1981,7 +2146,7 @@
                 beat.preferredDisplayTz = old.preferredDisplayTz; beat.preferredCountry = old.preferredCountry;
                 events[editIndex] = beat; cancelEdit(); 
             } else { events.push(beat); sortData(currentSortMethod); clearInputs(); }
-            saveLocalData(); renderChekhovList(); renderCharList(); render(); // Updated render calls
+            saveLocalData(); renderChekhovList(); renderCharList(); renderPlotholeList(); render();
         }
 
         window.editEvent = (i) => {
@@ -2001,6 +2166,10 @@
             currentBeatCharIds = e.charTags ? [ ...e.charTags ] : [];
             updateBeatCharDisplay();
 
+            // NEW: Load Plothole Tags
+            currentBeatPlotholeIds = e.plotholeTags ? [ ...e.plotholeTags ] : [];
+            updateBeatPlotholeDisplay();
+
             document.getElementById('btnAdd').innerText = "Update Beat"; 
             document.getElementById('btnAdd').className = "btn-update"; 
             document.getElementById('btnCancel').style.display = "inline-block"; 
@@ -2011,7 +2180,8 @@
         window.cancelEdit = () => { 
             editIndex = -1; clearInputs(); 
             currentBeatChekhovTags = {}; updateChekhovTagDisplay(); 
-            currentBeatCharIds = []; updateBeatCharDisplay(); // NEW
+            currentBeatCharIds = []; updateBeatCharDisplay();
+            currentBeatPlotholeIds = []; updateBeatPlotholeDisplay();
             document.getElementById('btnAdd').innerText = "+ Add Beat"; document.getElementById('btnAdd').className = "btn-add"; document.getElementById('btnCancel').style.display = "none"; document.getElementById('btnSaveNew').style.display = "none"; 
         }
         window.saveAsNew = () => { editIndex = -1; handleAdd(); cancelEdit(); }
@@ -2082,6 +2252,15 @@
                 }
                 cHtml += '</div>';
             }
+            // Plothole Badges
+            if (evt.plotholeTags && evt.plotholeTags.length > 0) {
+                cHtml += '<div style="margin-top:2px; padding-top:0; display:flex; flex-wrap:wrap;">';
+                evt.plotholeTags.forEach(pid => {
+                    const item = plotholeItems.find(i => i.id === pid);
+                    if(item) cHtml += `<span class="c-badge" style="color:white; background-color:var(--danger); border-color:var(--danger);" onclick="event.stopPropagation()">⚠️ ${item.rule}</span>`;
+                });
+                cHtml += '</div>';
+            }
             // Character Badges
             if (evt.charTags && evt.charTags.length > 0) {
                 cHtml += '<div style="margin-top:5px; padding-top:4px; border-top:1px dashed #eee;">';
@@ -2115,12 +2294,17 @@
                 chList.innerHTML = '';
                 const map = new Map();
                 events.forEach(e => {
-                    if (!map.has(e.number)) map.set(e.number, e.chapterTitle || '');
-                    else if (!map.get(e.number) && e.chapterTitle) map.set(e.number, e.chapterTitle);
+                    if (!map.has(e.number)) map.set(e.number, { t: e.chapterTitle || '', s: e.subChapterTitle || '' });
+                    else {
+                        const c = map.get(e.number);
+                        if(!c.t && e.chapterTitle) c.t = e.chapterTitle;
+                        if(!c.s && e.subChapterTitle) c.s = e.subChapterTitle;
+                    }
                 });
                 Array.from(map.keys()).sort((a,b)=>a-b).forEach(num => {
                     const opt = document.createElement('option');
-                    opt.value = num; opt.innerHTML = map.get(num) || 'Untitled';
+                    const d = map.get(num);
+                    opt.value = num; opt.innerHTML = (d.t || 'Untitled') + (d.s ? ` - ${d.s}` : '');
                     chList.appendChild(opt);
                 });
             }
@@ -2300,11 +2484,12 @@
 
         window.downloadCSV = () => { 
             if (events.length === 0) return showToast("No data to save."); 
-            let csv = "Date,Chapter,ChapterTitle,SubChapterTitle,Details,Remarks,PrefTz,PrefCountry,ChekhovTags\n"; 
+            let csv = "Date,Chapter,ChapterTitle,SubChapterTitle,Details,Remarks,PrefTz,PrefCountry,ChekhovTags,CharTags,PlotholeTags\n"; 
             events.forEach(e => { 
                 const chekhovStr = e.chekhovTags ? JSON.stringify(e.chekhovTags).replace(/"/g, '""') : '{}';
-                const charStr = e.charTags ? JSON.stringify(e.charTags).replace(/"/g, '""') : '[]'; // NEW
-                csv += `${e.date},${e.number},"${(e.chapterTitle||'').replace(/,/g,'{com}')}","${(e.subChapterTitle||'').replace(/,/g,'{com}')}","${(e.details||'').replace(/\n/g,'{nl}').replace(/,/g,'{com}')}","${(e.remarks||'').replace(/\n/g,'{nl}').replace(/,/g,'{com}')}","${e.preferredDisplayTz||''}","${e.preferredCountry||''}","${chekhovStr}","${charStr}"\n`;
+                const charStr = e.charTags ? JSON.stringify(e.charTags).replace(/"/g, '""') : '[]';
+                const phStr = e.plotholeTags ? JSON.stringify(e.plotholeTags).replace(/"/g, '""') : '[]';
+                csv += `${e.date},${e.number},"${(e.chapterTitle||'').replace(/,/g,'{com}')}","${(e.subChapterTitle||'').replace(/,/g,'{com}')}","${(e.details||'').replace(/\n/g,'{nl}').replace(/,/g,'{com}')}","${(e.remarks||'').replace(/\n/g,'{nl}').replace(/,/g,'{com}')}","${e.preferredDisplayTz||''}","${e.preferredCountry||''}","${chekhovStr}","${charStr}","${phStr}"\n`;
             });
             
             // Append Continuity Data
@@ -2329,6 +2514,13 @@
                 });
                 csv += "[CHARACTER_DATA_END]\n";
             }
+            if(plotholeItems.length > 0) {
+                csv += "\n[PLOTHOLE_DATA_START]\nID,Rule,Detail\n";
+                plotholeItems.forEach(p => {
+                    csv += `${p.id},${p.rule.replace(/,/g,'{com}')},${(p.detail||'').replace(/,/g,'{com}')}\n`;
+                });
+                csv += "[PLOTHOLE_DATA_END]\n";
+            }
 
             const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' })); a.download = 'storylines.csv'; a.click(); 
         }
@@ -2340,8 +2532,12 @@
                 const text = e.target.result;
                 
                 // 1. Split Sections (Characters are at the very bottom)
-                const charSplit = text.split('[CHARACTER_DATA_START]');
-                let mainContent = charSplit[0];
+                const phSplit = text.split('[PLOTHOLE_DATA_START]');
+                let mainContent = phSplit[0];
+                const phData = phSplit[1] ? phSplit[1].split('[PLOTHOLE_DATA_END]')[0].trim() : null;
+
+                const charSplit = mainContent.split('[CHARACTER_DATA_START]');
+                mainContent = charSplit[0];
                 const charData = charSplit[1] ? charSplit[1].split('[CHARACTER_DATA_END]')[0].trim() : null;
 
                 const chekhovSplit = mainContent.split('[CHEKHOV_DATA_START]');
@@ -2361,13 +2557,18 @@
 
                     let chekhovTags = {};
                     let charTags = [];
+                    let plotholeTags = [];
 
-                    // Regex to find the JSON columns at the end of the CSV row
-                    // Matches pattern: ...,"{...}","[...]" (Both exist) OR ...,"{...}" (Only Chekhov exists)
+                    // Regex to find the JSON columns at the end of the CSV row (Chekhov, Char, Plothole)
+                    const tripleMatch = row.match(/,"({.*})","(\[.*\])","(\[.*\])"$/);
                     const dualMatch = row.match(/,"({.*})","(\[.*\])"$/);
                     const singleMatch = row.match(/,"({.*})"$/);
                     
-                    if (dualMatch) {
+                    if (tripleMatch) {
+                        try { chekhovTags = JSON.parse(tripleMatch[1].replace(/""/g, '"')); } catch(e){}
+                        try { charTags = JSON.parse(tripleMatch[2].replace(/""/g, '"')); } catch(e){}
+                        try { plotholeTags = JSON.parse(tripleMatch[3].replace(/""/g, '"')); } catch(e){}
+                    } else if (dualMatch) {
                         try { chekhovTags = JSON.parse(dualMatch[1].replace(/""/g, '"')); } catch(e){}
                         try { charTags = JSON.parse(dualMatch[2].replace(/""/g, '"')); } catch(e){}
                     } else if (singleMatch) {
@@ -2376,7 +2577,8 @@
 
                     // Clean the row string to split the simple fields safely
                     let cleanRow = row;
-                    if (dualMatch) cleanRow = row.substring(0, row.indexOf(dualMatch[0]));
+                    if (tripleMatch) cleanRow = row.substring(0, row.indexOf(tripleMatch[0]));
+                    else if (dualMatch) cleanRow = row.substring(0, row.indexOf(dualMatch[0]));
                     else if (singleMatch) cleanRow = row.substring(0, row.indexOf(singleMatch[0]));
 
                     const pSimple = cleanRow.split(',');
@@ -2393,7 +2595,8 @@
                             preferredDisplayTz: pSimple[6] || '', 
                             preferredCountry: pSimple[7] || '', 
                             chekhovTags: chekhovTags,
-                            charTags: charTags // Load the parsed character tags
+                            charTags: charTags,
+                            plotholeTags: plotholeTags
                         }); 
                     } 
                 } 
@@ -2433,19 +2636,32 @@
                     }
                 }
 
-                // 6. Update State
-                if(newEvents.length > 0 || newContinuity.length > 0 || newChekhov.length > 0 || newChars.length > 0) { 
+                // 6. Parse Plotholes
+                let newPlotholes = [];
+                if(phData) {
+                    const cLines = phData.split('\n');
+                    for(let i=1; i<cLines.length; i++) {
+                        const c = cLines[i].trim().split(',');
+                        if(c.length >= 3) newPlotholes.push({ id: c[0], rule: c[1].replace(/{com}/g, ','), detail: c[2].replace(/{com}/g, ',') });
+                    }
+                }
+
+                // 7. Update State
+                if(newEvents.length > 0 || newContinuity.length > 0 || newChekhov.length > 0 || newChars.length > 0 || newPlotholes.length > 0) { 
                     events = newEvents; 
                     if(newContinuity.length > 0) continuityItems = newContinuity; 
                     if(newChekhov.length > 0) chekhovItems = newChekhov;
                     if(newChars.length > 0) characterItems = newChars; // Save characters
+                    if(newPlotholes.length > 0) plotholeItems = newPlotholes;
                     
                     saveLocalData(); 
                     renderContinuityList(); 
                     renderChekhovList(); 
                     renderCharList(); // Render character table
+                    renderPlotholeList();
                     populateChekhovSelect(); 
                     populateCharSelect(); // Update dropdowns
+                    populatePlotholeSelect();
                     render(); 
                     showToast("Data imported successfully"); 
                 } 
