@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Storylines - Non-Linear Manager</title>
+    
+    <!-- PWA & Mobile Settings -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#f4f1ea">
+    <link rel="apple-touch-icon" href="https://placehold.co/180x180/8c6b5d/ffffff?text=SL">
+    
+    <!-- Dependencies -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,300;0,400;0,700;0,900;1,300;1,400;1,700;1,900&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/4.3.0/marked.min.js"></script>
+
+    <!-- Local Assets -->
+    <link rel="stylesheet" href="style.css">
+    <script type="module" src="script.js"></script>
+</head>
+<body>
+
+    <div id="printHeader"><h1 class="main-title">STORYLINES</h1><h2 id="printSubtitle" class="main-subtitle">Sorted by: Chapter</h2></div>
+    <div class="header-branding">
+        <h2 class="main-title">STORYLINES</h2>
+        <h4 class="main-subtitle">Non-Linear Timeline Manager</h4>
+    </div>
+
+    <!-- BEAT SPACE -->
+    <div class="panel">
+        <div class="section-label">Beat Space</div>
+        <div class="panel-header" onclick="togglePanel('beatPanelContent', 'beatPanelIcon')">
+            <span style="font-weight:700;">Manage Beats</span><span id="beatPanelIcon" style="color:var(--secondary);">➕</span>
+        </div>
+        <div id="beatPanelContent" class="panel-content" style="display: none;">
+            <div class="controls">
+                <div class="input-group"><label>Date & Time</label><input type="datetime-local" id="dateIn"></div>
+                <div class="input-group"><label>Chapter No.</label><input type="number" id="numIn" placeholder="e.g. 1.1" step="0.01"></div>
+                <div class="input-group"><label>Event Location</label>
+                    <select id="inputTzSelect">
+                        <option value="Asia/Manila">Philippines</option><option value="Europe/Berlin">Germany</option>
+                        <option value="Europe/Paris">France</option><option value="Europe/London">UK</option>
+                    </select>
+                </div>
+                <div class="input-group col-span-2"><label>Chapter Title</label><input type="text" id="chapTitleIn"></div>
+                <div class="input-group"><label>SubChapter</label><input type="text" id="subChapTitleIn"></div>
+                <div class="input-group col-span-full"><label>Details (Markdown)</label><textarea id="detailIn" rows="3"></textarea></div>
+                <div class="input-group col-span-full"><label>Remarks</label><textarea id="remarksIn" rows="2" style="min-height:80px;"></textarea></div>
+                
+                <div class="input-group col-span-full" style="border-top:1px dashed #d4cdc3; padding-top:10px;">
+                    <label>Characters</label>
+                    <div style="display:flex; gap:10px;"><select id="charSelect" style="flex:2;"><option value="">-- Select --</option></select><button class="action-btn" onclick="tagCharacterToBeat()">➕ Add</button></div>
+                    <div id="currentCharTags" class="char-tag-row"></div>
+                </div>
+
+                <div class="input-group col-span-full" style="border-top:1px dashed #d4cdc3; padding-top:10px;">
+                    <label>Chekhov's Gun Tagging</label>
+                    <div style="display:flex; gap:10px;"><select id="chekhovSelect" style="flex:2;"><option value="">-- Select --</option></select>
+                        <button class="action-btn" onclick="markChekhov('setup')">🟢 Setup</button><button class="action-btn" onclick="markChekhov('payoff')">🔴 Payoff</button>
+                    </div>
+                    <div id="currentChekhovTag" style="font-size:0.8rem; margin-top:5px; font-style:italic;"></div>
+                </div>
+            </div>
+            <div class="btn-row">
+                <button id="btnAdd" class="btn-add" onclick="handleAdd()">+ Add Beat</button>
+                <button id="btnSaveNew" class="btn-update" style="display:none; background-color:var(--success);" onclick="saveAsNew()">+ Save as New</button>
+                <button id="btnCancel" class="btn-cancel" onclick="cancelEdit()">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- CONTINUITY SPACE -->
+    <div class="panel">
+        <div class="section-label">Continuity Space</div>
+        <div class="panel-header" onclick="togglePanel('continuityContent', 'cPanelIcon')">
+            <span style="font-weight:700;">Manage Tracking</span><span id="cPanelIcon" style="color:var(--secondary);">➕</span>
+        </div>
+        <div id="continuityContent" class="panel-content" style="display: none;">
+            <div style="margin-bottom:15px;"><input type="checkbox" id="filterBeatsToggle" onchange="toggleFilterMode()"> <label for="filterBeatsToggle">Filter Beats</label></div>
+            <div class="controls">
+                <div class="input-group"><label>Item</label><input type="text" id="cNameIn"></div>
+                <div class="input-group"><label>Icon</label><input type="text" id="cIconIn" style="text-align:center;"></div>
+                <div class="input-group"><label>Start (UTC)</label><input type="datetime-local" id="cStartIn"></div>
+                <div class="input-group"><label>End (UTC)</label><input type="datetime-local" id="cEndIn"></div>
+            </div>
+            <div class="btn-row"><button id="btnCAdd" class="btn-add" onclick="addContinuityItem()">+ Add Item</button><button id="btnCCancel" class="btn-cancel" onclick="cancelContinuityEdit()">Cancel</button></div>
+            <div id="continuityListArea"></div>
+        </div>
+    </div>
+
+    <!-- CHEKHOV'S GUN SPACE -->
+    <div class="panel">
+        <div class="section-label">Chekhov's Gun Space</div>
+        <div class="panel-header" onclick="togglePanel('chekhovContent', 'chekhovPanelIcon')">
+            <span style="font-weight:700;">Manage Foreshadowing</span><span id="chekhovPanelIcon" style="color:var(--secondary);">➕</span>
+        </div>
+        <div id="chekhovContent" class="panel-content" style="display: none;">
+            <div class="controls"><div class="input-group"><label>Name</label><input type="text" id="cgNameIn"></div><div class="input-group"><label>Icon</label><input type="text" id="cgIconIn"></div></div>
+            <div class="btn-row"><button id="btnCGAdd" class="btn-add" onclick="addChekhovItem()">+ Add Gun</button><button id="btnCGCancel" class="btn-cancel" onclick="cancelChekhovEdit()">Cancel</button></div>
+            <table class="chekhov-table"><thead><tr><th style="width:50px;">Icon</th><th>Item</th><th>Apps</th><th>Usage</th><th>Status</th><th>Action</th></tr></thead><tbody id="chekhovListArea"></tbody></table>
+        </div>
+    </div>
+
+    <!-- CHARACTER SPACE -->
+    <div class="panel">
+        <div class="section-label">Character Database</div>
+        <div class="panel-header" onclick="togglePanel('charContent', 'charPanelIcon')">
+            <span style="font-weight:700;">Manage Cast</span><span id="charPanelIcon" style="color:var(--secondary);">➕</span>
+        </div>
+        <div id="charContent" class="panel-content" style="display: none;">
+            <div class="controls">
+                <div class="input-group"><label>Name</label><input type="text" id="charNameIn"></div>
+                <div class="input-group"><label>Role</label><input type="text" id="charRoleIn"></div>
+                <div class="input-group"><label>Color</label><input type="color" id="charColorIn" value="#8c6b5d" style="height:40px; padding:2px;"></div>
+            </div>
+            <div class="btn-row"><button id="btnCharAdd" class="btn-add" onclick="addCharacter()">+ Add Character</button><button id="btnCharCancel" class="btn-cancel" onclick="cancelCharEdit()">Cancel</button></div>
+            <table class="chekhov-table"><thead><tr><th>Clr</th><th>Name</th><th>Role</th><th>Scenes</th><th>Action</th></tr></thead><tbody id="charListArea"></tbody></table>
+        </div>
+    </div>
+
+    <!-- NAVIGATION & VIEW -->
+    <div class="navigation-bar">
+        <div class="search-container"><input type="text" id="searchInput" placeholder="🔍 Search..." oninput="handleSearch(this.value)"><button id="btnSearchClear" onclick="clearSearch()">×</button></div>
+        <div class="nav-top-row">
+            <div><button id="btnSortDate" class="btn-sort" onclick="sortData('date')">Sort Date</button><button id="btnSortChapter" class="btn-sort" onclick="sortData('number')">Sort Chapter</button></div>
+            <div><button class="btn-view active" id="btnLinear" onclick="toggleView('linear')">Linear</button><button class="btn-view" id="btnMulti" onclick="toggleView('multi')">Multi</button><button class="btn-view" id="btnTab" onclick="toggleView('table')">List</button></div>
+        </div>
+        <div class="nav-bottom-row"><select id="tzSelect" style="width:auto;" onchange="updateTzPreference()"><option value="">Compare Time: Off</option><option value="UTC">UTC</option><option value="Asia/Manila">Philippines</option><option value="Europe/London">UK</option></select></div>
+    </div>
+
+    <div class="view-container">
+        <div id="viewHeaderLabel" class="view-header-label">UNSORTED</div>
+        <div id="visualArea" class="show"></div>
+        <div id="multiArea"></div>
+        <table id="tableArea"><thead><tr><th></th><th>Date / Time</th><th>Chapter</th><th>Details</th><th>Action</th></tr></thead><tbody id="tableBody"></tbody></table>
+        <p id="emptyMsg" style="text-align:center; color:var(--text-muted); margin-top:2rem;">The story has not yet begun...</p>
+    </div>
+
+    <!-- UTILS -->
+    <div class="panel" style="margin-top:20px;">
+        <div class="section-label">File Tools</div>
+        <div class="btn-row"><button class="btn-dl" onclick="downloadCSV()">Save CSV</button><button class="btn-print" onclick="window.print()">Print PDF</button><input type="file" accept=".csv" onchange="uploadCSV(this)"></div>
+    </div>
+
+    <div class="cloud-banner">
+        <div>☁️ <strong>Sync:</strong> <span id="syncStatus">Init...</span> <span id="userIdDisplay" style="display:none; font-size:0.75rem;">ID: <span class="cloud-id" id="userIdText" onclick="copyId()"></span></span></div>
+        <div style="display:flex; gap:5px;"><input type="text" id="manualIdIn" placeholder="Device ID"><button class="btn-cloud" onclick="linkExistingId()">Link</button><button class="btn-reset" onclick="resetToOriginalId()">Unlink</button></div>
+        <div class="btn-row" style="margin:0;"><button class="btn-cloud" onclick="confirmBackup()" id="btnBackup" disabled>Backup</button><button class="btn-cloud" onclick="confirmRestore()" id="btnRestore" disabled>Restore</button></div>
+    </div>
+
+    <div style="text-align:center; margin-top:50px; padding-top:20px; border-top:1px solid #ccc;">
+        <button class="btn-view" onclick="toggleReadme()">📖 Read Documentation</button>
+        <div id="readmeContainer"></div>
+    </div>
+
+    <!-- MODALS -->
+    <div id="backupModal" class="modal-overlay"><div class="modal-content"><h3>Confirm Backup</h3><p id="backupInfo"></p><div class="btn-row"><button class="btn-cloud" onclick="executeBackup()">Overwrite Cloud</button><button class="btn-dl" onclick="closeModal()">Cancel</button></div></div></div>
+    <div id="restoreModal" class="modal-overlay"><div class="modal-content"><h3>Confirm Restore</h3><p id="restoreInfo"></p><div class="btn-row"><button class="btn-cloud" onclick="executeRestore()">Restore</button><button class="btn-dl" onclick="closeModal()">Cancel</button></div></div></div>
+    <div id="toast"></div>
+
+</body>
+</html>

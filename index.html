@@ -698,7 +698,24 @@
             
             .c-item-tag { border: 1px solid #999; color: #000; }
         }
+        @media (min-width: 769px) {
+            /* 1. Center the Color Column */
+            #charListArea td:first-child {
+                text-align: center;
+                vertical-align: middle;
+            }
+            
+            /* Ensure the circle div itself is centered horizontally */
+            #charListArea td:first-child div {
+                margin: 0 auto;
+            }
 
+            /* 2. Adjust the Name Column Width */
+            /* Targeting the header in the Character Database panel */
+            #charContent .chekhov-table th:nth-child(2) {
+                width: 300px; /* Increase this number to make the Name column wider */
+            }
+        }
         @media (max-width: 768px) {
             body { padding: 10px; padding-bottom: 100px; }
             .panel { padding: 15px; border-radius: 0; margin-left: -10px; margin-right: -10px; border-left: none; border-right: none; }
@@ -914,8 +931,19 @@
 
             .chekhov-table td:nth-child(3)::before { content: "Appearances: "; font-weight: bold; color: var(--text-muted); font-size: 0.8rem; margin-right: 5px; }
             .chekhov-table td:nth-child(4)::before { content: "Usage: "; font-weight: bold; color: var(--text-muted); font-size: 0.8rem; margin-right: 5px; }
+            #charListArea td:nth-child(3)::before { content: "Role: " !important; }
+            #charListArea td:nth-child(4)::before { content: "Scenes: " !important; }
             .chekhov-table td:nth-child(5)::before { content: "Status: "; font-weight: bold; color: var(--text-muted); font-size: 0.8rem; margin-right: 5px; }
+            /* Center the color circle in the Character Database table */
+            #charListArea td:nth-child(1) {
+                text-align: center;
+                vertical-align: middle;
+            }
 
+            /* Ensure the color circle itself is centered if it's a block-level element */
+            #charListArea td:nth-child(1) div {
+                margin: 0 auto;
+            }
             .chekhov-table td:last-child {
                 border-top: 1px dashed #e6e0d4; 
                 margin-top: 10px; 
@@ -927,7 +955,16 @@
                 align-items: center;
                 white-space: nowrap;
             }
+            /* Character Table Specific Column Widths */
+        #charContent .chekhov-table th:nth-child(2) { 
+            width: 250px; /* Adjust this value as needed */
+        }
 
+        /* Optional: Ensure the Name text itself looks good */
+        #charContent .chekhov-table td:nth-child(2) {
+            width: 250px;
+            word-wrap: break-word;
+        }
             /* --- Continuity Specific Mobile Styles --- */
             /* Visibility (1), Icon (2), Name (3) Header Row */
             
@@ -1171,7 +1208,7 @@
         </div>
         
         <div id="charContent" class="panel-content" style="display: none;">
-            <div class="c-row-70-30">
+            <div class="c-row-50-50">
                 <div class="input-group">
                     <label>Character Name</label>
                     <input type="text" id="charNameIn" placeholder="e.g. Sherlock Holmes">
@@ -1201,11 +1238,11 @@
             <table class="chekhov-table" style="margin-top:20px;">
                 <thead>
                     <tr>
-                        <th style="width:40px;">Color</th>
-                        <th>Name</th>
-                        <th style="width:120px;">Role</th>
-                        <th style="width:80px;">Scenes</th>
-                        <th style="width:90px;">ACTION</th>
+                        <th style="width:48px; text-align: center;">Color</th>
+                        <th style="width:120px; text-align: left;">Name</th>
+                        <th style="width:320px; text-align: center;">Role</th>
+                        <th style="width:80px; text-align: center;">Scenes</th>
+                        <th style="width:90px; text-align: center;">ACTION</th>
                     </tr>
                 </thead>
                 <tbody id="charListArea"></tbody>
@@ -1527,9 +1564,8 @@
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
                     <td><div style="width:20px; height:20px; border-radius:50%; background-color:${item.color}; border:1px solid #ccc;"></div></td>
-                    <td style="font-weight:bold;">${item.name}</td>
-                    <td>${item.role || '-'}</td>
-                    <td>${count}</td>
+                    <td style="font-weight:bold; text-align: left;">${item.name}</td>
+                    <td style="text-align: left;">${item.role || '-'}</td> <td style="text-align: center;">${count}</td>
                     <td>
                         <div style="display:flex; gap:8px; justify-content:center; align-items:center;">
                             <button class="action-btn" onclick="editCharacter('${item.id}')" title="Edit">✎</button> 
