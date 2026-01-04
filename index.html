@@ -1214,18 +1214,16 @@
                     <input type="text" id="charNameIn" placeholder="e.g. Sherlock Holmes">
                 </div>
                 <div class="input-group">
-                    <label>Role / Archetype</label>
-                    <input type="text" id="charRoleIn" placeholder="e.g. Protagonist">
-                </div>
-            </div>
-            <div class="c-row-50-50" style="margin-top:15px;">
-                 <div class="input-group">
                     <label>Color Tag</label>
                     <div style="display:flex; gap:10px; align-items:center;">
                         <input type="color" id="charColorIn" value="#8c6b5d" style="height:40px; width:60px; padding:2px;">
                         <span style="font-size:0.8rem; color:var(--text-muted);">Pick a unique color</span>
                     </div>
                 </div>
+            </div>
+            <div class="input-group" style="margin-top:15px;">
+                <label>Role / Profile / Archetype</label>
+                <textarea id="charRoleIn" rows="3" placeholder="e.g. Protagonist" style="min-height:80px;"></textarea>
             </div>
 
             <div class="btn-row">
@@ -1255,6 +1253,7 @@
         <div class="search-container">
             <input type="text" id="searchInput" placeholder="🔍 Search details, titles, remarks..." oninput="handleSearch(this.value)">
             <button id="btnSearchClear" onclick="clearSearch()" title="Clear Search">×</button>
+            <div id="activeCharFilterDisplay" style="display:none; gap:5px; flex-wrap:wrap; margin-top:8px; padding-top:5px; border-top:1px dashed #d4cdc3;"></div>
         </div>
         <div class="nav-top-row">
             <div class="nav-left">
@@ -1267,7 +1266,7 @@
                 <div class="btn-group-mobile">
                     <button class="btn-view active" id="btnLinear" onclick="toggleView('linear')">Linear</button>
                     <button class="btn-view" id="btnMulti" onclick="toggleView('multi')">MultiTimeline</button>
-                    <button class="btn-view" id="btnTab" onclick="toggleView('table')">List</button>
+                    <button class="btn-view" id="btnTab" onclick="toggleView('table')">Card List</button>
                 </div>
             </div>
         </div>
@@ -1479,7 +1478,7 @@
         // --- CORE LOGIC ---
         let events = [], continuityItems = [], chekhovItems = [], editIndex = -1, currentSortMethod = 'unsorted', currentTz = localStorage.getItem('storylines_tz') || '', editingContinuityId = null, editingChekhovId = null;
         let currentSearchTerm = '';
-        let activeFilterIds = []; 
+        let activeFilterIds = [], activeCharFilterIds = [];
         const STORAGE_KEY = 'storylines_persist';
         
         
@@ -1544,6 +1543,7 @@
             editingCharId = null;
             document.getElementById('charNameIn').value = ''; 
             document.getElementById('charRoleIn').value = '';
+            document.getElementById('charRoleIn').style.height = 'auto';
             document.getElementById('charColorIn').value = '#8c6b5d';
             const btn = document.getElementById('btnCharAdd'); btn.innerText = "+ Add Character"; btn.className = "btn-add";
             document.getElementById('btnCharCancel').style.display = 'none';
@@ -1553,6 +1553,7 @@
             if(confirm("Delete this character? (Will disappear from all beats)")) {
                 characterItems = characterItems.filter(i => i.id !== id);
                 if (editingCharId === id) cancelCharEdit();
+                activeCharFilterIds = activeCharFilterIds.filter(fid => fid !== id);
                 saveLocalData(); renderCharList(); populateCharSelect(); render();
             }
         }
@@ -1562,7 +1563,7 @@
             if (to < 0 || to >= characterItems.length) return;
             const item = characterItems.splice(index, 1)[0];
             characterItems.splice(to, 0, item);
-            saveLocalData(); renderCharList(); populateCharSelect();
+            saveLocalData(); renderCharList(); populateCharSelect(); render();
         }
 
         function renderCharList() {
@@ -1575,7 +1576,7 @@
                 tr.innerHTML = `
                     <td><div style="width:20px; height:20px; border-radius:50%; background-color:${item.color}; border:1px solid #ccc;"></div></td>
                     <td style="font-weight:bold; text-align: left;">${item.name}</td>
-                    <td style="text-align: left;">${item.role || '-'}</td> <td style="text-align: center;">${count}</td>
+                    <td style="text-align: left; white-space: pre-wrap;">${item.role || '-'}</td> <td style="text-align: center;">${count}</td>
                     <td>
                         <div style="display:flex; gap:4px; justify-content:center; align-items:center;">
                             <button class="action-btn" onclick="moveCharacter(${index}, -1)" title="Move Up">↑</button>
@@ -1640,6 +1641,7 @@
             document.getElementById('tzSelect').value = currentTz; detectUserNearestZone(); loadLocalData(); initFirebase();
             document.getElementById('detailIn').addEventListener('input', function() { this.style.height = 'auto'; this.style.height = (this.scrollHeight) + 'px'; });
             document.getElementById('remarksIn').addEventListener('input', function() { this.style.height = 'auto'; this.style.height = (this.scrollHeight) + 'px'; });
+            document.getElementById('charRoleIn').addEventListener('input', function() { this.style.height = 'auto'; this.style.height = (this.scrollHeight) + 'px'; });
         };
 
         function saveLocalData() { localStorage.setItem(STORAGE_KEY, JSON.stringify({ events, continuity: continuityItems, chekhov: chekhovItems, characters: characterItems })); }
@@ -2082,7 +2084,10 @@
                 // Display characters in the order defined in the Character Database
                 const orderedChars = characterItems.filter(c => evt.charTags.includes(c.id));
                 orderedChars.forEach(char => {
-                    cHtml += `<span class="char-badge" style="background-color:${char.color};" title="${char.role || ''}">${char.name}</span>`;
+                    const isActive = activeCharFilterIds.includes(char.id);
+                    const activeStyle = isActive ? 'border:2px solid #444; box-shadow:0 0 2px rgba(0,0,0,0.5);' : '';
+                    const check = isActive ? '✓ ' : '';
+                    cHtml += `<span class="char-badge" style="background-color:${char.color}; cursor:pointer; ${activeStyle}" title="Filter by ${char.name}" onclick="event.stopPropagation(); toggleCharFilter('${char.id}')">${check}${char.name}</span>`;
                 });
                 cHtml += '</div>';
             }
@@ -2100,6 +2105,34 @@
         }
 
         function render() {
+            // Update Active Filter Display
+            const filterDisp = document.getElementById('activeCharFilterDisplay');
+            if (activeCharFilterIds.length > 0) {
+                filterDisp.style.display = 'flex';
+                filterDisp.innerHTML = '<span style="font-size:0.8rem; align-self:center; color:var(--text-muted); margin-right:5px;">Filtered by:</span>';
+                activeCharFilterIds.forEach(id => {
+                    const char = characterItems.find(c => c.id === id);
+                    if (char) {
+                        const tag = document.createElement('span');
+                        tag.className = 'char-badge';
+                        tag.style.backgroundColor = char.color;
+                        tag.style.cursor = 'pointer';
+                        tag.innerHTML = `${char.name} <span style="margin-left:4px;">×</span>`;
+                        tag.onclick = () => toggleCharFilter(id);
+                        filterDisp.appendChild(tag);
+                    }
+                });
+                if (activeCharFilterIds.length > 1) {
+                     const clearAll = document.createElement('span');
+                     clearAll.style.cssText = 'font-size:0.8rem; text-decoration:underline; cursor:pointer; color:var(--danger); align-self:center; margin-left:5px;';
+                     clearAll.innerText = 'Clear All';
+                     clearAll.onclick = () => { activeCharFilterIds = []; render(); };
+                     filterDisp.appendChild(clearAll);
+                }
+            } else {
+                filterDisp.style.display = 'none';
+            }
+
             const linear = document.getElementById('visualArea'), body = document.getElementById('tableBody'), multi = document.getElementById('multiArea'), msg = document.getElementById('emptyMsg');
             linear.innerHTML = ''; body.innerHTML = ''; multi.innerHTML = ''; if (events.length === 0) { msg.style.display = 'block'; return; } msg.style.display = 'none';
             const isFilterOn = document.getElementById('filterBeatsToggle').checked;
@@ -2119,6 +2152,13 @@
                 }
 
                 if (!matchesFilter) return false;
+
+                // 2. Check Character Filters (AND Logic)
+                if (activeCharFilterIds.length > 0) {
+                    if (!evt.charTags || evt.charTags.length === 0) return false;
+                    const hasAllChars = activeCharFilterIds.every(id => evt.charTags.includes(id));
+                    if (!hasAllChars) return false;
+                }
 
                 // 2. Check Search Term (Global Search Option A)
                 if (currentSearchTerm) {
@@ -2195,6 +2235,13 @@
         }
         window.render = render;
 
+        window.toggleCharFilter = (id) => {
+            const idx = activeCharFilterIds.indexOf(id);
+            if (idx > -1) activeCharFilterIds.splice(idx, 1);
+            else activeCharFilterIds.push(id);
+            render();
+        }
+
         window.sortData = (type) => { 
             currentSortMethod = type; 
             const label = document.getElementById('viewHeaderLabel'); 
@@ -2257,7 +2304,7 @@
                 csv += "\n[CHARACTER_DATA_START]\nID,Name,Role,Color\n";
                 characterItems.forEach(c => { 
                     const safeName = c.name.replace(/,/g, '{com}');
-                    const safeRole = (c.role || '').replace(/,/g, '{com}');
+                    const safeRole = (c.role || '').replace(/\n/g, '{nl}').replace(/,/g, '{com}');
                     csv += `${c.id},${safeName},${safeRole},${c.color}\n`; 
                 });
                 csv += "[CHARACTER_DATA_END]\n";
@@ -2360,7 +2407,7 @@
                         if(c.length >= 4) newChars.push({ 
                             id: c[0], 
                             name: c[1].replace(/{com}/g, ','), 
-                            role: c[2].replace(/{com}/g, ','), 
+                            role: c[2].replace(/{nl}/g, '\n').replace(/{com}/g, ','), 
                             color: c[3] 
                         });
                     }
@@ -2475,6 +2522,7 @@
         window.setPreferredDisplayTz = window.setPreferredDisplayTz;
         window.addContinuityItem = window.addContinuityItem;
         window.moveBeat = window.moveBeat;
+        window.toggleCharFilter = window.toggleCharFilter;
         window.moveCharacter = window.moveCharacter;
         window.toggleReadme = window.toggleReadme;
 
