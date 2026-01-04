@@ -1238,11 +1238,11 @@
             <table class="chekhov-table" style="margin-top:20px;">
                 <thead>
                     <tr>
-                        <th style="width:48px; text-align: center;">Color</th>
+                        <th style="width:40px; text-align: center;">Color</th>
                         <th style="width:120px; text-align: left;">Name</th>
                         <th style="width:320px; text-align: center;">Role</th>
                         <th style="width:80px; text-align: center;">Scenes</th>
-                        <th style="width:90px; text-align: center;">ACTION</th>
+                        <th style="width:140px; text-align: center;">ACTION</th>
                     </tr>
                 </thead>
                 <tbody id="charListArea"></tbody>
@@ -1434,15 +1434,17 @@
                     const data = docSnap.data();
                     const cloudBeatsCount = data.beats ? data.beats.length : 0;
                     const localBeatsCount = events.length;
+                    const cloudCharCount = data.characters ? data.characters.length : 0;
+                    const localCharCount = characterItems.length;
                     
                     if (data.lastUpdated) {
                         const dO = new Date(data.lastUpdated), rel = timeAgo(dO), deviceStr = data.lastDevice ? data.lastDevice.substring(0, 6) + "..." : "Unknown";
                         infoHtml = `<div style="text-align:center; padding-bottom:10px; border-bottom:1px solid #eee; margin-bottom:15px;"><strong>Conflict Check</strong></div>
                         <strong>Cloud Version:</strong> ${dO.toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true })} <br><span style="color:var(--primary);">(${rel})</span><br><br>
-                        <strong>Beats Comparison:</strong><br>
-                        • Local: ${localBeatsCount} beats<br>
-                        • Cloud: ${cloudBeatsCount} beats<br><br>
-                        <span style="color:var(--danger); font-size:0.8rem;">* Restoring will permanently replace local beats.</span>`;
+                        <strong>Data Comparison:</strong><br>
+                        • Beats: ${localBeatsCount} (Local) vs ${cloudBeatsCount} (Cloud)<br>
+                        • Characters: ${localCharCount} (Local) vs ${cloudCharCount} (Cloud)<br><br>
+                        <span style="color:var(--danger); font-size:0.8rem;">* Restoring will permanently replace local data.</span>`;
                     }
                 }
                 document.getElementById('restoreInfo').innerHTML = infoHtml; document.getElementById('restoreModal').style.display = 'flex';
@@ -1555,9 +1557,17 @@
             }
         }
 
+        window.moveCharacter = (index, direction) => {
+            const to = index + direction;
+            if (to < 0 || to >= characterItems.length) return;
+            const item = characterItems.splice(index, 1)[0];
+            characterItems.splice(to, 0, item);
+            saveLocalData(); renderCharList(); populateCharSelect();
+        }
+
         function renderCharList() {
             const tbody = document.getElementById('charListArea'); tbody.innerHTML = '';
-            characterItems.forEach(item => {
+            characterItems.forEach((item, index) => {
                 // Count appearances
                 const count = events.filter(e => e.charTags && e.charTags.includes(item.id)).length;
                 
@@ -1567,7 +1577,9 @@
                     <td style="font-weight:bold; text-align: left;">${item.name}</td>
                     <td style="text-align: left;">${item.role || '-'}</td> <td style="text-align: center;">${count}</td>
                     <td>
-                        <div style="display:flex; gap:8px; justify-content:center; align-items:center;">
+                        <div style="display:flex; gap:4px; justify-content:center; align-items:center;">
+                            <button class="action-btn" onclick="moveCharacter(${index}, -1)" title="Move Up">↑</button>
+                            <button class="action-btn" onclick="moveCharacter(${index}, 1)" title="Move Down">↓</button>
                             <button class="action-btn" onclick="editCharacter('${item.id}')" title="Edit">✎</button> 
                             <button class="action-btn del-btn" onclick="deleteCharacter('${item.id}')" title="Delete">×</button>
                         </div>
@@ -2067,11 +2079,10 @@
             // Character Badges
             if (evt.charTags && evt.charTags.length > 0) {
                 cHtml += '<div style="margin-top:5px; padding-top:4px; border-top:1px dashed #eee;">';
-                evt.charTags.forEach(cid => {
-                    const char = characterItems.find(c => c.id === cid);
-                    if (char) {
-                        cHtml += `<span class="char-badge" style="background-color:${char.color};" title="${char.role || ''}">${char.name}</span>`;
-                    }
+                // Display characters in the order defined in the Character Database
+                const orderedChars = characterItems.filter(c => evt.charTags.includes(c.id));
+                orderedChars.forEach(char => {
+                    cHtml += `<span class="char-badge" style="background-color:${char.color};" title="${char.role || ''}">${char.name}</span>`;
                 });
                 cHtml += '</div>';
             }
@@ -2244,7 +2255,11 @@
             }
             if(characterItems.length > 0) {
                 csv += "\n[CHARACTER_DATA_START]\nID,Name,Role,Color\n";
-                characterItems.forEach(c => { csv += `${c.id},${c.name},${c.role || ''},${c.color}\n`; });
+                characterItems.forEach(c => { 
+                    const safeName = c.name.replace(/,/g, '{com}');
+                    const safeRole = (c.role || '').replace(/,/g, '{com}');
+                    csv += `${c.id},${safeName},${safeRole},${c.color}\n`; 
+                });
                 csv += "[CHARACTER_DATA_END]\n";
             }
 
@@ -2342,12 +2357,17 @@
                     const cLines = charData.split('\n');
                     for(let i=1; i<cLines.length; i++) {
                         const c = cLines[i].trim().split(',');
-                        if(c.length >= 4) newChars.push({ id: c[0], name: c[1], role: c[2], color: c[3] });
+                        if(c.length >= 4) newChars.push({ 
+                            id: c[0], 
+                            name: c[1].replace(/{com}/g, ','), 
+                            role: c[2].replace(/{com}/g, ','), 
+                            color: c[3] 
+                        });
                     }
                 }
 
                 // 6. Update State
-                if(newEvents.length > 0) { 
+                if(newEvents.length > 0 || newContinuity.length > 0 || newChekhov.length > 0 || newChars.length > 0) { 
                     events = newEvents; 
                     if(newContinuity.length > 0) continuityItems = newContinuity; 
                     if(newChekhov.length > 0) chekhovItems = newChekhov;
@@ -2455,6 +2475,7 @@
         window.setPreferredDisplayTz = window.setPreferredDisplayTz;
         window.addContinuityItem = window.addContinuityItem;
         window.moveBeat = window.moveBeat;
+        window.moveCharacter = window.moveCharacter;
         window.toggleReadme = window.toggleReadme;
 
         // Register Service Worker for PWA functionality (Improved for iOS reliability)
