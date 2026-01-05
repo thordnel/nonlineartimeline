@@ -1245,20 +1245,21 @@
                     <input type="text" id="phDetailIn" placeholder="e.g. Magic requires blood sacrifice">
                 </div>
             </div>
-            <div class="btn-row">
+            <div class="btn-row" style="justify-content: space-between;">
                 <div class="action-group">
                     <button id="btnPhAdd" class="btn-add" onclick="addPlotholeItem()">+ Add Rule</button>
                     <button id="btnPhCancel" class="btn-cancel" onclick="cancelPlotholeEdit()">Cancel</button>
                 </div>
+                <input type="text" id="plotholeSearchInput" placeholder="🔍 Search rules..." oninput="renderPlotholeList()" style="width: 200px; padding: 8px; font-size: 0.9rem;">
             </div>
             
             <table class="chekhov-table">
                 <thead>
                     <tr>
                         <th style="width:50px; text-align:center;">Status</th>
-                        <th style="width:100px;">Rule</th>
+                        <th style="width:130px;">Rule</th>
                         <th style="text-align:left;">Details</th>
-                        <th style="width:180px;">Track Record</th>
+                        <th style="width:80px;">Track Record</th>
                         <th style="width:90px; text-align:center;">ACTION</th>
                     </tr>
                 </thead>
@@ -1757,7 +1758,11 @@
 
         function renderPlotholeList() {
             const tbody = document.getElementById('plotholeListArea'); tbody.innerHTML = '';
-            plotholeItems.forEach(item => {
+            const searchTerm = document.getElementById('plotholeSearchInput') ? document.getElementById('plotholeSearchInput').value.toLowerCase() : '';
+
+            plotholeItems.filter(item => {
+                return !searchTerm || item.rule.toLowerCase().includes(searchTerm) || (item.detail || '').toLowerCase().includes(searchTerm);
+            }).forEach(item => {
                 // Normalize tags for calculation
                 const affectedBeats = events.filter(e => {
                     if (!e.plotholeTags) return false;
@@ -1792,6 +1797,7 @@
                 tbody.appendChild(tr);
             });
         }
+        window.renderPlotholeList = renderPlotholeList;
 
         function populatePlotholeSelect() {
             const sel = document.getElementById('plotholeSelect');
