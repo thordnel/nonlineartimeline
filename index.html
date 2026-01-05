@@ -1018,6 +1018,16 @@
 
             #readmeContainer { padding: 20px; }
         }
+
+        .clickable-link { cursor: pointer; text-decoration: underline; color: var(--info); }
+        .clickable-link:hover { color: var(--primary); font-weight: bold; }
+        
+        @keyframes highlightPulse {
+            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(140, 107, 93, 0); }
+            50% { transform: scale(1.02); box-shadow: 0 0 15px rgba(140, 107, 93, 0.3); }
+            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(140, 107, 93, 0); }
+        }
+        .highlight-pulse { animation: highlightPulse 1s ease-out; z-index: 10; }
     </style>
 </head>
 <body>
@@ -1763,8 +1773,8 @@
                 });
 
                 const statusIcon = violations.length > 0 ? '⚠️' : (adherences.length > 0 ? '✅' : '⚪');
-                const vStr = violations.length > 0 ? `<div style="color:var(--danger); font-size:0.8rem;">⚠️ ${[...new Set(violations)].sort((a,b)=>a-b).join(', ')}</div>` : '';
-                const aStr = adherences.length > 0 ? `<div style="color:var(--success); font-size:0.8rem;">✅ ${[...new Set(adherences)].sort((a,b)=>a-b).join(', ')}</div>` : '';
+                const vStr = violations.length > 0 ? `<div style="color:var(--danger); font-size:0.8rem;">⚠️ ${[...new Set(violations)].sort((a,b)=>a-b).map(n => `<span class="clickable-link" onclick="jumpToChapter(${n})">${n}</span>`).join(', ')}</div>` : '';
+                const aStr = adherences.length > 0 ? `<div style="color:var(--success); font-size:0.8rem;">✅ ${[...new Set(adherences)].sort((a,b)=>a-b).map(n => `<span class="clickable-link" onclick="jumpToChapter(${n})">${n}</span>`).join(', ')}</div>` : '';
                 
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
@@ -2063,8 +2073,8 @@
                 tr.innerHTML = `
                     <td style="font-size:1.2rem;">${item.icon}</td>
                     <td style="font-weight:bold;">${item.name}</td>
-                    <td>${setupCh !== null ? 'Ch ' + setupCh : '-'}</td>
-                    <td>${payoffCh !== null ? 'Ch ' + payoffCh : '-'}</td>
+                    <td>${setupCh !== null ? `<span class="clickable-link" onclick="jumpToChapter(${setupCh})">Ch ${setupCh}</span>` : '-'}</td>
+                    <td>${payoffCh !== null ? `<span class="clickable-link" onclick="jumpToChapter(${payoffCh})">Ch ${payoffCh}</span>` : '-'}</td>
                     <td>${statusHtml}</td>
                     <td>
                         <div style="display:flex; gap:8px; justify-content:center; align-items:center;">
@@ -2334,7 +2344,7 @@
             return {
                 table: `<tr class="${dragClass}" data-index="${i}" ${dragAttr}><td>${currentSortMethod === 'number' ? '☰' : ''}</td><td style="white-space: nowrap;">${displayDate} ${displayTime}<br><small>${displayDay}</small><br><span class="display-basis-tag">${displayBasis}</span>${altTzHtml}</td><td><b>${evt.number}</b><br><span style="font-weight:700;">${evt.chapterTitle || ''}</span>${evt.subChapterTitle ? `<br><span style="font-size:0.8rem; font-style:italic; color:var(--text-muted);">${evt.subChapterTitle}</span>` : ''}</td><td><div class="markdown-body">${parsedDetails}</div>${evt.remarks ? `<div class="td-remarks">📝 <div class="markdown-body" style="display:inline;">${parsedRemarks}</div></div>` : ''}<div style="margin-top:4px">${cHtml}</div></td><td><div class="action-btn-group" style="display:flex; gap:4px;"><button class="action-btn" onclick="editEvent(${i})" title="Edit">✎</button>${currentSortMethod === 'number' ? `<button class="action-btn" onclick="moveBeat(${i}, -1)" title="Move Up">↑</button><button class="action-btn" onclick="moveBeat(${i}, 1)" title="Move Down">↓</button>` : ''}<button class="action-btn del-btn" onclick="askDelete(${i})" title="Delete">×</button></div></td></tr>`,
                 linear: `<div class="h-item ${dragClass}" data-index="${i}" ${dragAttr}><div class="h-date-wrap"><div class="h-date">${displayDate}</div><div class="h-day">${displayDay}</div><div class="h-time">${displayTime}<br><span class="display-basis-tag">${displayBasis}</span>${altTzHtml}</div></div><div class="h-dot-container"><div class="h-line"></div><div class="h-dot" onclick="editEvent(${i})"></div></div><div class="h-card" onclick="editEvent(${i})"><span class="card-del" onclick="event.stopPropagation(); askDelete(${i})">×</span><div class="h-val-text">Chapter ${evt.number}</div>${evt.chapterTitle ? `<div class="h-chap-title">${evt.chapterTitle}</div>` : ''}${evt.subChapterTitle ? `<div class="h-sub-title">${evt.subChapterTitle}</div>` : ''}<div class="h-divider"></div><div class="h-detail-text markdown-body">${parsedDetails}</div>${evt.remarks ? `<div class="h-remarks"><div class="markdown-body">${parsedRemarks}</div></div>` : ''}${cHtml}</div></div>`,
-                multi: `<div class="h-item"><div class="h-date-wrap" style="min-height:auto; text-align:left;"><div class="h-date" style="font-size:0.7rem; font-weight:900;">${displayDate}</div><div class="h-time" style="font-size:0.6rem; color:var(--text-muted)">${displayTime} <span class="display-basis-tag" style="font-size:0.5rem; padding:1px 3px;">${displayBasis}</span></div>${altTzHtml}</div><div class="h-card" onclick="editEvent(${i})"><span class="card-del" onclick="event.stopPropagation(); askDelete(${i})">×</span><div class="h-val-text" style="font-size:0.55rem">CH ${evt.number}</div>${evt.chapterTitle ? `<div class="h-chap-title" style="font-size:0.75rem">${evt.chapterTitle}</div>` : ''}${evt.subChapterTitle ? `<div class="h-sub-title" style="font-size:0.65rem">${evt.subChapterTitle}</div>` : ''}<div class="h-divider"></div><div class="h-detail-text markdown-body" style="font-size:0.75rem">${parsedDetails.substring(0, 150)}${evt.details.length > 150 ? '...' : ''}</div>${cHtml}</div></div>`
+                multi: `<div class="h-item"><div class="h-date-wrap" style="min-height:auto; text-align:left;"><div class="h-date" style="font-size:0.7rem; font-weight:900;">${displayDate}</div><div class="h-time" style="font-size:0.6rem; color:var(--text-muted)">${displayTime} <span class="display-basis-tag" style="font-size:0.5rem; padding:1px 3px;">${displayBasis}</span></div>${altTzHtml}</div><div class="h-card" data-index="${i}" onclick="editEvent(${i})"><span class="card-del" onclick="event.stopPropagation(); askDelete(${i})">×</span><div class="h-val-text" style="font-size:0.55rem">CH ${evt.number}</div>${evt.chapterTitle ? `<div class="h-chap-title" style="font-size:0.75rem">${evt.chapterTitle}</div>` : ''}${evt.subChapterTitle ? `<div class="h-sub-title" style="font-size:0.65rem">${evt.subChapterTitle}</div>` : ''}<div class="h-divider"></div><div class="h-detail-text markdown-body" style="font-size:0.75rem">${parsedDetails.substring(0, 150)}${evt.details.length > 150 ? '...' : ''}</div>${cHtml}</div></div>`
             };
         }
 
@@ -2797,6 +2807,35 @@
             container.style.display = 'block'; 
             container.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
+        
+        window.jumpToChapter = (num) => {
+            const idx = events.findIndex(e => e.number === num);
+            if (idx === -1) return showToast("Chapter not found");
+            editEvent(idx);
+            setTimeout(() => {
+                let scrollTarget = null;
+                let animateTarget = null;
+
+                if (document.getElementById('visualArea').classList.contains('show')) {
+                    scrollTarget = document.querySelector(`#visualArea .h-item[data-index="${idx}"]`);
+                    if (scrollTarget) animateTarget = scrollTarget.querySelector('.h-card');
+                } else if (document.getElementById('tableArea').classList.contains('show')) {
+                    scrollTarget = document.querySelector(`#tableArea tr[data-index="${idx}"]`);
+                    animateTarget = scrollTarget;
+                } else if (document.getElementById('multiArea').classList.contains('show')) {
+                    scrollTarget = document.querySelector(`#multiArea .h-card[data-index="${idx}"]`);
+                    animateTarget = scrollTarget;
+                }
+
+                if (scrollTarget) {
+                    scrollTarget.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
+                    if (animateTarget) {
+                        animateTarget.classList.add('highlight-pulse');
+                        setTimeout(() => animateTarget.classList.remove('highlight-pulse'), 2000);
+                    }
+                }
+            }, 300);
+        }
 
         // Global exposure
         window.toggleBeatPanel = window.toggleBeatPanel;
@@ -2840,6 +2879,7 @@
         window.addContinuityItem = window.addContinuityItem;
         window.moveBeat = window.moveBeat;
         window.toggleCharFilter = window.toggleCharFilter;
+        window.jumpToChapter = window.jumpToChapter;
         window.toggleChekhovFilter = window.toggleChekhovFilter;
         window.loadBeatByNumber = () => {
             const val = parseFloat(document.getElementById('numIn').value);
