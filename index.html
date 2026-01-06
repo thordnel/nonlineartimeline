@@ -1028,6 +1028,36 @@
             100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(140, 107, 93, 0); }
         }
         .highlight-pulse { animation: highlightPulse 1s ease-out; z-index: 10; }
+
+        /* Mention Suggestions */
+        .mention-suggestions {
+            position: absolute;
+            background: white;
+            border: 1px solid #d4cdc3;
+            border-radius: 4px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 3000;
+            display: none;
+            width: 250px;
+        }
+        .mention-item { padding: 8px 12px; cursor: pointer; border-bottom: 1px solid #f0ebe4; font-size: 0.9rem; color: var(--text-main); }
+        .mention-item:hover { background-color: #f0ebe4; color: var(--primary); }
+        .mention-item strong { color: var(--primary); }
+
+        /* Sticky Footer for Action Buttons */
+        .sticky-footer {
+            position: sticky;
+            bottom: 0;
+            background-color: var(--panel);
+            padding: 15px 25px;
+            margin: 0 -25px -10px -25px; /* Negative margins to extend to edges */
+            border-top: 1px solid #e6e0d4;
+            z-index: 95;
+            box-shadow: 0 -4px 6px -1px rgba(0,0,0,0.02);
+            margin-top: 10px; /* Small gap from content above */
+        }
     </style>
 </head>
 <body>
@@ -1130,7 +1160,7 @@
                 </div>
 
             </div>
-            <div class="btn-row">
+            <div class="btn-row sticky-footer">
                 <div class="action-group">
                     <button id="btnAdd" class="btn-add" onclick="handleAdd()">+ Add Beat</button>
                     <button id="btnSaveNew" style="display:none; background-color: var(--success);" onclick="saveAsNew()">+ Save as New</button>
@@ -1174,7 +1204,7 @@
                     <input type="datetime-local" id="cEndIn">
                 </div>
             </div>
-            <div class="btn-row">
+            <div class="btn-row sticky-footer">
                 <div class="action-group">
                     <button id="btnCAdd" class="btn-add" onclick="addContinuityItem()">+ Add Item</button>
                     <button id="btnCCancel" class="btn-cancel" onclick="cancelContinuityEdit()">Cancel</button>
@@ -1203,7 +1233,7 @@
                     <input type="text" id="cgIconIn" placeholder="e.g. ✉️" style="text-align:center;">
                 </div>
             </div>
-            <div class="btn-row">
+            <div class="btn-row sticky-footer">
                 <div class="action-group">
                     <button id="btnCGAdd" class="btn-add" onclick="addChekhovItem()">+ Add Gun</button>
                     <button id="btnCGCancel" class="btn-cancel" onclick="cancelChekhovEdit()">Cancel</button>
@@ -1245,7 +1275,7 @@
                     <input type="text" id="phDetailIn" placeholder="e.g. Magic requires blood sacrifice">
                 </div>
             </div>
-            <div class="btn-row" style="justify-content: space-between;">
+            <div class="btn-row sticky-footer" style="justify-content: space-between;">
                 <div class="action-group">
                     <button id="btnPhAdd" class="btn-add" onclick="addPlotholeItem()">+ Add Rule</button>
                     <button id="btnPhCancel" class="btn-cancel" onclick="cancelPlotholeEdit()">Cancel</button>
@@ -1295,7 +1325,7 @@
                 <textarea id="charRoleIn" rows="3" placeholder="e.g. Protagonist" style="min-height:80px;"></textarea>
             </div>
 
-            <div class="btn-row">
+            <div class="btn-row sticky-footer">
                 <div class="action-group">
                     <button id="btnCharAdd" class="btn-add" onclick="addCharacter()">+ Add Character</button>
                     <button id="btnCharCancel" class="btn-cancel" onclick="cancelCharEdit()">Cancel</button>
@@ -1384,7 +1414,7 @@
     <!-- CLOUD BANNER -->
     <div class="cloud-banner" id="cloudBanner">
         <div>
-            ☁️ <strong>Cloud Sync:</strong> <span id="syncStatus">Initializing...</span><br>
+            ☁️ <strong>Cloud Sync:</strong> <span id="syncStatus">Initializing...</span> <span id="modCounter" style="font-size:0.8rem; margin-left:10px; font-weight:bold; color:var(--warning); display:none;"></span><br>
             <span id="userIdDisplay" style="display: none; margin-top: 5px; font-size: 0.75rem;">
                 ID: <span class="cloud-id" id="userIdText" title="Click to copy" onclick="copyId()"></span>
             </span>
@@ -1413,6 +1443,9 @@
     <div id="restoreModal" class="modal-overlay"><div class="modal-content"><h3>Confirm Restore</h3><p id="restoreInfo" style="text-align: left; background: #fdfbf7; padding: 15px; border-radius: 4px; border: 1px solid #e6e0d4; font-size:0.9rem; margin-top: 15px;">Loading cloud info...</p><div class="btn-row" style="justify-content: center;"><button class="btn-cloud" style="background-color: var(--primary);" onclick="executeRestore()">Yes, Restore</button><button class="btn-dl" onclick="closeModal()">Cancel</button></div></div></div>
 
     <div id="toast"></div>
+    
+    <!-- Autocomplete Dropdown -->
+    <div id="mentionBox" class="mention-suggestions"></div>
 
     <script type="module">
         const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -1487,6 +1520,7 @@
                     lastUpdated: Date.now(), 
                     lastDevice: user.uid 
                 });
+                modificationCount = 0; localStorage.setItem('storylines_mod_count', 0); updateModCountUI();
                 showToast("✅ Successfully backed up to Cloud");
             } catch (err) { showToast("Backup failed."); }
         };
@@ -1534,6 +1568,7 @@
                     plotholeItems = data.plotholes || [];
                     
                     saveLocalData(); 
+                    modificationCount = 0; localStorage.setItem('storylines_mod_count', 0); updateModCountUI();
                     renderContinuityList(); 
                     renderChekhovList(); 
                     renderCharList();        // Fix 2: Render character table
@@ -1549,7 +1584,7 @@
         };
 
         // --- CORE LOGIC ---
-        let events = [], continuityItems = [], chekhovItems = [], editIndex = -1, currentSortMethod = 'unsorted', currentTz = localStorage.getItem('storylines_tz') || '', editingContinuityId = null, editingChekhovId = null;
+        let events = [], continuityItems = [], chekhovItems = [], editIndex = -1, currentSortMethod = 'unsorted', currentTz = localStorage.getItem('storylines_tz') || '', editingContinuityId = null, editingChekhovId = null, modificationCount = 0;
         let currentSearchTerm = '';
         let activeFilterIds = [], activeCharFilterIds = [], activeChekhovFilterIds = [];
         const STORAGE_KEY = 'storylines_persist';
@@ -1841,12 +1876,28 @@
             document.getElementById('remarksIn').addEventListener('input', function() { this.style.height = 'auto'; this.style.height = (this.scrollHeight) + 'px'; });
             document.getElementById('charRoleIn').addEventListener('input', function() { this.style.height = 'auto'; this.style.height = (this.scrollHeight) + 'px'; });
             sortData('number');
+            setupMentionLogic();
         };
 
-        function saveLocalData() { localStorage.setItem(STORAGE_KEY, JSON.stringify({ events, continuity: continuityItems, chekhov: chekhovItems, characters: characterItems, plotholes: plotholeItems })); }
+        function updateModCountUI() {
+            const el = document.getElementById('modCounter');
+            if(el) {
+                if(modificationCount > 0) { el.style.display = 'inline'; el.innerText = `(+${modificationCount} changes)`; }
+                else { el.style.display = 'none'; }
+            }
+        }
+
+        function saveLocalData() { 
+            localStorage.setItem(STORAGE_KEY, JSON.stringify({ events, continuity: continuityItems, chekhov: chekhovItems, characters: characterItems, plotholes: plotholeItems })); 
+            modificationCount++;
+            localStorage.setItem('storylines_mod_count', modificationCount);
+            updateModCountUI();
+        }
 
         function loadLocalData() {
             const data = localStorage.getItem(STORAGE_KEY);
+            modificationCount = parseInt(localStorage.getItem('storylines_mod_count') || '0');
+            updateModCountUI();
             if(data) {
                 try {
                     const parsed = JSON.parse(data);
@@ -2344,8 +2395,14 @@
             const dragAttr = currentSortMethod === 'number' ? 'draggable="true"' : '', dragClass = currentSortMethod === 'number' ? 'draggable' : '';
             
             // Markdown parsing for details and remarks
-            const parsedDetails = marked.parse(evt.details.replace(/{nl}/g, '\n'));
-            const parsedRemarks = evt.remarks ? marked.parse(evt.remarks.replace(/{nl}/g, '\n')) : '';
+            let parsedDetails = marked.parse(evt.details.replace(/{nl}/g, '\n'));
+            let parsedRemarks = evt.remarks ? marked.parse(evt.remarks.replace(/{nl}/g, '\n')) : '';
+
+            // Cross-referencing: Convert ChX.Y to links
+            const linkRegex = /\bCh(\d+(?:\.\d+)?)\b/g;
+            const linkReplacement = '<span class="clickable-link" onclick="event.stopPropagation(); jumpToChapter($1)">Ch$1</span>';
+            parsedDetails = parsedDetails.replace(linkRegex, linkReplacement);
+            if (parsedRemarks) parsedRemarks = parsedRemarks.replace(linkRegex, linkReplacement);
 
             return {
                 table: `<tr class="${dragClass}" data-index="${i}" ${dragAttr}><td>${currentSortMethod === 'number' ? '☰' : ''}</td><td style="white-space: nowrap;">${displayDate} ${displayTime}<br><small>${displayDay}</small><br><span class="display-basis-tag">${displayBasis}</span>${altTzHtml}</td><td><b>${evt.number}</b><br><span style="font-weight:700;">${evt.chapterTitle || ''}</span>${evt.subChapterTitle ? `<br><span style="font-size:0.8rem; font-style:italic; color:var(--text-muted);">${evt.subChapterTitle}</span>` : ''}</td><td><div class="markdown-body">${parsedDetails}</div>${evt.remarks ? `<div class="td-remarks">📝 <div class="markdown-body" style="display:inline;">${parsedRemarks}</div></div>` : ''}<div style="margin-top:4px">${cHtml}</div></td><td><div class="action-btn-group" style="display:flex; gap:4px;"><button class="action-btn" onclick="editEvent(${i})" title="Edit">✎</button>${currentSortMethod === 'number' ? `<button class="action-btn" onclick="moveBeat(${i}, -1)" title="Move Up">↑</button><button class="action-btn" onclick="moveBeat(${i}, 1)" title="Move Down">↓</button>` : ''}<button class="action-btn del-btn" onclick="askDelete(${i})" title="Delete">×</button></div></td></tr>`,
@@ -2815,6 +2872,22 @@
         }
         
         window.jumpToChapter = (num) => {
+            num = parseFloat(num);
+            
+            // Clear Filters to ensure visibility
+            if (activeFilterIds.length > 0 || activeCharFilterIds.length > 0 || activeChekhovFilterIds.length > 0 || currentSearchTerm || document.getElementById('filterBeatsToggle').checked) {
+                activeFilterIds = [];
+                activeCharFilterIds = [];
+                activeChekhovFilterIds = [];
+                currentSearchTerm = '';
+                document.getElementById('searchInput').value = '';
+                document.getElementById('filterBeatsToggle').checked = false;
+                document.getElementById('btnSearchClear').style.display = 'none';
+                if (document.getElementById('btnCAdd')) document.getElementById('btnCAdd').disabled = false;
+                if (document.getElementById('btnCCancel')) document.getElementById('btnCCancel').disabled = false;
+                render();
+            }
+
             const idx = events.findIndex(e => e.number === num);
             if (idx === -1) return showToast("Chapter not found");
             editEvent(idx);
@@ -2900,6 +2973,57 @@
         };
         window.moveCharacter = window.moveCharacter;
         window.toggleReadme = window.toggleReadme;
+        
+        function setupMentionLogic() {
+            const inputs = ['detailIn', 'remarksIn'];
+            const box = document.getElementById('mentionBox');
+            
+            inputs.forEach(id => {
+                const el = document.getElementById(id);
+                if (!el) return;
+
+                el.addEventListener('keyup', (e) => {
+                    const val = el.value;
+                    const cursor = el.selectionStart;
+                    const lastChar = val.substring(cursor - 1, cursor);
+                    
+                    if (lastChar === '@') {
+                        const rect = el.getBoundingClientRect();
+                        box.style.top = (window.scrollY + rect.bottom) + 'px';
+                        box.style.left = (window.scrollX + rect.left) + 'px';
+                        box.style.width = rect.width + 'px';
+                        box.style.display = 'block';
+                        
+                        box.innerHTML = '';
+                        const uniqueChapters = [...new Set(events.map(ev => ev.number))].sort((a,b)=>a-b);
+                        
+                        uniqueChapters.forEach(num => {
+                            const ev = events.find(e => e.number === num);
+                            const div = document.createElement('div');
+                            div.className = 'mention-item';
+                            div.innerHTML = `<strong>${num}</strong> - ${ev.chapterTitle || 'Untitled'}${ev.subChapterTitle ? ' - ' + ev.subChapterTitle : ''}`;
+                            div.onclick = () => {
+                                const textBefore = val.substring(0, cursor - 1);
+                                const textAfter = val.substring(cursor);
+                                const insert = `Ch${num}`;
+                                el.value = textBefore + insert + textAfter;
+                                box.style.display = 'none';
+                                el.focus();
+                                const newPos = textBefore.length + insert.length;
+                                el.setSelectionRange(newPos, newPos);
+                            };
+                            box.appendChild(div);
+                        });
+                        if (uniqueChapters.length === 0) {
+                             const div = document.createElement('div'); div.className = 'mention-item'; div.innerText = 'No chapters found'; box.appendChild(div);
+                        }
+                    } else if (e.key === 'Escape' || e.key === ' ') {
+                        box.style.display = 'none';
+                    }
+                });
+                el.addEventListener('blur', () => { setTimeout(() => box.style.display = 'none', 200); });
+            });
+        }
 
         // Register Service Worker for PWA functionality (Improved for iOS reliability)
         if ('serviceWorker' in navigator) {
