@@ -1239,8 +1239,8 @@
                     <select id="narrativeModeIn">
                         <option value="Present">Present (Normal)</option>
                         <option value="Flashback">Flashback</option>
-                        <option value="Vision">Vision</option>
-                        <option value="Superimposed">Superimposed</option>
+                        <option value="Vision">Vision/Dream</option>
+                        <option value="Superimposed">Superimposed (Haunting)</option>
                     </select>
                 </div>
                 <div class="input-group col-span-2">
@@ -2510,9 +2510,9 @@
             
             // Narrative Mode Styling
             let bgStyle = 'background-color: #fff;';
-            if (evt.narrativeMode === 'Flashback') bgStyle = 'background-color: #f3f4f6;'; // Light Gray
-            else if (evt.narrativeMode === 'Vision') bgStyle = 'background-color: #fef9c3;'; // Light Yellow
-            else if (evt.narrativeMode === 'Superimposed') bgStyle = 'background-color: #ffedd5;'; // Light Orange
+            if (evt.narrativeMode === 'Flashback') bgStyle = 'background-color: #f3f4f6;'; // Light Gray #f3f4f6
+            else if (evt.narrativeMode === 'Vision') bgStyle = 'background-color: #fffde7;'; // Light Yellow
+            else if (evt.narrativeMode === 'Superimposed') bgStyle = 'background-color: #fff3e0;'; // Light Orange
 
             if (evt.preferredDisplayTz) {
                 const pref = convertTime(evt.date, evt.preferredDisplayTz);
