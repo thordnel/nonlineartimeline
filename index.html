@@ -1294,11 +1294,11 @@
             <table class="chekhov-table">
                 <thead>
                     <tr>
-                        <th style="width:180px;">Item / Detail</th>
-                        <th style="width:120px;">Type</th>
-                        <th style="width:200px;">Appearance (Setup)</th>
-                        <th style="width:200px;">Intended Misdirection</th>
-                        <th style="width:200px;">Real Usage (Payoff)</th>
+                        <th style="width:120px;">Item</th>
+                        <th style="width:45px;">Type</th>
+                        <th style="width:18%;">Appearance (Setup)</th>
+                        <th style="width:18%;">Intended Misdirection</th>
+                        <th style="width:18%;">Real Usage (Payoff)</th>
                         <th style="width:90px;">Status</th>
                         <th style="width:90px;">ACTION</th>
                     </tr>
@@ -2111,7 +2111,7 @@
 
         /* --- CHEKHOV'S GUN FUNCTIONS --- */
         window.addChekhovItem = () => {
-            const name = document.getElementById('cgNameIn').value, icon = document.getElementById('cgIconIn').value || '📜', type = document.getElementById('cgTypeIn').value;
+            const name = document.getElementById('cgNameIn').value, icon = document.getElementById('cgIconIn').value || '💡', type = document.getElementById('cgTypeIn').value;
             const setup = document.getElementById('cgSetupIn').value, misdirection = document.getElementById('cgMisdIn').value, payoff = document.getElementById('cgPayoffIn').value, status = document.getElementById('cgStatusIn').value;
             
             if(!name) return showToast("Item Name required");
@@ -2125,7 +2125,7 @@
             } else { 
                 chekhovItems.push({ id: Date.now().toString(), name, icon, type, setup, misdirection, payoff, status }); 
             }
-            saveLocalData(); renderChekhovList();
+            saveLocalData(); renderChekhovList(); render();
         }
 
         window.editChekhovItem = (id) => {
@@ -2166,6 +2166,7 @@
         function renderChekhovList() {
             const tbody = document.getElementById('chekhovListArea'); tbody.innerHTML = '';
             
+            const TYPE_EMOJIS = { "Motif": "🎈", "Chekhov's Gun": "🛡️", "Twist": "🥨", "Symbolism": "⚜️", "Red Herring": "🐡" };
             const linkify = (text) => {
                 if (!text) return '-';
                 // Replace "Ch 1.2" or "Ch1.2" or "Ch 1" with clickable link
@@ -2177,11 +2178,12 @@
                 if (item.status === 'Completed') statusColor = 'var(--success)';
                 else if (item.status === 'In Progress') statusColor = 'var(--warning)';
                 else if (item.status === 'Abandoned') statusColor = 'var(--danger)';
+                const typeEmoji = TYPE_EMOJIS[item.type] || "🛡️";
 
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
                     <td style="font-weight:bold;"><span style="font-size:1.2rem; margin-right:5px;">${item.icon}</span>${item.name}</td>
-                    <td style="font-size:0.85rem;">${item.type || "Chekhov's Gun"}</td>
+                    <td style="font-size:1.2rem; cursor:help;" title="${item.type || "Chekhov's Gun"}">${typeEmoji}</td>
                     <td>${linkify(item.setup)}</td>
                     <td>${linkify(item.misdirection)}</td>
                     <td>${linkify(item.payoff)}</td>
@@ -2372,7 +2374,7 @@
             const TYPE_EMOJIS = { "Motif": "🎈", "Chekhov's Gun": "🛡️", "Twist": "🥨", "Symbolism": "⚜️", "Red Herring": "🐡" };
             
             chekhovItems.forEach(item => {
-                const typeEmoji = TYPE_EMOJIS[item.type] || "🟤";
+                const typeEmoji = TYPE_EMOJIS[item.type] || "🛡️";
                 const checkRef = (text) => {
                     if (!text) return false;
                     const matches = [...text.matchAll(/\bCh\s*(\d+(?:\.\d+)?)\b/gi)];
