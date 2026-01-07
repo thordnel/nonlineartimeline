@@ -400,6 +400,13 @@
         }
         .chekhov-table td:nth-child(2) { text-align: left; } 
         
+        /* Narrative Tracker Specific Alignment */
+        #chekhovContent .chekhov-table td:nth-child(1) { text-align: left; }
+        #chekhovContent .chekhov-table td:nth-child(2) { text-align: center; }
+        #chekhovContent .chekhov-table td:nth-child(3),
+        #chekhovContent .chekhov-table td:nth-child(4),
+        #chekhovContent .chekhov-table td:nth-child(5) { text-align: left; }
+
         /* Action column flex layout for side-by-side buttons */
         .chekhov-table td:last-child {
             display: table-cell;
@@ -425,6 +432,43 @@
             margin-top: 4px;
             box-shadow: 0 1px 2px rgba(0,0,0,0.2);
             text-shadow: 0 1px 1px rgba(0,0,0,0.3);
+        }
+        
+        /* Narrative Item Badges */
+        .n-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 2px 6px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            margin-right: 4px;
+            margin-bottom: 4px;
+            cursor: pointer;
+            border: 1px solid transparent;
+            position: relative;
+            transition: transform 0.1s;
+        }
+        .n-badge:hover { transform: scale(1.05); }
+        .n-badge-setup { background-color: #eaebec; border-color: #8a8a8a; color: #0c0c0c; }
+        .n-badge-misd { background-color: #fecaca; border-color: #f87171; color: #991b1b; }
+        .n-badge-payoff { background-color: #b5e6ab; border-color: #2ed154; color: #14532d; }
+
+        .n-badge[data-tooltip]:hover::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 125%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #333;
+            color: #fff;
+            padding: 5px 10px;
+            border-radius: 4px;
+            white-space: nowrap;
+            font-size: 0.75rem;
+            z-index: 100;
+            pointer-events: none;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
         }
 
         /* Character Input Row in Beat Panel */
@@ -1133,19 +1177,6 @@
                     <div id="currentCharTags" class="char-tag-row"></div>
                 </div>
 
-                <!-- ADD: Chekhov's Gun selection in Beat Space -->
-                <div class="input-group col-span-full" style="padding-top: 10px; border-top: 1px dashed #d4cdc3;">
-                    <label>Chekhov's Gun Tagging (Optional)</label>
-                    <div style="display:flex; gap:10px; align-items:center;">
-                        <select id="chekhovSelect" style="flex:2;">
-                            <option value="">-- Select Item --</option>
-                        </select>
-                        <button id="btnMarkSetup" class="action-btn" onclick="markChekhov('setup')" title="Mark as Setup (Appearance)">🟢 Setup</button>
-                        <button id="btnMarkPayoff" class="action-btn" onclick="markChekhov('payoff')" title="Mark as Payoff (Used)">🔴 Payoff</button>
-                    </div>
-                    <div id="currentChekhovTag" style="font-size:0.8rem; margin-top:5px; color:var(--info); font-style:italic;"></div>
-                </div>
-
                 <!-- ADD: Plothole Tagging in Beat Space -->
                 <div class="input-group col-span-full" style="padding-top: 10px; border-top: 1px dashed #d4cdc3;">
                     <label>World Logic & Rules</label>
@@ -1216,26 +1247,46 @@
 
     <!-- CHEKHOV'S GUN SPACE -->
     <div class="panel">
-        <div class="section-label">Chekhov's Gun Space</div>
+        <div class="section-label">Master Narrative Tracker</div>
         <div class="panel-header" onclick="toggleChekhovPanel()">
-            <span style="font-weight:700; color:var(--text-main);">Manage Foreshadowing</span>
+            <span style="font-weight:700; color:var(--text-main);">Manage Narrative Items</span>
             <span id="chekhovPanelIcon" style="color:var(--secondary);">➕</span>
         </div>
         
         <div id="chekhovContent" class="panel-content" style="display: none;">
-            <div class="c-row-70-30">
+            <div class="controls">
                 <div class="input-group">
-                    <label>Gun Name</label>
+                    <label>Item Name</label>
                     <input type="text" id="cgNameIn" placeholder="e.g. The Letter, Dagger">
+                </div>
+                <div class="input-group">
+                    <label>Type</label>
+                    <select id="cgTypeIn"><option>Chekhov's Gun</option><option>Red Herring</option><option>Twist</option><option>Symbolism</option><option>Motif</option></select>
                 </div>
                 <div class="input-group">
                     <label>Icon</label>
                     <input type="text" id="cgIconIn" placeholder="e.g. ✉️" style="text-align:center;">
                 </div>
+                <div class="input-group">
+                    <label>Status</label>
+                    <select id="cgStatusIn"><option>Pending</option><option>In Progress</option><option>Completed</option><option>Abandoned</option></select>
+                </div>
+                <div class="input-group col-span-full">
+                    <label>Appearance (Setup)</label>
+                    <input type="text" id="cgSetupIn" placeholder="e.g. Found in drawer (Ch 2)">
+                </div>
+                <div class="input-group col-span-full">
+                    <label>Intended Misdirection</label>
+                    <input type="text" id="cgMisdIn" placeholder="e.g. Make reader suspect the brother">
+                </div>
+                <div class="input-group col-span-full">
+                    <label>Real Usage (Payoff)</label>
+                    <input type="text" id="cgPayoffIn" placeholder="e.g. Unlocks the secret diary">
+                </div>
             </div>
             <div class="btn-row sticky-footer">
                 <div class="action-group">
-                    <button id="btnCGAdd" class="btn-add" onclick="addChekhovItem()">+ Add Gun</button>
+                    <button id="btnCGAdd" class="btn-add" onclick="addChekhovItem()">+ Add Item</button>
                     <button id="btnCGCancel" class="btn-cancel" onclick="cancelChekhovEdit()">Cancel</button>
                 </div>
             </div>
@@ -1243,11 +1294,12 @@
             <table class="chekhov-table">
                 <thead>
                     <tr>
-                        <th style="width:50px;">Icon</th>
-                        <th>Item</th>
-                        <th style="width:100px;">Appearances</th>
-                        <th style="width:100px;">Usage</th>
-                        <th style="width:80px;">Status</th>
+                        <th style="width:180px;">Item / Detail</th>
+                        <th style="width:120px;">Type</th>
+                        <th style="width:200px;">Appearance (Setup)</th>
+                        <th style="width:200px;">Intended Misdirection</th>
+                        <th style="width:200px;">Real Usage (Payoff)</th>
+                        <th style="width:90px;">Status</th>
                         <th style="width:90px;">ACTION</th>
                     </tr>
                 </thead>
@@ -1588,10 +1640,6 @@
         let currentSearchTerm = '';
         let activeFilterIds = [], activeCharFilterIds = [], activeChekhovFilterIds = [];
         const STORAGE_KEY = 'storylines_persist';
-        
-        
-        // Temp storage for chekhov tagging in edit mode
-        let currentBeatChekhovTags = {}; // { itemId: 'setup' | 'payoff' }
 
         // Markdown Configuration
         marked.setOptions({ breaks: true, gfm: true });
@@ -1908,6 +1956,7 @@
                         chekhovItems = parsed.chekhov || [];
                         characterItems = parsed.characters || [];
                         plotholeItems = parsed.plotholes || [];
+                        chekhovItems = chekhovItems.map(i => ({ ...i, type: i.type || "Chekhov's Gun", setup: i.setup || '', misdirection: i.misdirection || '', payoff: i.payoff || '', status: i.status || 'Pending' }));
                     }
                     // Normalize Plothole Tags (Array -> Object)
                     events.forEach(e => {
@@ -1917,7 +1966,7 @@
                     });
                     events.forEach(e => e.number = parseFloat(e.number)); 
                     renderContinuityList(); renderChekhovList(); renderCharList(); renderPlotholeList();
-                    populateChekhovSelect(); populateCharSelect(); populatePlotholeSelect();
+                    populateCharSelect(); populatePlotholeSelect();
                     render();
                 } catch(e) { console.error(e); }
             }
@@ -2062,19 +2111,21 @@
 
         /* --- CHEKHOV'S GUN FUNCTIONS --- */
         window.addChekhovItem = () => {
-            const name = document.getElementById('cgNameIn').value, icon = document.getElementById('cgIconIn').value || '📜';
+            const name = document.getElementById('cgNameIn').value, icon = document.getElementById('cgIconIn').value || '📜', type = document.getElementById('cgTypeIn').value;
+            const setup = document.getElementById('cgSetupIn').value, misdirection = document.getElementById('cgMisdIn').value, payoff = document.getElementById('cgPayoffIn').value, status = document.getElementById('cgStatusIn').value;
+            
             if(!name) return showToast("Item Name required");
             if (editingChekhovId) {
                 const idx = chekhovItems.findIndex(i => i.id === editingChekhovId);
                 if (idx > -1) { 
-                    chekhovItems[idx] = { ...chekhovItems[idx], name, icon }; 
-                    showToast("Updated Gun"); 
+                    chekhovItems[idx] = { ...chekhovItems[idx], name, icon, type, setup, misdirection, payoff, status }; 
+                    showToast("Updated Item"); 
                 }
                 cancelChekhovEdit();
             } else { 
-                chekhovItems.push({ id: Date.now().toString(), name, icon }); 
+                chekhovItems.push({ id: Date.now().toString(), name, icon, type, setup, misdirection, payoff, status }); 
             }
-            saveLocalData(); renderChekhovList(); populateChekhovSelect();
+            saveLocalData(); renderChekhovList();
         }
 
         window.editChekhovItem = (id) => {
@@ -2082,57 +2133,59 @@
             editingChekhovId = id;
             document.getElementById('cgNameIn').value = item.name;
             document.getElementById('cgIconIn').value = item.icon;
+            document.getElementById('cgTypeIn').value = item.type || "Chekhov's Gun";
+            document.getElementById('cgSetupIn').value = item.setup || '';
+            document.getElementById('cgMisdIn').value = item.misdirection || '';
+            document.getElementById('cgPayoffIn').value = item.payoff || '';
+            document.getElementById('cgStatusIn').value = item.status || 'Pending';
             const btn = document.getElementById('btnCGAdd'); 
-            btn.innerText = "Update Gun"; btn.className = "btn-update"; 
+            btn.innerText = "Update Item"; btn.className = "btn-update"; 
             document.getElementById('btnCGCancel').style.display = 'inline-block';
         }
 
         window.cancelChekhovEdit = () => {
-            editingChekhovId = null;
-            document.getElementById('cgNameIn').value = ''; document.getElementById('cgIconIn').value = '';
-            const btn = document.getElementById('btnCGAdd'); btn.innerText = "+ Add Gun"; btn.className = "btn-add";
+            editingChekhovId = null; clearChekhovInputs();
+            const btn = document.getElementById('btnCGAdd'); btn.innerText = "+ Add Item"; btn.className = "btn-add";
             document.getElementById('btnCGCancel').style.display = 'none';
+        }
+        
+        function clearChekhovInputs() {
+            document.getElementById('cgNameIn').value = ''; document.getElementById('cgIconIn').value = ''; document.getElementById('cgTypeIn').value = "Chekhov's Gun";
+            document.getElementById('cgSetupIn').value = ''; document.getElementById('cgMisdIn').value = ''; document.getElementById('cgPayoffIn').value = ''; document.getElementById('cgStatusIn').value = 'Pending';
         }
 
         window.deleteChekhovItem = (id) => {
-            if(confirm("Remove this Chekhov Item?")) {
+            if(confirm("Remove this Narrative Item?")) {
                 chekhovItems = chekhovItems.filter(i => i.id !== id);
                 if (editingChekhovId === id) cancelChekhovEdit();
                 activeChekhovFilterIds = activeChekhovFilterIds.filter(fid => fid !== id);
-                saveLocalData(); renderChekhovList(); populateChekhovSelect(); render();
+                saveLocalData(); renderChekhovList(); render();
             }
-        }
-
-        function calculateChekhovStatus(itemId) {
-            // Find setup and payoff chapters from events
-            let setupCh = null, payoffCh = null;
-            
-            // Loop through all beats to find setup/payoff for this item
-            events.forEach(e => {
-                if (e.chekhovTags && e.chekhovTags[itemId]) {
-                    if (e.chekhovTags[itemId] === 'setup') setupCh = e.number;
-                    if (e.chekhovTags[itemId] === 'payoff') payoffCh = e.number;
-                }
-            });
-
-            return { setupCh, payoffCh };
         }
 
         function renderChekhovList() {
             const tbody = document.getElementById('chekhovListArea'); tbody.innerHTML = '';
+            
+            const linkify = (text) => {
+                if (!text) return '-';
+                // Replace "Ch 1.2" or "Ch1.2" or "Ch 1" with clickable link
+                return text.replace(/\bCh\s*(\d+(?:\.\d+)?)\b/gi, '<span class="clickable-link" onclick="jumpToChapter(\'$1\')">Ch $1</span>');
+            };
+
             chekhovItems.forEach(item => {
-                const { setupCh, payoffCh } = calculateChekhovStatus(item.id);
-                let statusHtml = '<span class="status-badge-pending">Pending</span>';
-                if (setupCh !== null && payoffCh !== null) statusHtml = '<span class="status-badge-ok">Fulfilled ✅</span>';
-                if (setupCh === null && payoffCh !== null) statusHtml = '<span class="status-badge-error">Paradox ⚠️</span>';
+                let statusColor = 'var(--text-muted)';
+                if (item.status === 'Completed') statusColor = 'var(--success)';
+                else if (item.status === 'In Progress') statusColor = 'var(--warning)';
+                else if (item.status === 'Abandoned') statusColor = 'var(--danger)';
 
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
-                    <td style="font-size:1.2rem;">${item.icon}</td>
-                    <td style="font-weight:bold;">${item.name}</td>
-                    <td>${setupCh !== null ? `<span class="clickable-link" onclick="jumpToChapter(${setupCh})">Ch ${setupCh}</span>` : '-'}</td>
-                    <td>${payoffCh !== null ? `<span class="clickable-link" onclick="jumpToChapter(${payoffCh})">Ch ${payoffCh}</span>` : '-'}</td>
-                    <td>${statusHtml}</td>
+                    <td style="font-weight:bold;"><span style="font-size:1.2rem; margin-right:5px;">${item.icon}</span>${item.name}</td>
+                    <td style="font-size:0.85rem;">${item.type || "Chekhov's Gun"}</td>
+                    <td>${linkify(item.setup)}</td>
+                    <td>${linkify(item.misdirection)}</td>
+                    <td>${linkify(item.payoff)}</td>
+                    <td style="font-weight:bold; color:${statusColor};">${item.status || 'Pending'}</td>
                     <td>
                         <div style="display:flex; gap:8px; justify-content:center; align-items:center;">
                             <button class="action-btn" onclick="editChekhovItem('${item.id}')" title="Edit">✎</button> 
@@ -2144,55 +2197,11 @@
             });
         }
 
-        function populateChekhovSelect() {
-            const sel = document.getElementById('chekhovSelect');
-            sel.innerHTML = '<option value="">-- Select Item --</option>';
-            chekhovItems.forEach(i => {
-                const opt = document.createElement('option');
-                opt.value = i.id; opt.text = `${i.icon} ${i.name}`;
-                sel.appendChild(opt);
-            });
-        }
-
-        window.markChekhov = (type) => {
-            const sel = document.getElementById('chekhovSelect');
-            const itemId = sel.value;
-            if (!itemId) return showToast("Select an item first");
-            
-            // Toggle logic: if already set to this type, unset it.
-            if (currentBeatChekhovTags[itemId] === type) {
-                delete currentBeatChekhovTags[itemId];
-            } else {
-                currentBeatChekhovTags[itemId] = type;
-            }
-            updateChekhovTagDisplay();
-        }
-
-        function updateChekhovTagDisplay() {
-            const display = document.getElementById('currentChekhovTag');
-            const tags = [];
-            for (const [id, type] of Object.entries(currentBeatChekhovTags)) {
-                const item = chekhovItems.find(i => i.id === id);
-                if (item) {
-                    const label = type === 'setup' ? '🟢 Setup' : '🔴 Payoff';
-                    tags.push(`${item.icon} ${item.name} (${label})`);
-                }
-            }
-            display.innerText = tags.length > 0 ? tags.join(', ') : '';
-        }
-
         window.toggleChekhovFilter = (id) => {
-            const { setupCh, payoffCh } = calculateChekhovStatus(id);
-            // Only allow filtering if Fulfilled (Setup + Payoff exist)
-            if (setupCh !== null && payoffCh !== null) {
-                const idx = activeChekhovFilterIds.indexOf(id);
-                if (idx > -1) activeChekhovFilterIds = [];
-                else activeChekhovFilterIds = [id];
-                render();
-            } else {
-                let status = (setupCh === null && payoffCh !== null) ? "Paradox" : "Pending";
-                showToast(`Cannot filter: Gun is ${status}`);
-            }
+            const idx = activeChekhovFilterIds.indexOf(id);
+            if (idx > -1) activeChekhovFilterIds = [];
+            else activeChekhovFilterIds = [id];
+            render();
         }
 
         function getActiveContinuity(beatDateStr) { const beatDate = new Date(beatDateStr); return continuityItems.filter(item => { if(!item.visible) return false; const s = new Date(item.start), e = item.end ? new Date(item.end) : null; return beatDate >= s && (!e || beatDate <= e); }); }
@@ -2240,7 +2249,6 @@
             // UPDATED OBJECT CONSTRUCTION
             const beat = { 
                 date, number: parseFloat(num), chapterTitle: cT, subChapterTitle: sT, details: det, remarks: rem, 
-                chekhovTags: { ...currentBeatChekhovTags },
                 charTags: [ ...currentBeatCharIds ],
                 plotholeTags: { ...currentBeatPlotholeTags }
             };
@@ -2250,7 +2258,7 @@
                 beat.preferredDisplayTz = old.preferredDisplayTz; beat.preferredCountry = old.preferredCountry;
                 events[editIndex] = beat; cancelEdit(); 
             } else { events.push(beat); sortData(currentSortMethod); clearInputs(); }
-            saveLocalData(); renderChekhovList(); renderCharList(); renderPlotholeList(); render();
+            saveLocalData(); renderCharList(); renderPlotholeList(); render();
         }
 
         window.editEvent = (i) => {
@@ -2262,10 +2270,6 @@
             document.getElementById('detailIn').value = e.details; 
             document.getElementById('remarksIn').value = e.remarks || '';
             
-            // Load Chekhov tags
-            currentBeatChekhovTags = e.chekhovTags ? { ...e.chekhovTags } : {};
-            updateChekhovTagDisplay();
-
             // NEW: Load Character Tags
             currentBeatCharIds = e.charTags ? [ ...e.charTags ] : [];
             updateBeatCharDisplay();
@@ -2289,7 +2293,6 @@
 
         window.cancelEdit = () => { 
             editIndex = -1; clearInputs(); 
-            currentBeatChekhovTags = {}; updateChekhovTagDisplay(); 
             currentBeatCharIds = []; updateBeatCharDisplay();
             currentBeatPlotholeTags = {}; updateBeatPlotholeDisplay();
             document.getElementById('btnAdd').innerText = "+ Add Beat"; document.getElementById('btnAdd').className = "btn-add"; document.getElementById('btnCancel').style.display = "none"; document.getElementById('btnSaveNew').style.display = "none"; 
@@ -2349,22 +2352,6 @@
                 cHtml += '</div>';
             }
 
-            // Chekhov Badges
-            if (evt.chekhovTags && Object.keys(evt.chekhovTags).length > 0) {
-                cHtml += '<div class="c-badges-container" style="border-top:none; margin-top:2px; padding-top:0;">';
-                for (const [id, type] of Object.entries(evt.chekhovTags)) {
-                    const item = chekhovItems.find(it => it.id === id);
-                    if (item) {
-                        const isActive = activeChekhovFilterIds.includes(id);
-                        const activeStyle = isActive ? 'border:2px solid #444; box-shadow:0 0 2px rgba(0,0,0,0.5);' : '';
-                        const check = isActive ? '✓ ' : '';
-                        const styleClass = type === 'setup' ? 'color:var(--success); border-color:var(--success);' : 'color:var(--danger); border-color:var(--danger);';
-                        const dot = type === 'setup' ? '🟢' : '🔴';
-                        cHtml += `<span class="c-badge" style="${styleClass} cursor:pointer; ${activeStyle}" onclick="event.stopPropagation(); toggleChekhovFilter('${id}')" title="Filter by ${item.name}">${check}${dot} ${item.name}</span>`;
-                    }
-                }
-                cHtml += '</div>';
-            }
             // Plothole Badges
             const phTags = evt.plotholeTags || {};
             const phKeys = Array.isArray(phTags) ? phTags : Object.keys(phTags);
@@ -2379,6 +2366,34 @@
                 });
                 cHtml += '</div>';
             }
+
+            // Narrative Item Badges (Chekhov, etc.)
+            const narrativeBadges = [];
+            const TYPE_EMOJIS = { "Motif": "🎈", "Chekhov's Gun": "🛡️", "Twist": "🥨", "Symbolism": "⚜️", "Red Herring": "🐡" };
+            
+            chekhovItems.forEach(item => {
+                const typeEmoji = TYPE_EMOJIS[item.type] || "🟤";
+                const checkRef = (text) => {
+                    if (!text) return false;
+                    const matches = [...text.matchAll(/\bCh\s*(\d+(?:\.\d+)?)\b/gi)];
+                    return matches.some(m => parseFloat(m[1]) === evt.number);
+                };
+
+                if (checkRef(item.setup)) narrativeBadges.push({ item, label: 'Appearance', class: 'n-badge-setup', emoji: typeEmoji });
+                if (checkRef(item.misdirection)) narrativeBadges.push({ item, label: 'Misdirection', class: 'n-badge-misd', emoji: typeEmoji });
+                if (checkRef(item.payoff)) narrativeBadges.push({ item, label: 'Usage', class: 'n-badge-payoff', emoji: typeEmoji });
+            });
+
+            if (narrativeBadges.length > 0) {
+                cHtml += '<div style="margin-top:5px; padding-top:4px; border-top:1px dashed #eee;">';
+                narrativeBadges.forEach(nb => {
+                    const isActive = activeChekhovFilterIds.includes(nb.item.id);
+                    const activeStyle = isActive ? 'box-shadow:0 0 0 2px #555;' : '';
+                    cHtml += `<span class="n-badge ${nb.class}" style="${activeStyle}" data-tooltip="${nb.item.name} (${nb.label})" onclick="event.stopPropagation(); toggleChekhovFilter('${nb.item.id}')">${nb.emoji} ${nb.item.icon}</span>`;
+                });
+                cHtml += '</div>';
+            }
+
             // Character Badges
             if (evt.charTags && evt.charTags.length > 0) {
                 cHtml += '<div style="margin-top:5px; padding-top:4px; border-top:1px dashed #eee;">';
@@ -2504,11 +2519,19 @@
                     if (!hasAllChars) return false;
                 }
 
-                // 3. Check Chekhov Filters (AND Logic)
+                // 3. Check Narrative Item Filters (AND Logic)
                 if (activeChekhovFilterIds.length > 0) {
-                    if (!evt.chekhovTags) return false;
-                    const hasAllGuns = activeChekhovFilterIds.every(id => evt.chekhovTags[id]);
-                    if (!hasAllGuns) return false;
+                    const hasAllItems = activeChekhovFilterIds.every(id => {
+                        const item = chekhovItems.find(i => i.id === id);
+                        if (!item) return false;
+                        const checkRef = (text) => {
+                            if (!text) return false;
+                            const matches = [...text.matchAll(/\bCh\s*(\d+(?:\.\d+)?)\b/gi)];
+                            return matches.some(m => parseFloat(m[1]) === evt.number);
+                        };
+                        return checkRef(item.setup) || checkRef(item.misdirection) || checkRef(item.payoff);
+                    });
+                    if (!hasAllItems) return false;
                 }
 
                 // 2. Check Search Term (Global Search Option A)
@@ -2631,12 +2654,11 @@
 
         window.downloadCSV = () => { 
             if (events.length === 0) return showToast("No data to save."); 
-            let csv = "Date,Chapter,ChapterTitle,SubChapterTitle,Details,Remarks,PrefTz,PrefCountry,ChekhovTags,CharTags,PlotholeTags\n"; 
+            let csv = "Date,Chapter,ChapterTitle,SubChapterTitle,Details,Remarks,PrefTz,PrefCountry,CharTags,PlotholeTags\n"; 
             events.forEach(e => { 
-                const chekhovStr = e.chekhovTags ? JSON.stringify(e.chekhovTags).replace(/"/g, '""') : '{}';
                 const charStr = e.charTags ? JSON.stringify(e.charTags).replace(/"/g, '""') : '[]';
                 const phStr = e.plotholeTags ? JSON.stringify(e.plotholeTags).replace(/"/g, '""') : '{}';
-                csv += `${e.date},${e.number},"${(e.chapterTitle||'').replace(/,/g,'{com}')}","${(e.subChapterTitle||'').replace(/,/g,'{com}')}","${(e.details||'').replace(/\n/g,'{nl}').replace(/,/g,'{com}')}","${(e.remarks||'').replace(/\n/g,'{nl}').replace(/,/g,'{com}')}","${e.preferredDisplayTz||''}","${e.preferredCountry||''}","${chekhovStr}","${charStr}","${phStr}"\n`;
+                csv += `${e.date},${e.number},"${(e.chapterTitle||'').replace(/,/g,'{com}')}","${(e.subChapterTitle||'').replace(/,/g,'{com}')}","${(e.details||'').replace(/\n/g,'{nl}').replace(/,/g,'{com}')}","${(e.remarks||'').replace(/\n/g,'{nl}').replace(/,/g,'{com}')}","${e.preferredDisplayTz||''}","${e.preferredCountry||''}","${charStr}","${phStr}"\n`;
             });
             
             // Append Continuity Data
@@ -2648,8 +2670,8 @@
             
             // Append Chekhov Data
             if(chekhovItems.length > 0) {
-                 csv += "\n[CHEKHOV_DATA_START]\nID,Name,Icon\n";
-                 chekhovItems.forEach(ci => { csv += `${ci.id},${ci.name},${ci.icon}\n`; });
+                 csv += "\n[CHEKHOV_DATA_START]\nID,Name,Icon,Type,Setup,Misdirection,Payoff,Status\n";
+                 chekhovItems.forEach(ci => { csv += `${ci.id},${ci.name},${ci.icon},${ci.type || ''},"${(ci.setup||'').replace(/,/g,'{com}')}","${(ci.misdirection||'').replace(/,/g,'{com}')}","${(ci.payoff||'').replace(/,/g,'{com}')}",${ci.status||''}\n`; });
                  csv += "[CHEKHOV_DATA_END]\n";
             }
             if(characterItems.length > 0) {
@@ -2702,18 +2724,15 @@
                     const row = lines[i].trim();
                     if(!row) continue;
 
-                    let chekhovTags = {};
                     let charTags = [];
                     let plotholeTags = {};
 
-                    // Regex to find the JSON columns at the end of the CSV row (Chekhov, Char, Plothole)
-                    const tripleMatch = row.match(/,"({.*})","(\[.*\])","([{\[].*[}\]])"$/);
-                    const dualMatch = row.match(/,"({.*})","(\[.*\])"$/);
+                    // Regex to find the JSON columns at the end of the CSV row (Char, Plothole)
+                    const dualMatch = row.match(/,"(\[.*\])","([{\[].*[}\]])"$/);
                     const singleMatch = row.match(/,"({.*})"$/);
                     
-                    if (tripleMatch) {
-                        try { chekhovTags = JSON.parse(tripleMatch[1].replace(/""/g, '"')); } catch(e){}
-                        try { charTags = JSON.parse(tripleMatch[2].replace(/""/g, '"')); } catch(e){}
+                    if (dualMatch) {
+                        try { charTags = JSON.parse(dualMatch[1].replace(/""/g, '"')); } catch(e){}
                         try { 
                             const rawPh = JSON.parse(tripleMatch[3].replace(/""/g, '"')); 
                             if(Array.isArray(rawPh)) {
@@ -2722,17 +2741,13 @@
                                 plotholeTags = rawPh;
                             }
                         } catch(e){}
-                    } else if (dualMatch) {
-                        try { chekhovTags = JSON.parse(dualMatch[1].replace(/""/g, '"')); } catch(e){}
-                        try { charTags = JSON.parse(dualMatch[2].replace(/""/g, '"')); } catch(e){}
                     } else if (singleMatch) {
-                        try { chekhovTags = JSON.parse(singleMatch[1].replace(/""/g, '"')); } catch(e){}
+                        // Legacy support for older CSVs if needed, or just ignore
                     }
 
                     // Clean the row string to split the simple fields safely
                     let cleanRow = row;
-                    if (tripleMatch) cleanRow = row.substring(0, row.indexOf(tripleMatch[0]));
-                    else if (dualMatch) cleanRow = row.substring(0, row.indexOf(dualMatch[0]));
+                    if (dualMatch) cleanRow = row.substring(0, row.indexOf(dualMatch[0]));
                     else if (singleMatch) cleanRow = row.substring(0, row.indexOf(singleMatch[0]));
 
                     const pSimple = cleanRow.split(',');
@@ -2748,7 +2763,6 @@
                             remarks: pSimple[5]?.replace(/{nl}/g,'\n').replace(/{com}/g,',') || '', 
                             preferredDisplayTz: pSimple[6] || '', 
                             preferredCountry: pSimple[7] || '', 
-                            chekhovTags: chekhovTags,
                             charTags: charTags,
                             plotholeTags: plotholeTags
                         }); 
@@ -2771,7 +2785,7 @@
                     const cLines = chekhovData.split('\n');
                     for(let i=1; i<cLines.length; i++) {
                         const c = cLines[i].trim().split(',');
-                        if(c.length >= 3) newChekhov.push({ id: c[0], name: c[1], icon: c[2] });
+                        if(c.length >= 3) newChekhov.push({ id: c[0], name: c[1], icon: c[2], type: c[3] || "Chekhov's Gun", setup: (c[4]||'').replace(/{com}/g,','), misdirection: (c[5]||'').replace(/{com}/g,','), payoff: (c[6]||'').replace(/{com}/g,','), status: c[7]||'Pending' });
                     }
                 }
 
@@ -2813,7 +2827,6 @@
                     renderChekhovList(); 
                     renderCharList(); // Render character table
                     renderPlotholeList();
-                    populateChekhovSelect(); 
                     populateCharSelect(); // Update dropdowns
                     populatePlotholeSelect();
                     render(); 
@@ -2875,7 +2888,7 @@
             num = parseFloat(num);
             
             // Clear Filters to ensure visibility
-            if (activeFilterIds.length > 0 || activeCharFilterIds.length > 0 || activeChekhovFilterIds.length > 0 || currentSearchTerm || document.getElementById('filterBeatsToggle').checked) {
+            if (activeFilterIds.length > 0 || activeCharFilterIds.length > 0 || currentSearchTerm || document.getElementById('filterBeatsToggle').checked) {
                 activeFilterIds = [];
                 activeCharFilterIds = [];
                 activeChekhovFilterIds = [];
@@ -2975,7 +2988,7 @@
         window.toggleReadme = window.toggleReadme;
         
         function setupMentionLogic() {
-            const inputs = ['detailIn', 'remarksIn'];
+            const inputs = ['detailIn', 'remarksIn', 'cgSetupIn', 'cgMisdIn', 'cgPayoffIn'];
             const box = document.getElementById('mentionBox');
             
             inputs.forEach(id => {
