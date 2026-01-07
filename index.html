@@ -984,6 +984,40 @@
                 vertical-align: middle;
             }
 
+            /* --- Narrative Tracker (Chekhov) Mobile Overrides --- */
+            /* Reset/Adjust for 7-column structure */
+            #chekhovContent .chekhov-table td:nth-child(1) {
+                float: none;
+                width: 100%;
+                margin-right: 0;
+                font-size: 1.1rem !important;
+                font-weight: 700;
+                color: var(--primary);
+                border-bottom: 1px solid #f0ebe4;
+                padding-bottom: 5px;
+                margin-bottom: 5px;
+            }
+            #chekhovContent .chekhov-table td:nth-child(2) {
+                /* Type Emoji positioned top-right */
+                position: absolute;
+                top: 15px;
+                right: 15px;
+                width: auto;
+                border: none;
+                padding: 0;
+                font-size: 1.5rem;
+                background: transparent;
+                box-shadow: none;
+                margin: 0;
+            }
+            #chekhovContent .chekhov-table td:nth-child(2)::after { display: none; }
+            
+            #chekhovContent .chekhov-table td:nth-child(3)::before { content: "Appearance: " !important; }
+            #chekhovContent .chekhov-table td:nth-child(4)::before { content: "Misdirection: " !important; font-weight: bold; color: var(--text-muted); font-size: 0.8rem; margin-right: 5px; }
+            #chekhovContent .chekhov-table td:nth-child(5)::before { content: "Usage: " !important; font-weight: bold; color: var(--text-muted); font-size: 0.8rem; margin-right: 5px; }
+            #chekhovContent .chekhov-table td:nth-child(6)::before { content: "Status: " !important; font-weight: bold; color: var(--text-muted); font-size: 0.8rem; margin-right: 5px; }
+            #chekhovContent .chekhov-table td:last-child::before { content: "" !important; margin: 0; }
+
             /* Ensure the color circle itself is centered if it's a block-level element */
             #charListArea td:nth-child(1) div {
                 margin: 0 auto;
