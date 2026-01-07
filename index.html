@@ -656,10 +656,39 @@
         #readmeContainer h1, #readmeContainer h2 { color: var(--primary); border-bottom: 1px solid #f0ebe4; padding-bottom: 10px; margin-top: 30px; }
         #readmeContainer code { background: #f4f1ea; padding: 2px 6px; border-radius: 3px; font-family: monospace; color: var(--primary); }
         #readmeContainer a { color: var(--info); text-decoration: underline; }
+        #readmeContainer img { max-width: 100%; height: auto; display: block; margin: 20px auto; }
+
+        .floating-collapse-btn {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            width: 36px;
+            height: 36px;
+            background: var(--panel);
+            border: 1px solid #d4cdc3;
+            border-radius: 4px;
+            color: var(--text-muted);
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 900;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+            transition: all 0.2s;
+            opacity: 0.7;
+        }
+        .floating-collapse-btn:hover {
+            opacity: 1;
+            transform: scale(1.05);
+            color: var(--primary);
+            border-color: var(--primary);
+            background: #fff;
+        }
 
         @media print {
             body { padding: 0; background: white; color: black; }
-            .panel, .navigation-bar, .header-branding, .cloud-banner, .readme-footer, 
+            .panel, .navigation-bar, .header-branding, .cloud-banner, .readme-footer, .floating-collapse-btn,
             .section-label, .view-header-label, .file-tools, .modal-overlay, .action-btn-group,
             .h-item, #visualArea, #multiArea, #emptyMsg, #toast, .btn-row { 
                 display: none !important; 
@@ -1018,6 +1047,11 @@
             #chekhovContent .chekhov-table td:nth-child(6)::before { content: "Status: " !important; font-weight: bold; color: var(--text-muted); font-size: 0.8rem; margin-right: 5px; }
             #chekhovContent .chekhov-table td:last-child::before { content: "" !important; margin: 0; }
 
+            /* --- Plothole Tracker Mobile Overrides --- */
+            #plotholeContent .chekhov-table td:nth-child(3)::before { content: "Rule Details: " !important; }
+            #plotholeContent .chekhov-table td:nth-child(4)::before { content: "Track Record: " !important; }
+            #plotholeContent .chekhov-table td:nth-child(5)::before { content: "" !important; margin: 0; }
+
             /* Ensure the color circle itself is centered if it's a block-level element */
             #charListArea td:nth-child(1) div {
                 margin: 0 auto;
@@ -1139,6 +1173,8 @@
     </style>
 </head>
 <body>
+
+    <button id="globalCollapseBtn" class="floating-collapse-btn" onclick="collapseAllPanels()" title="Collapse All Panels">➖</button>
 
     <div id="printHeader">
         <h1 class="print-title">Storylines</h1>
@@ -2908,7 +2944,7 @@
                     const response = await fetch(README_URL); if (!response.ok) throw new Error("Could not load README");
                     const text = await response.text(); 
                     let htmlContent = marked.parse(text);
-                    const urlRegex = /(?<!href=['"])(https?:\/\/[^\s<]+[^<.,:;"')\]\s])/gi;
+                    const urlRegex = /(?<!href=['"])(?<!src=['"])(https?:\/\/[^\s<]+[^<.,:;"')\]\s])/gi;
                     htmlContent = htmlContent.replace(urlRegex, '<a href="$1" target="_blank">$1</a>');
                     container.innerHTML = htmlContent;
                 } catch (e) { 
@@ -2917,6 +2953,32 @@
             }
             container.style.display = 'block'; 
             container.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        window.collapseAllPanels = () => {
+            const close = (contentId, iconId) => {
+                const content = document.getElementById(contentId);
+                const icon = document.getElementById(iconId);
+                if (content && content.style.display === 'block') {
+                    content.style.display = 'none';
+                    if (icon) icon.innerText = '➕';
+                }
+            };
+            
+            // Close all main panels
+            close('beatPanelContent', 'beatPanelIcon');
+            close('continuityContent', 'cPanelIcon');
+            close('chekhovContent', 'chekhovPanelIcon');
+            close('plotholeContent', 'plotholePanelIcon');
+            close('charContent', 'charPanelIcon');
+            
+            // Close Documentation if open
+            const readme = document.getElementById('readmeContainer');
+            if (readme && readme.style.display === 'block') {
+                readme.style.display = 'none';
+            }
+            
+            showToast("All panels collapsed");
         }
         
         window.jumpToChapter = (num) => {
@@ -3007,6 +3069,7 @@
         window.moveBeat = window.moveBeat;
         window.toggleCharFilter = window.toggleCharFilter;
         window.jumpToChapter = window.jumpToChapter;
+        window.collapseAllPanels = window.collapseAllPanels;
         window.toggleChekhovFilter = window.toggleChekhovFilter;
         window.loadBeatByNumber = () => {
             const val = parseFloat(document.getElementById('numIn').value);
