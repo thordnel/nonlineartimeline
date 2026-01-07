@@ -1615,7 +1615,7 @@
                     const data = docSnap.data();
                     events = data.beats || []; 
                     continuityItems = data.continuity || []; 
-                    chekhovItems = data.chekhov || [];
+                    chekhovItems = (data.chekhov || []).map(i => ({ ...i, type: i.type || "Chekhov's Gun", setup: i.setup || '', misdirection: i.misdirection || '', payoff: i.payoff || '', status: i.status || 'Pending' }));
                     characterItems = data.characters || []; // Fix 1: Load characters
                     plotholeItems = data.plotholes || [];
                     
@@ -1625,7 +1625,6 @@
                     renderChekhovList(); 
                     renderCharList();        // Fix 2: Render character table
                     renderPlotholeList();
-                    populateChekhovSelect();
                     populateCharSelect();    // Fix 3: Refresh dropdowns
                     populatePlotholeSelect();
                     render(); 
@@ -2673,7 +2672,7 @@
             // Append Chekhov Data
             if(chekhovItems.length > 0) {
                  csv += "\n[CHEKHOV_DATA_START]\nID,Name,Icon,Type,Setup,Misdirection,Payoff,Status\n";
-                 chekhovItems.forEach(ci => { csv += `${ci.id},${ci.name},${ci.icon},${ci.type || ''},"${(ci.setup||'').replace(/,/g,'{com}')}","${(ci.misdirection||'').replace(/,/g,'{com}')}","${(ci.payoff||'').replace(/,/g,'{com}')}",${ci.status||''}\n`; });
+                 chekhovItems.forEach(ci => { csv += `${ci.id},${(ci.name||'').replace(/,/g,'{com}')},${ci.icon},${(ci.type || '').replace(/,/g,'{com}')},${(ci.setup||'').replace(/,/g,'{com}')},${(ci.misdirection||'').replace(/,/g,'{com}')},${(ci.payoff||'').replace(/,/g,'{com}')},${ci.status||''}\n`; });
                  csv += "[CHEKHOV_DATA_END]\n";
             }
             if(characterItems.length > 0) {
@@ -2736,7 +2735,7 @@
                     if (dualMatch) {
                         try { charTags = JSON.parse(dualMatch[1].replace(/""/g, '"')); } catch(e){}
                         try { 
-                            const rawPh = JSON.parse(tripleMatch[3].replace(/""/g, '"')); 
+                            const rawPh = JSON.parse(dualMatch[2].replace(/""/g, '"')); 
                             if(Array.isArray(rawPh)) {
                                 rawPh.forEach(id => plotholeTags[id] = 'violation');
                             } else {
@@ -2787,7 +2786,7 @@
                     const cLines = chekhovData.split('\n');
                     for(let i=1; i<cLines.length; i++) {
                         const c = cLines[i].trim().split(',');
-                        if(c.length >= 3) newChekhov.push({ id: c[0], name: c[1], icon: c[2], type: c[3] || "Chekhov's Gun", setup: (c[4]||'').replace(/{com}/g,','), misdirection: (c[5]||'').replace(/{com}/g,','), payoff: (c[6]||'').replace(/{com}/g,','), status: c[7]||'Pending' });
+                        if(c.length >= 3) newChekhov.push({ id: c[0], name: c[1].replace(/{com}/g,','), icon: c[2], type: (c[3] || "Chekhov's Gun").replace(/{com}/g,','), setup: (c[4]||'').replace(/{com}/g,','), misdirection: (c[5]||'').replace(/{com}/g,','), payoff: (c[6]||'').replace(/{com}/g,','), status: c[7]||'Pending' });
                     }
                 }
 
