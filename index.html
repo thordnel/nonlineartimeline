@@ -1170,6 +1170,21 @@
             box-shadow: 0 -4px 6px -1px rgba(0,0,0,0.02);
             margin-top: 10px; /* Small gap from content above */
         }
+
+        /* Track Record Badges */
+        .track-badge {
+            display: inline-flex; align-items: center; gap: 3px;
+            padding: 1px 6px; border-radius: 4px; font-size: 0.8rem;
+            margin: 2px; border: 1px solid transparent; cursor: pointer;
+        }
+        .track-badge.violation { background: #fee2e2; color: #991b1b; border-color: #fca5a5; }
+        .track-badge.adherence { background: #dcfce7; color: #166534; border-color: #86efac; }
+        .track-del { margin-left: 4px; opacity: 0.5; font-weight: bold; font-size: 0.9rem; }
+        .track-del:hover { opacity: 1; }
+        .mini-add-btn {
+            background: #fff; border: 1px dashed #a89f91; color: #a89f91; border-radius: 4px; padding: 1px 8px; font-size: 0.8rem; cursor: pointer; margin-left: 4px; transition: all 0.2s;
+        }
+        .mini-add-btn:hover { border-color: var(--primary); color: var(--primary); background: #fff; }
     </style>
 </head>
 <body>
@@ -1564,6 +1579,23 @@
     <div id="backupModal" class="modal-overlay"><div class="modal-content"><h3>Confirm Cloud Backup</h3><p id="backupInfo" style="text-align: left; background: #fdfbf7; padding: 15px; border-radius: 4px; border: 1px solid #e6e0d4; font-size:0.9rem;">Loading info...</p><div class="btn-row" style="justify-content: center;"><button class="btn-cloud" onclick="executeBackup()">Overwrite Cloud</button><button class="btn-dl" onclick="closeModal()">Cancel</button></div></div></div>
     <div id="restoreModal" class="modal-overlay"><div class="modal-content"><h3>Confirm Restore</h3><p id="restoreInfo" style="text-align: left; background: #fdfbf7; padding: 15px; border-radius: 4px; border: 1px solid #e6e0d4; font-size:0.9rem; margin-top: 15px;">Loading cloud info...</p><div class="btn-row" style="justify-content: center;"><button class="btn-cloud" style="background-color: var(--primary);" onclick="executeRestore()">Yes, Restore</button><button class="btn-dl" onclick="closeModal()">Cancel</button></div></div></div>
 
+    <!-- Quick Tag Modal -->
+    <div id="quickTagModal" class="modal-overlay">
+        <div class="modal-content">
+            <h3>Add Track Record</h3>
+            <p id="quickTagRuleName" style="color:var(--text-muted); margin-bottom:15px; font-style:italic;"></p>
+            <div class="input-group">
+                <label>Select Chapter</label>
+                <input type="text" id="quickTagChapIn" placeholder="Type @ to search chapters..." autocomplete="off">
+            </div>
+            <div class="btn-row" style="justify-content: center; gap: 10px; margin-top: 20px;">
+                <button class="action-btn" onclick="executeQuickTag('violation')" style="background:#fee2e2; color:#991b1b; border:1px solid #fca5a5; padding: 8px 15px;">⚠️ Broken</button>
+                <button class="action-btn" onclick="executeQuickTag('adherence')" style="background:#dcfce7; color:#166534; border:1px solid #86efac; padding: 8px 15px;">✅ Upheld</button>
+            </div>
+            <div style="margin-top:15px;"><button class="btn-dl" onclick="closeModal()">Cancel</button></div>
+        </div>
+    </div>
+
     <div id="toast"></div>
     
     <!-- Autocomplete Dropdown -->
@@ -1729,6 +1761,7 @@
         let characterItems = []; 
         let editingCharId = null;
         let currentBeatCharIds = []; // Temporary array for the beat currently being edited
+        let activeQuickTagRuleId = null; // For the quick tag modal
         let plotholeItems = [];
         let editingPlotholeId = null;
         let currentBeatPlotholeTags = {}; // Changed from array to object { id: 'violation'|'adherence' }
@@ -1908,6 +1941,53 @@
             }
         }
 
+        // --- Quick Tag Logic (Table Direct Edit) ---
+        window.openQuickTagModal = (ruleId) => {
+            const item = plotholeItems.find(i => i.id === ruleId);
+            if(!item) return;
+            activeQuickTagRuleId = ruleId;
+            document.getElementById('quickTagRuleName').innerText = item.rule;
+            document.getElementById('quickTagChapIn').value = '';
+            document.getElementById('quickTagModal').style.display = 'flex';
+            setTimeout(() => document.getElementById('quickTagChapIn').focus(), 100);
+        }
+
+        window.executeQuickTag = (type) => {
+            if(!activeQuickTagRuleId) return;
+            const val = document.getElementById('quickTagChapIn').value;
+            // Parse "Ch1.1" or just "1.1"
+            const match = val.match(/Ch\s*(\d+(\.\d+)?)/i) || val.match(/(\d+(\.\d+)?)/);
+            if(!match) return showToast("Invalid Chapter Number");
+            
+            const num = parseFloat(match[1]);
+            const beatIndex = events.findIndex(e => e.number === num);
+            
+            if(beatIndex === -1) return showToast("Chapter not found");
+            
+            // Add tag to beat
+            if(!events[beatIndex].plotholeTags) events[beatIndex].plotholeTags = {};
+            if(Array.isArray(events[beatIndex].plotholeTags)) { // Legacy check
+                 const obj = {}; events[beatIndex].plotholeTags.forEach(id => obj[id] = 'violation'); events[beatIndex].plotholeTags = obj;
+            }
+            
+            events[beatIndex].plotholeTags[activeQuickTagRuleId] = type;
+            
+            saveLocalData();
+            renderPlotholeList();
+            closeModal();
+            showToast("Record Added");
+        }
+
+        window.removePlotholeTagFromTable = (ruleId, beatNum) => {
+            if(!confirm(`Remove record for Chapter ${beatNum}?`)) return;
+            const beatIndex = events.findIndex(e => e.number === beatNum);
+            if(beatIndex > -1 && events[beatIndex].plotholeTags) {
+                delete events[beatIndex].plotholeTags[ruleId];
+                saveLocalData();
+                renderPlotholeList();
+            }
+        }
+
         function renderPlotholeList() {
             const tbody = document.getElementById('plotholeListArea'); tbody.innerHTML = '';
             const searchTerm = document.getElementById('plotholeSearchInput') ? document.getElementById('plotholeSearchInput').value.toLowerCase() : '';
@@ -1930,15 +2010,16 @@
                 });
 
                 const statusIcon = violations.length > 0 ? '⚠️' : (adherences.length > 0 ? '✅' : '⚪');
-                const vStr = violations.length > 0 ? `<div style="color:var(--danger); font-size:0.8rem;">⚠️ ${[...new Set(violations)].sort((a,b)=>a-b).map(n => `<span class="clickable-link" onclick="jumpToChapter(${n})">${n}</span>`).join(', ')}</div>` : '';
-                const aStr = adherences.length > 0 ? `<div style="color:var(--success); font-size:0.8rem;">✅ ${[...new Set(adherences)].sort((a,b)=>a-b).map(n => `<span class="clickable-link" onclick="jumpToChapter(${n})">${n}</span>`).join(', ')}</div>` : '';
+                
+                const vStr = [...new Set(violations)].sort((a,b)=>a-b).map(n => `<span class="track-badge violation" onclick="jumpToChapter(${n})" title="Go to Chapter ${n}">⚠️ ${n} <span class="track-del" onclick="event.stopPropagation(); removePlotholeTagFromTable('${item.id}', ${n})">×</span></span>`).join('');
+                const aStr = [...new Set(adherences)].sort((a,b)=>a-b).map(n => `<span class="track-badge adherence" onclick="jumpToChapter(${n})" title="Go to Chapter ${n}">✅ ${n} <span class="track-del" onclick="event.stopPropagation(); removePlotholeTagFromTable('${item.id}', ${n})">×</span></span>`).join('');
                 
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
                     <td style="font-size:1.2rem; text-align:center;">${statusIcon}</td>
                     <td style="font-weight:bold;">${item.rule}</td>
                     <td style="text-align: left;">${item.detail || '-'}</td>
-                    <td style="text-align:left;">${vStr}${aStr}</td>
+                    <td style="text-align:left;">${vStr}${aStr}<button class="mini-add-btn" onclick="openQuickTagModal('${item.id}')" title="Add Record">+</button></td>
                     <td>
                         <div style="display:flex; gap:8px; justify-content:center; align-items:center;">
                             <button class="action-btn" onclick="editPlotholeItem('${item.id}')" title="Edit">✎</button> 
@@ -3086,7 +3167,7 @@
         window.toggleReadme = window.toggleReadme;
         
         function setupMentionLogic() {
-            const inputs = ['detailIn', 'remarksIn', 'cgSetupIn', 'cgMisdIn', 'cgPayoffIn'];
+            const inputs = ['detailIn', 'remarksIn', 'cgSetupIn', 'cgMisdIn', 'cgPayoffIn', 'quickTagChapIn'];
             const box = document.getElementById('mentionBox');
             
             inputs.forEach(id => {
