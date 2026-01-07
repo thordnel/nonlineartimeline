@@ -1,4 +1,4 @@
-const CACHE_NAME = 'storylines-v26-offline'; // Increment version to force update
+const CACHE_NAME = 'storylines-v28-offline'; // Increment version to force update
 const ASSETS = [
   './',
   './index.html',
@@ -50,6 +50,19 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   // Skip cross-origin requests like Google Analytics or things we don't want to cache logic for simplicity
   if (event.request.method !== 'GET') return;
+
+  // Network First for HTML (navigation) to ensure updates are seen immediately
+  if (event.request.mode === 'navigate') {
+    event.respondWith(
+      fetch(event.request).then((networkResponse) => {
+        return caches.open(CACHE_NAME).then((cache) => {
+          cache.put(event.request, networkResponse.clone());
+          return networkResponse;
+        });
+      }).catch(() => caches.match(event.request))
+    );
+    return;
+  }
 
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {
