@@ -1255,7 +1255,7 @@
                     <select id="narrativeModeIn">
                         <option value="Present">Present (Normal)</option>
                         <option value="Flashback">Flashback</option>
-                        <option value="Vision">Vision/Dream</option>
+                        <option value="Vision">Vision / Dream</option>
                         <option value="Superimposed">Superimposed (Haunting)</option>
                     </select>
                 </div>
@@ -1518,7 +1518,14 @@
             </div>
             <div class="filter-toggle-row" style="margin-top:5px; margin-bottom:0;">
                 <input type="checkbox" id="filterPlotholesToggle" onchange="render()">
-                <label for="filterPlotholesToggle" style="color:var(--danger); cursor:pointer;">⚠️ With Plotholes</label>
+                <label for="filterPlotholesToggle" style="color:var(--danger); cursor:pointer;">⚠️ Plotholes</label>
+                <select id="filterNarrativeMode" onchange="render()" style="width: auto; padding: 4px 8px; font-size: 0.85rem; margin-left: auto; border: 1px solid #d4cdc3; border-radius: 3px;">
+                    <option value="">All</option>
+                    <option value="Present">Present (Normal)</option>
+                    <option value="Flashback">Flashback</option>
+                    <option value="Vision">Vision / Dream</option>
+                    <option value="Superimposed">Superimposed (Haunting)</option>
+                </select>
             </div>            
             <div id="activeCharFilterDisplay" style="display:none; gap:5px; flex-wrap:wrap; margin-top:8px; padding-top:5px; border-top:1px dashed #d4cdc3;"></div>
 
@@ -2773,6 +2780,13 @@
                     if (!evt.plotholeTags) return false;
                     const hasViolation = Array.isArray(evt.plotholeTags) ? evt.plotholeTags.length > 0 : Object.values(evt.plotholeTags).includes('violation');
                     if (!hasViolation) return false;
+                }
+
+                // 5. Check Narrative Mode Filter
+                const narrativeFilter = document.getElementById('filterNarrativeMode').value;
+                if (narrativeFilter) {
+                    const mode = evt.narrativeMode || 'Present';
+                    if (mode !== narrativeFilter) return false;
                 }
 
                 // 2. Check Search Term (Global Search Option A)
