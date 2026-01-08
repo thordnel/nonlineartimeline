@@ -1566,7 +1566,10 @@
 
     <!-- RESULTS -->
     <div class="view-container">
-        <div id="viewHeaderLabel" class="view-header-label">UNSORTED</div>
+        <div style="display: flex; justify-content: center; align-items: baseline; border-bottom: 2px solid #e6e0d4; padding-bottom: 15px; margin-bottom: 20px;">
+            <div id="viewHeaderLabel" class="view-header-label" style="width: auto; border: none; padding: 0; margin: 0;">UNSORTED</div>
+            <span id="filteredCountDisplay" style="font-family: var(--font-ui); font-size: 0.8rem; color: var(--text-muted); display: none; margin-left: 15px;"></span>
+        </div>
         <div id="visualArea" class="show"></div>
         <div id="multiArea"></div>
         <table id="tableArea">
@@ -2804,6 +2807,24 @@
 
                 return true;
             });
+
+            // Update filtered count display
+            const countDisplay = document.getElementById('filteredCountDisplay');
+            const isContinuityFiltered = document.getElementById('filterBeatsToggle').checked && activeFilterIds.length > 0;
+            const isCharFiltered = activeCharFilterIds.length > 0;
+            const isChekhovFiltered = activeChekhovFilterIds.length > 0;
+            const isPlotholeFiltered = document.getElementById('filterPlotholesToggle').checked;
+            const isNarrativeFiltered = document.getElementById('filterNarrativeMode').value !== '';
+            const isSearchFiltered = currentSearchTerm !== '';
+
+            const isAnyFilterActive = isContinuityFiltered || isCharFiltered || isChekhovFiltered || isPlotholeFiltered || isNarrativeFiltered || isSearchFiltered;
+
+            if (isAnyFilterActive) {
+                countDisplay.innerText = `Showing ${displayEvents.length} beat(s)`;
+                countDisplay.style.display = 'inline';
+            } else {
+                countDisplay.style.display = 'none';
+            }
 
             displayEvents.forEach((evt) => {
                 const parts = createCardHtml(evt, evt.originalIndex);
