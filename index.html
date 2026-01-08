@@ -1588,6 +1588,7 @@
             <div class="file-tools-row-1">
                 <button class="btn-dl" onclick="downloadCSV()">Save CSV</button>
                 <button class="btn-print" onclick="window.print()">Print / Save PDF</button>
+                <button class="btn-dl" onclick="printChapterList()">Print Chapter List</button>
             </div>
             <input type="file" id="fileIn" accept=".csv" onchange="uploadCSV(this)">
             <button id="btnMainReset" class="btn-reset" onclick="confirmReset()" disabled>Reset</button>
@@ -3165,6 +3166,47 @@
             container.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
 
+        function printChapterList() {
+            const chapters = new Map();
+            // Ensure events are sorted by chapter number to get the first title for each chapter
+            const sortedEvents = [...events].sort((a, b) => a.number - b.number);
+
+            sortedEvents.forEach(event => {
+                const chapterNum = Math.floor(event.number);
+                if (!chapters.has(chapterNum) && event.chapterTitle) {
+                    chapters.set(chapterNum, event.chapterTitle);
+                }
+            });
+
+            if (chapters.size === 0) {
+                showToast("No chapters with titles to print.");
+                return;
+            }
+
+            let printContent = `
+                <html><head><title>Chapter List</title><style>
+                    body { font-family: sans-serif; margin: 2rem; }
+                    h1 { text-align: center; border-bottom: 2px solid #333; padding-bottom: 1rem; margin-bottom: 2rem; }
+                    ul { list-style-type: none; padding: 0; }
+                    li { font-size: 1.2rem; padding: 0.5rem 0; border-bottom: 1px solid #eee; }
+                    li:last-child { border-bottom: none; }
+                    span { font-weight: bold; color: #555; margin-right: 1em; }
+                </style></head><body><h1>Chapter List</h1><ul>
+            `;
+
+            const sortedChapters = Array.from(chapters.entries()).sort((a, b) => a[0] - b[0]);
+            sortedChapters.forEach(([num, title]) => {
+                printContent += `<li><span>Chapter ${num}:</span> ${title}</li>`;
+            });
+            printContent += `</ul></body></html>`;
+
+            const printWindow = window.open('', '_blank');
+            printWindow.document.write(printContent);
+            printWindow.document.close();
+            printWindow.focus();
+            setTimeout(() => { printWindow.print(); printWindow.close(); }, 250);
+        }
+
         window.collapseAllPanels = () => {
             const close = (contentId, iconId) => {
                 const content = document.getElementById(contentId);
@@ -3281,6 +3323,7 @@
         window.jumpToChapter = window.jumpToChapter;
         window.collapseAllPanels = window.collapseAllPanels;
         window.toggleChekhovFilter = window.toggleChekhovFilter;
+        window.printChapterList = printChapterList;
         window.loadBeatByNumber = () => {
             const val = parseFloat(document.getElementById('numIn').value);
             if (isNaN(val)) return showToast("Enter a number");
