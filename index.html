@@ -148,6 +148,14 @@
             box-shadow: 0 0 0 2px rgba(140, 107, 93, 0.1);
         }
 
+        /* Hide Number Input Arrows */
+        input::-webkit-outer-spin-button,
+        input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        input[type=number] { -moz-appearance: textfield; }
+
         textarea { resize: vertical; min-height: 150px; line-height: 1.5; overflow: hidden; }
 
         .btn-row { margin-top: 20px; display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
@@ -261,7 +269,7 @@
 
         .nav-bottom-row {
             display: flex;
-            justify-content: flex-end;
+            align-items: center;
             width: 100%;
         }
 
@@ -365,7 +373,10 @@
             color: #fff;
             padding: 5px 10px;
             border-radius: 4px;
-            white-space: nowrap;
+            white-space: normal;
+            width: max-content;
+            max-width: 240px;
+            text-align: left;
             font-size: 0.7rem;
             z-index: 100;
             pointer-events: none;
@@ -522,15 +533,15 @@
         th:nth-child(2) { width: 180px; } 
         th:nth-child(3) { width: 160px; } 
         /* Fixed width for Action column to prevent overlap - Increased to 90px */
-        th:last-child { width: 90px; text-align: center; } 
+        th:last-child { width: 50px; text-align: center; } 
         td:nth-child(4) { font-size: 0.95rem; font-weight: 300; line-height: 1.6; white-space: normal; word-wrap: break-word; }
 
         /* Ensure action buttons don't wrap and stay centered */
         td:last-child .action-btn-group {
             display: flex;
-            gap: 4px;
-            justify-content: center;
-            white-space: nowrap;
+            flex-direction: column;
+            gap: 2px;
+            align-items: center;
         }
 
         /* Markdown Styling within Details - Reduced Spacing */
@@ -617,6 +628,7 @@
 
         .h-dot { width: 16px; height: 16px; background: var(--bg); border: 3px solid var(--primary); border-radius: 50%; z-index: 1; box-shadow: 0 0 0 4px var(--bg); cursor: pointer; transition: all 0.2s; position: relative; }
         .h-dot:hover { background: var(--primary); transform: scale(1.2); }
+        .h-dot.active { background: var(--primary); transform: scale(1.2); }
 
         .h-card { margin-top: 15px; background: #fff; border: 1px solid #e6e0d4; border-top: 3px solid var(--primary); border-radius: 2px; padding: 15px; width: 190px; margin-left: 15px; margin-right: 15px; white-space: normal; text-align: left; position: relative; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); transition: transform 0.2s; cursor: pointer; }
         .multi-day-slot .h-card { margin: 0; width: 160px; padding: 12px; }
@@ -940,6 +952,10 @@
                 display: flex;
                 justify-content: flex-end;
                 gap: 8px;
+            }
+
+            #tableArea td:nth-child(5) .action-btn-group {
+                flex-direction: row;
             }
 
             /* Make action buttons larger for touch */
@@ -1515,8 +1531,12 @@
                 </div>
             </div>
         </div>
-        <div class="nav-bottom-row">
-            <select id="tzSelect" class="tz-picker-compact" onchange="updateTzPreference()">
+        <div class="nav-bottom-row" style="margin-top: 10px;">
+            <div id="dragDropToggleContainer" class="filter-toggle-row" style="display: none; margin-bottom: 0;">
+                <input type="checkbox" id="allowDragDrop" onchange="render()">
+                <label for="allowDragDrop">Allow Drag & Drop Sort</label>
+            </div>
+            <select id="tzSelect" class="tz-picker-compact" onchange="updateTzPreference()" style="margin-left: auto;">
                 <option value="">Compare Time: Off</option>
                 <option value="UTC">UTC</option>
                 <option value="Asia/Manila">Philippines</option>
@@ -1537,7 +1557,7 @@
         <div id="multiArea"></div>
         <table id="tableArea">
             <thead>
-                <tr><th></th><th>Date / Time</th><th>Chapter</th><th>Details</th><th>ACTION</th></tr>
+                <tr><th></th><th>Date / Time</th><th>Chapter</th><th>Details</th><th></th></tr>
             </thead>
             <tbody id="tableBody"></tbody>
         </table>
@@ -2446,6 +2466,14 @@
             saveLocalData(); renderCharList(); renderPlotholeList(); render();
         }
 
+        function updateActiveDotVisuals() {
+            document.querySelectorAll('.h-dot').forEach(d => d.classList.remove('active'));
+            if (editIndex > -1) {
+                const dot = document.querySelector(`.h-item[data-index="${editIndex}"] .h-dot`);
+                if (dot) dot.classList.add('active');
+            }
+        }
+
         window.editEvent = (i) => {
             editIndex = i; const e = events[i]; 
             document.getElementById('dateIn').value = e.date; 
@@ -2475,6 +2503,7 @@
             document.getElementById('btnCancel').style.display = "inline-block"; 
             document.getElementById('btnSaveNew').style.display = "inline-block";
             if (document.getElementById('beatPanelContent').style.display === 'none') window.toggleBeatPanel();
+            updateActiveDotVisuals();
         }
 
         window.cancelEdit = () => { 
@@ -2482,6 +2511,7 @@
             currentBeatCharIds = []; updateBeatCharDisplay();
             currentBeatPlotholeTags = {}; updateBeatPlotholeDisplay();
             document.getElementById('btnAdd').innerText = "+ Add Beat"; document.getElementById('btnAdd').className = "btn-add"; document.getElementById('btnCancel').style.display = "none"; document.getElementById('btnSaveNew').style.display = "none"; 
+            updateActiveDotVisuals();
         }
         window.saveAsNew = () => { editIndex = -1; handleAdd(); cancelEdit(); }
 
@@ -2554,7 +2584,9 @@
                     const item = plotholeItems.find(i => i.id === pid);
                     if(item) {
                         const isBroken = Array.isArray(phTags) ? true : (phTags[pid] === 'violation');
-                        cHtml += `<span class="c-badge" style="color:white; background-color:${isBroken?'var(--danger)':'var(--success)'}; border-color:${isBroken?'var(--danger)':'var(--success)'};" onclick="event.stopPropagation()">${isBroken?'⚠️':'✅'} ${item.rule}</span>`;
+                        const statusLine = isBroken ? "Violated Rule:" : "Complied Rule:";
+                        const tooltip = `${statusLine}\n${item.detail || ''}`.replace(/"/g, '&quot;');
+                        cHtml += `<span class="c-badge" style="color:white; background-color:${isBroken?'var(--danger)':'var(--success)'}; border-color:${isBroken?'var(--danger)':'var(--success)'};" data-tooltip="${tooltip}" onclick="event.stopPropagation()">${isBroken?'⚠️':'✅'} ${item.rule}</span>`;
                     }
                 });
                 cHtml += '</div>';
@@ -2600,9 +2632,9 @@
                 });
                 cHtml += '</div>';
             }
-            const dragAttr = currentSortMethod === 'number' ? 'draggable="true"' : '', dragClass = currentSortMethod === 'number' ? 'draggable' : '';
-            
-            // Markdown parsing for details and remarks
+            const allowDrag = currentSortMethod === 'number' && document.getElementById('allowDragDrop').checked;
+            const dragAttr = allowDrag ? 'draggable="true"' : '', dragClass = allowDrag ? 'draggable' : '';
+
             let parsedDetails = marked.parse(evt.details.replace(/{nl}/g, '\n'));
             let parsedRemarks = evt.remarks ? marked.parse(evt.remarks.replace(/{nl}/g, '\n')) : '';
 
@@ -2612,9 +2644,11 @@
             parsedDetails = parsedDetails.replace(linkRegex, linkReplacement);
             if (parsedRemarks) parsedRemarks = parsedRemarks.replace(linkRegex, linkReplacement);
 
+            const dotClass = (i === editIndex) ? 'h-dot active' : 'h-dot';
+
             return {
-                table: `<tr class="${dragClass}" data-index="${i}" ${dragAttr} style="${bgStyle}"><td>${currentSortMethod === 'number' ? '☰' : ''}</td><td style="white-space: nowrap;">${displayDate} ${displayTime}<br><small>${displayDay}</small><br><span class="display-basis-tag">${displayBasis}</span>${altTzHtml}</td><td><b>${evt.number}</b><br><span style="font-weight:700;">${evt.chapterTitle || ''}</span>${evt.subChapterTitle ? `<br><span style="font-size:0.8rem; font-style:italic; color:var(--text-muted);">${evt.subChapterTitle}</span>` : ''}</td><td><div class="markdown-body">${parsedDetails}</div>${evt.remarks ? `<div class="td-remarks">📝 <div class="markdown-body" style="display:inline;">${parsedRemarks}</div></div>` : ''}<div style="margin-top:4px">${cHtml}</div></td><td><div class="action-btn-group" style="display:flex; gap:4px;"><button class="action-btn" onclick="editEvent(${i})" title="Edit">✎</button>${currentSortMethod === 'number' ? `<button class="action-btn" onclick="moveBeat(${i}, -1)" title="Move Up">↑</button><button class="action-btn" onclick="moveBeat(${i}, 1)" title="Move Down">↓</button>` : ''}<button class="action-btn del-btn" onclick="askDelete(${i})" title="Delete">×</button></div></td></tr>`,
-                linear: `<div class="h-item ${dragClass}" data-index="${i}" ${dragAttr}><div class="h-date-wrap"><div class="h-date">${displayDate}</div><div class="h-day">${displayDay}</div><div class="h-time">${displayTime}<br><span class="display-basis-tag">${displayBasis}</span>${altTzHtml}</div></div><div class="h-dot-container"><div class="h-line"></div><div class="h-dot" onclick="editEvent(${i})"></div></div><div class="h-card" onclick="editEvent(${i})" style="${bgStyle}"><span class="card-del" onclick="event.stopPropagation(); askDelete(${i})">×</span><div class="h-val-text">Chapter ${evt.number}</div>${evt.chapterTitle ? `<div class="h-chap-title">${evt.chapterTitle}</div>` : ''}${evt.subChapterTitle ? `<div class="h-sub-title">${evt.subChapterTitle}</div>` : ''}<div class="h-divider"></div><div class="h-detail-text markdown-body">${parsedDetails}</div>${evt.remarks ? `<div class="h-remarks"><div class="markdown-body">${parsedRemarks}</div></div>` : ''}${cHtml}</div></div>`,
+                table: `<tr class="${dragClass}" data-index="${i}" ${dragAttr} style="${bgStyle}"><td>${currentSortMethod === 'number' ? '☰' : ''}</td><td style="white-space: nowrap;">${displayDate} ${displayTime}<br><small>${displayDay}</small><br><span class="display-basis-tag">${displayBasis}</span>${altTzHtml}</td><td><b>${evt.number}</b><br><span style="font-weight:700;">${evt.chapterTitle || ''}</span>${evt.subChapterTitle ? `<br><span style="font-size:0.8rem; font-style:italic; color:var(--text-muted);">${evt.subChapterTitle}</span>` : ''}</td><td><div class="markdown-body">${parsedDetails}</div>${evt.remarks ? `<div class="td-remarks">📝 <div class="markdown-body" style="display:inline;">${parsedRemarks}</div></div>` : ''}<div style="margin-top:4px">${cHtml}</div></td><td><div class="action-btn-group"><button class="action-btn" onclick="editEvent(${i})" title="Edit">✎</button>${currentSortMethod === 'number' ? `<button class="action-btn" onclick="moveBeat(${i}, -1)" title="Move Up">↑</button><button class="action-btn" onclick="moveBeat(${i}, 1)" title="Move Down">↓</button>` : ''}<button class="action-btn del-btn" onclick="askDelete(${i})" title="Delete">×</button></div></td></tr>`,
+                linear: `<div class="h-item ${dragClass}" data-index="${i}" ${dragAttr}><div class="h-date-wrap"><div class="h-date">${displayDate}</div><div class="h-day">${displayDay}</div><div class="h-time">${displayTime}<br><span class="display-basis-tag">${displayBasis}</span>${altTzHtml}</div></div><div class="h-dot-container"><div class="h-line"></div><div class="${dotClass}" onclick="editEvent(${i})"></div></div><div class="h-card" onclick="editEvent(${i})" style="${bgStyle}"><span class="card-del" onclick="event.stopPropagation(); askDelete(${i})">×</span><div class="h-val-text">Chapter ${evt.number}</div>${evt.chapterTitle ? `<div class="h-chap-title">${evt.chapterTitle}</div>` : ''}${evt.subChapterTitle ? `<div class="h-sub-title">${evt.subChapterTitle}</div>` : ''}<div class="h-divider"></div><div class="h-detail-text markdown-body">${parsedDetails}</div>${evt.remarks ? `<div class="h-remarks"><div class="markdown-body">${parsedRemarks}</div></div>` : ''}${cHtml}</div></div>`,
                 multi: `<div class="h-item"><div class="h-date-wrap" style="min-height:auto; text-align:left;"><div class="h-date" style="font-size:0.7rem; font-weight:900;">${displayDate}</div><div class="h-time" style="font-size:0.6rem; color:var(--text-muted)">${displayTime} <span class="display-basis-tag" style="font-size:0.5rem; padding:1px 3px;">${displayBasis}</span></div>${altTzHtml}</div><div class="h-card" data-index="${i}" onclick="editEvent(${i})" style="${bgStyle}"><span class="card-del" onclick="event.stopPropagation(); askDelete(${i})">×</span><div class="h-val-text" style="font-size:0.55rem">CH ${evt.number}</div>${evt.chapterTitle ? `<div class="h-chap-title" style="font-size:0.75rem">${evt.chapterTitle}</div>` : ''}${evt.subChapterTitle ? `<div class="h-sub-title" style="font-size:0.65rem">${evt.subChapterTitle}</div>` : ''}<div class="h-divider"></div><div class="h-detail-text markdown-body" style="font-size:0.75rem">${parsedDetails.substring(0, 150)}${evt.details.length > 150 ? '...' : ''}</div>${cHtml}</div></div>`
             };
         }
@@ -2814,15 +2848,19 @@
             const label = document.getElementById('viewHeaderLabel'); 
             const printSub = document.getElementById('printSubtitle');
 
-            if (type === 'number') {
-                events.sort((a, b) => a.number - b.number); 
-                label.innerText = "CHAPTER"; 
-                if(printSub) printSub.innerText = "Sorted by: Chapter";
-            } else if (type === 'date') { 
+            if (type === 'date') { 
                 events.sort((a, b) => new Date(a.date) - new Date(b.date)); 
                 label.innerText = "CHRONOLOGICAL"; 
                 if(printSub) printSub.innerText = "Sorted by: Chronological";
-            } 
+                document.getElementById('allowDragDrop').checked = false; // Uncheck when not in chapter sort
+            } else { // 'number'
+                events.sort((a, b) => a.number - b.number); 
+                label.innerText = "CHAPTER"; 
+                if(printSub) printSub.innerText = "Sorted by: Chapter";
+            }
+            
+            const dragDropContainer = document.getElementById('dragDropToggleContainer');
+            if (dragDropContainer) dragDropContainer.style.display = (type === 'number') ? 'flex' : 'none';
             
             render(); 
         }
@@ -3031,7 +3069,7 @@
         }
         
         function setupDragAndDrop() { 
-            if (currentSortMethod !== 'number') return;
+            if (currentSortMethod !== 'number' || !document.getElementById('allowDragDrop').checked) return;
             document.querySelectorAll('.draggable').forEach(el => { 
                 el.ondragstart = (e) => { e.dataTransfer.setData('idx', el.dataset.index); el.classList.add('dragging'); }; 
                 el.ondragover = (e) => { e.preventDefault(); e.currentTarget.classList.add('drag-over'); }; 
