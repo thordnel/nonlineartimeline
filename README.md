@@ -53,7 +53,7 @@ This repository contains a single-page web app that helps you manage complex sto
 
 The app utilizes an extended CSV format to preserve all metadata:
 
-Date,Chapter,ChapterTitle,SubChapterTitle,Details,Remarks, PrefTz,PrefCountry,NarrativeMode,CharTags,PlotholeTags
+*Date,Chapter,ChapterTitle,SubChapterTitle,Details,Remarks, PrefTz,PrefCountry,NarrativeMode,CharTags,PlotholeTags*
 
 * **NarrativeMode**: Stores the type of event (Present, Flashback, etc.).
 * **Details/Remarks**: Newlines are encoded as {nl} and commas as {com}.
