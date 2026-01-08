@@ -841,6 +841,16 @@
                 height: 42px;
                 font-size: 0.9rem;
             }
+            
+            .filter-toggle-row {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 10px;
+            }
+            .filter-toggle-row select {
+                width: 100% !important;
+                margin-left: 0 !important;
+            }
 
             .cloud-banner { flex-direction: column; align-items: stretch; padding: 15px; }
             .id-input-group { width: 100%; display: flex; gap: 5px; }
@@ -1213,7 +1223,7 @@
     </div>
 
     <div class="header-branding">
-        <h2 class="main-title">STORYLINES</h2>
+        <h2 class="main-title">Storylines</h2>
         <h4 class="main-subtitle">Non-Linear Timeline Manager</h4>
     </div>
 
@@ -1321,8 +1331,10 @@
         
         <div id="continuityContent" class="panel-content" style="display: none;">
             <div class="filter-toggle-row">
-                <input type="checkbox" id="filterBeatsToggle" onchange="toggleFilterMode()">
-                <label for="filterBeatsToggle">Filter Beats</label>
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <input type="checkbox" id="filterBeatsToggle" onchange="toggleFilterMode()">
+                    <label for="filterBeatsToggle" style="margin-bottom:0;">Filter Beats</label>
+                </div>
             </div>
 
             <div class="c-row-70-30">
@@ -1520,8 +1532,10 @@
                 <button id="btnGlobalClear" onclick="clearAllFilters()" style="display:none; background-color: var(--secondary); padding: 0 15px;" title="Reset all filters">Clear Filters</button>
             </div>
             <div class="filter-toggle-row" style="margin-top:5px; margin-bottom:0;">
-                <input type="checkbox" id="filterPlotholesToggle" onchange="render()">
-                <label for="filterPlotholesToggle" style="color:var(--danger); cursor:pointer;">⚠️ Plotholes</label>
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <input type="checkbox" id="filterPlotholesToggle" onchange="render()">
+                    <label for="filterPlotholesToggle" style="color:var(--danger); cursor:pointer; margin-bottom:0;">⚠️ Plotholes</label>
+                </div>
                 <select id="filterChapter" onchange="render()" style="width: auto; padding: 4px 8px; font-size: 0.85rem; margin-left: auto; border: 1px solid #d4cdc3; border-radius: 3px;">
                     <option value="">All Chapters</option>
                 </select>
@@ -1553,8 +1567,10 @@
         </div>
         <div class="nav-bottom-row" style="margin-top: 10px;">
             <div id="dragDropToggleContainer" class="filter-toggle-row" style="display: none; margin-bottom: 0;">
-                <input type="checkbox" id="allowDragDrop" onchange="render()">
-                <label for="allowDragDrop">Allow Drag & Drop Sort</label>
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <input type="checkbox" id="allowDragDrop" onchange="render()">
+                    <label for="allowDragDrop" style="margin-bottom:0;">Allow Drag & Drop Sort</label>
+                </div>
             </div>
             <select id="tzSelect" class="tz-picker-compact" onchange="updateTzPreference()" style="margin-left: auto;">
                 <option value="">Compare Time: Off</option>
