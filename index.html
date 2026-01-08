@@ -1512,15 +1512,21 @@
     <!-- NAVIGATION BAR -->
     <div class="navigation-bar">
         <div class="search-container">
-            <div style="position: relative;">
-                <input type="text" id="searchInput" placeholder="🔍 Search details, titles, remarks..." oninput="handleSearch(this.value)">
-                <button id="btnSearchClear" onclick="clearSearch()" title="Clear Search">×</button>
+            <div style="display: flex; gap: 10px;">
+                <div style="position: relative; flex: 1;">
+                    <input type="text" id="searchInput" placeholder="🔍 Search details, titles, remarks..." oninput="handleSearch(this.value)">
+                    <button id="btnSearchClear" onclick="clearSearch()" title="Clear Search">×</button>
+                </div>
+                <button id="btnGlobalClear" onclick="clearAllFilters()" style="display:none; background-color: var(--secondary); padding: 0 15px;" title="Reset all filters">Clear Filters</button>
             </div>
             <div class="filter-toggle-row" style="margin-top:5px; margin-bottom:0;">
                 <input type="checkbox" id="filterPlotholesToggle" onchange="render()">
                 <label for="filterPlotholesToggle" style="color:var(--danger); cursor:pointer;">⚠️ Plotholes</label>
-                <select id="filterNarrativeMode" onchange="render()" style="width: auto; padding: 4px 8px; font-size: 0.85rem; margin-left: auto; border: 1px solid #d4cdc3; border-radius: 3px;">
-                    <option value="">All</option>
+                <select id="filterChapter" onchange="render()" style="width: auto; padding: 4px 8px; font-size: 0.85rem; margin-left: auto; border: 1px solid #d4cdc3; border-radius: 3px;">
+                    <option value="">All Chapters</option>
+                </select>
+                <select id="filterNarrativeMode" onchange="render()" style="width: auto; padding: 4px 8px; font-size: 0.85rem; border: 1px solid #d4cdc3; border-radius: 3px;">
+                    <option value="">All Narrative Modes</option>
                     <option value="Present">Present (Normal)</option>
                     <option value="Flashback">Flashback</option>
                     <option value="Vision">Vision / Dream</option>
@@ -1591,7 +1597,6 @@
                 <button class="btn-dl" onclick="printChapterList()">Print Chapter List</button>
             </div>
             <input type="file" id="fileIn" accept=".csv" onchange="uploadCSV(this)">
-            <button id="btnMainReset" class="btn-reset" onclick="confirmReset()" disabled>Reset</button>
         </div>
     </div>
 
@@ -1803,6 +1808,25 @@
             document.getElementById('searchInput').value = '';
             handleSearch('');
         };
+
+        window.clearAllFilters = () => {
+            currentSearchTerm = '';
+            document.getElementById('searchInput').value = '';
+            document.getElementById('btnSearchClear').style.display = 'none';
+            activeCharFilterIds = [];
+            activeChekhovFilterIds = [];
+            activeFilterIds = [];
+            document.getElementById('filterPlotholesToggle').checked = false;
+            document.getElementById('filterChapter').value = '';
+            document.getElementById('filterNarrativeMode').value = '';
+            document.getElementById('filterBeatsToggle').checked = false;
+            
+            if (document.getElementById('btnCAdd')) document.getElementById('btnCAdd').disabled = false;
+            if (document.getElementById('btnCCancel')) document.getElementById('btnCCancel').disabled = false;
+            
+            renderContinuityList();
+            render();
+        }
 
         /* --- CHARACTER LOGIC --- */
         let characterItems = []; 
@@ -2693,6 +2717,29 @@
                 });
             }
 
+            // Populate Chapter Filter
+            const chFilter = document.getElementById('filterChapter');
+            if (chFilter) {
+                const currentVal = chFilter.value;
+                const chapters = [...new Set(events.map(e => Math.floor(e.number)))].sort((a,b)=>a-b);
+                
+                const titleMap = new Map();
+                [...events].sort((a,b) => a.number - b.number).forEach(e => {
+                    const c = Math.floor(e.number);
+                    if(!titleMap.has(c) && e.chapterTitle) titleMap.set(c, e.chapterTitle);
+                });
+
+                chFilter.innerHTML = '<option value="">All Chapters</option>';
+                chapters.forEach(num => {
+                    const opt = document.createElement('option');
+                    const t = titleMap.get(num);
+                    opt.value = num; 
+                    opt.innerText = `Chapter ${num}${t ? ': ' + t : ''}`;
+                    chFilter.appendChild(opt);
+                });
+                chFilter.value = currentVal;
+            }
+
             // Update Active Filter Display
             const filterDisp = document.getElementById('activeCharFilterDisplay');
             if (activeCharFilterIds.length > 0 || activeChekhovFilterIds.length > 0) {
@@ -2793,6 +2840,12 @@
                     if (mode !== narrativeFilter) return false;
                 }
 
+                // 6. Check Chapter Filter
+                const chapterFilter = document.getElementById('filterChapter').value;
+                if (chapterFilter) {
+                    if (Math.floor(evt.number) !== parseInt(chapterFilter)) return false;
+                }
+
                 // 2. Check Search Term (Global Search Option A)
                 if (currentSearchTerm) {
                     const searchStr = (
@@ -2816,15 +2869,18 @@
             const isChekhovFiltered = activeChekhovFilterIds.length > 0;
             const isPlotholeFiltered = document.getElementById('filterPlotholesToggle').checked;
             const isNarrativeFiltered = document.getElementById('filterNarrativeMode').value !== '';
+            const isChapterFiltered = document.getElementById('filterChapter').value !== '';
             const isSearchFiltered = currentSearchTerm !== '';
 
-            const isAnyFilterActive = isContinuityFiltered || isCharFiltered || isChekhovFiltered || isPlotholeFiltered || isNarrativeFiltered || isSearchFiltered;
+            const isAnyFilterActive = isContinuityFiltered || isCharFiltered || isChekhovFiltered || isPlotholeFiltered || isNarrativeFiltered || isChapterFiltered || isSearchFiltered;
 
             if (isAnyFilterActive) {
                 countDisplay.innerText = `Showing ${displayEvents.length} beat(s)`;
                 countDisplay.style.display = 'inline';
+                if(document.getElementById('btnGlobalClear')) document.getElementById('btnGlobalClear').style.display = 'block';
             } else {
                 countDisplay.style.display = 'none';
+                if(document.getElementById('btnGlobalClear')) document.getElementById('btnGlobalClear').style.display = 'none';
             }
 
             displayEvents.forEach((evt) => {
@@ -3237,11 +3293,12 @@
             num = parseFloat(num);
             
             // Clear Filters to ensure visibility
-            if (activeFilterIds.length > 0 || activeCharFilterIds.length > 0 || currentSearchTerm || document.getElementById('filterBeatsToggle').checked) {
+            if (activeFilterIds.length > 0 || activeCharFilterIds.length > 0 || currentSearchTerm || document.getElementById('filterBeatsToggle').checked || document.getElementById('filterChapter').value) {
                 activeFilterIds = [];
                 activeCharFilterIds = [];
                 activeChekhovFilterIds = [];
                 currentSearchTerm = '';
+                document.getElementById('filterChapter').value = '';
                 document.getElementById('searchInput').value = '';
                 document.getElementById('filterBeatsToggle').checked = false;
                 document.getElementById('btnSearchClear').style.display = 'none';
@@ -3327,10 +3384,66 @@
         window.loadBeatByNumber = () => {
             const val = parseFloat(document.getElementById('numIn').value);
             if (isNaN(val)) return showToast("Enter a number");
+
+            // Clear filters to ensure visibility, similar to jumpToChapter
+            if (activeFilterIds.length > 0 || activeCharFilterIds.length > 0 || activeChekhovFilterIds.length > 0 || currentSearchTerm || document.getElementById('filterBeatsToggle').checked || document.getElementById('filterChapter').value || document.getElementById('filterPlotholesToggle').checked || document.getElementById('filterNarrativeMode').value) {
+                activeFilterIds = [];
+                activeCharFilterIds = [];
+                activeChekhovFilterIds = [];
+                currentSearchTerm = '';
+                document.getElementById('filterChapter').value = '';
+                document.getElementById('filterNarrativeMode').value = '';
+                document.getElementById('searchInput').value = '';
+                document.getElementById('filterBeatsToggle').checked = false;
+                document.getElementById('filterPlotholesToggle').checked = false;
+                document.getElementById('btnSearchClear').style.display = 'none';
+                if (document.getElementById('btnCAdd')) document.getElementById('btnCAdd').disabled = false;
+                if (document.getElementById('btnCCancel')) document.getElementById('btnCCancel').disabled = false;
+                render();
+                showToast("Filters cleared to show beat.");
+            }
+
             const idx = events.findIndex(e => e.number === val);
             if (idx !== -1) {
                 editEvent(idx);
                 showToast(`Loaded Chapter ${val}`);
+                
+                // Scroll container logic (without scrolling window)
+                setTimeout(() => {
+                    const visualArea = document.getElementById('visualArea');
+                    const multiArea = document.getElementById('multiArea');
+                    const tableArea = document.getElementById('tableArea');
+                    
+                    let target = null;
+                    let container = null;
+                    let isHorizontal = false;
+
+                    if (visualArea.classList.contains('show')) {
+                        container = visualArea;
+                        target = container.querySelector(`.h-item[data-index="${idx}"]`);
+                        isHorizontal = true;
+                    } else if (multiArea.classList.contains('show')) {
+                        container = multiArea;
+                        target = container.querySelector(`.h-card[data-index="${idx}"]`);
+                    } else if (tableArea.classList.contains('show')) {
+                        target = tableArea.querySelector(`tr[data-index="${idx}"]`);
+                    }
+
+                    if (target) {
+                        const animateTarget = target.classList.contains('h-item') ? target.querySelector('.h-card') : target;
+                        if (animateTarget) {
+                            animateTarget.classList.add('highlight-pulse');
+                            setTimeout(() => animateTarget.classList.remove('highlight-pulse'), 2000);
+                        }
+
+                        if (container) {
+                            const rect = target.getBoundingClientRect();
+                            const cRect = container.getBoundingClientRect();
+                            const scrollPos = isHorizontal ? (rect.left - cRect.left + container.scrollLeft - (container.clientWidth / 2) + (rect.width / 2)) : (rect.top - cRect.top + container.scrollTop - (container.clientHeight / 2) + (rect.height / 2));
+                            container.scrollTo({ [isHorizontal ? 'left' : 'top']: scrollPos, behavior: 'smooth' });
+                        }
+                    }
+                }, 300);
             } else {
                 showToast("Chapter not found");
             }
