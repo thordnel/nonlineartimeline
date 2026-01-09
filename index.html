@@ -3218,7 +3218,7 @@
             events.forEach(e => { 
                 const charStr = e.charTags ? JSON.stringify(e.charTags).replace(/"/g, '""') : '[]';
                 const phStr = e.plotholeTags ? JSON.stringify(e.plotholeTags).replace(/"/g, '""') : '{}';
-                csv += `${e.date},${e.number},"${(e.chapterTitle||'').replace(/,/g,'{com}')}","${(e.subChapterTitle||'').replace(/,/g,'{com}')}","${(e.details||'').replace(/\n/g,'{nl}').replace(/,/g,'{com}')}","${(e.remarks||'').replace(/\n/g,'{nl}').replace(/,/g,'{com}')}","${e.preferredDisplayTz||''}","${e.preferredCountry||''}","${e.narrativeMode||'Present'}","${charStr}","${phStr}"\n`;
+                csv += `${e.date},${e.number},"${(e.chapterTitle||'').replace(/,/g,'{com}')}","${(e.subChapterTitle||'').replace(/,/g,'{com}')}","${(e.details||'').replace(/\n/g,'{nl}').replace(/,/g,'{com}')}","${(e.remarks||'').replace(/\n/g,'{nl}').replace(/,/g,'{com}')}","${(e.preferredDisplayTz||'').replace(/,/g,'{com}')}","${(e.preferredCountry||'').replace(/,/g,'{com}')}","${e.narrativeMode||'Present'}","${charStr}","${phStr}"\n`;
             });
             
             // Append Continuity Data
@@ -3314,16 +3314,19 @@
 
                     if(pSimple.length >= 2) { 
                         const n = parseFloat(pSimple[1]); 
+                        // Helper to clean fields: remove surrounding quotes, restore newlines/commas
+                        const clean = (s) => (s || '').trim().replace(/^"|"$/g, '').replace(/{nl}/g, '\n').replace(/{com}/g, ',');
+
                         if(!isNaN(n)) newEvents.push({ 
                             date: pSimple[0], 
                             number: n, 
-                            chapterTitle: pSimple[2]?.replace(/{com}/g,',') || '', 
-                            subChapterTitle: pSimple[3]?.replace(/{com}/g,',') || '', 
-                            details: pSimple[4]?.replace(/{nl}/g,'\n').replace(/{com}/g,',') || '', 
-                            remarks: pSimple[5]?.replace(/{nl}/g,'\n').replace(/{com}/g,',') || '', 
-                            preferredDisplayTz: pSimple[6] || '', 
-                            preferredCountry: pSimple[7] || '', 
-                            narrativeMode: pSimple[8] || 'Present',
+                            chapterTitle: clean(pSimple[2]), 
+                            subChapterTitle: clean(pSimple[3]), 
+                            details: clean(pSimple[4]), 
+                            remarks: clean(pSimple[5]), 
+                            preferredDisplayTz: clean(pSimple[6]), 
+                            preferredCountry: clean(pSimple[7]), 
+                            narrativeMode: clean(pSimple[8]) || 'Present',
                             charTags: charTags,
                             plotholeTags: plotholeTags
                         }); 
