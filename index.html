@@ -1671,7 +1671,7 @@
 
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js';
         import { getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js';
-        import { getFirestore, doc, setDoc, getDoc, collection, onSnapshot, deleteDoc, writeBatch, enableIndexedDbPersistence, query, limit, getDocs } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js';
+        import { initializeFirestore, persistentLocalCache, doc, setDoc, getDoc, collection, onSnapshot, deleteDoc, writeBatch, query, limit, getDocs } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js';
 
         let firebaseConfig = null;
         try { if (typeof __firebase_config !== 'undefined') { firebaseConfig = JSON.parse(__firebase_config); } } catch (e) {}
@@ -1689,12 +1689,7 @@
                 }
                 const app = initializeApp(firebaseConfig);
                 auth = getAuth(app);
-                db = getFirestore(app);
-                try {
-                    await enableIndexedDbPersistence(db);
-                } catch (err) {
-                    console.warn("Persistence disabled:", err.code);
-                }
+                db = initializeFirestore(app, { localCache: persistentLocalCache() });
                 if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) { await signInWithCustomToken(auth, __initial_auth_token); } else { await signInAnonymously(auth); }
                 onAuthStateChanged(auth, (u) => { 
                     user = u; 
@@ -1942,16 +1937,20 @@
             showToast("Initializing Cloud...");
             
             try {
-                const batch = writeBatch(db);
-
-                // 1. Upload Beats (Collection)
+                // 1. Upload Beats (Collection) with Chunking
                 // Ensure IDs exist
                 events.forEach(e => { if (!e.id) e.id = generateId(); });
                 
-                events.forEach(e => {
-                    const ref = doc(db, 'users', activeSyncId, 'beats', e.id);
-                    batch.set(ref, e);
-                });
+                const chunkSize = 450;
+                for (let i = 0; i < events.length; i += chunkSize) {
+                    const batch = writeBatch(db);
+                    const chunk = events.slice(i, i + chunkSize);
+                    chunk.forEach(e => {
+                        const ref = doc(db, 'users', activeSyncId, 'beats', e.id);
+                        batch.set(ref, e);
+                    });
+                    await batch.commit();
+                }
 
                 // 2. Upload Lists (Single Doc)
                 const listBatch = writeBatch(db);
