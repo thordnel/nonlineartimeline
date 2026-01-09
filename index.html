@@ -1669,7 +1669,7 @@
 
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js';
         import { getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js';
-        import { getFirestore, doc, setDoc, getDoc, collection, onSnapshot, deleteDoc, writeBatch, enableIndexedDbPersistence } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js';
+        import { getFirestore, doc, setDoc, getDoc, collection, onSnapshot, deleteDoc, writeBatch, enableIndexedDbPersistence, query, limit, getDocs } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js';
 
         let firebaseConfig = null;
         try { if (typeof __firebase_config !== 'undefined') { firebaseConfig = JSON.parse(__firebase_config); } } catch (e) {}
@@ -1727,11 +1727,11 @@
             
             try {
                 // Check if cloud data exists for this ID
-                const beatsRef = doc(db, 'users', id, 'data', 'beats');
+                const beatsRef = collection(db, 'users', id, 'beats');
                 const listsRef = doc(db, 'users', id, 'data', 'lists');
-                const [bSnap, lSnap] = await Promise.all([getDoc(beatsRef), getDoc(listsRef)]);
+                const [bSnap, lSnap] = await Promise.all([getDocs(query(beatsRef, limit(1))), getDoc(listsRef)]);
                 
-                const cloudHasData = (bSnap.exists() && bSnap.data().items && bSnap.data().items.length > 0) || lSnap.exists();
+                const cloudHasData = (!bSnap.empty) || lSnap.exists();
                 const localHasData = events.length > 0 || continuityItems.length > 0 || chekhovItems.length > 0 || characterItems.length > 0 || plotholeItems.length > 0;
 
                 if (cloudHasData) {
@@ -1769,14 +1769,19 @@
 
             } catch (e) {
                 console.error("Link Error:", e);
-                showToast("Error linking ID");
-                document.getElementById('syncStatus').innerText = "Link Error";
+                if (e.code === 'permission-denied') {
+                    alert("⚠️ Access Denied\n\nPlease ensure your Firestore Security Rules allow access to:\n/users/{userId}/beats/{beatId}\n/users/{userId}/data/lists");
+                    document.getElementById('syncStatus').innerText = "Rules Error";
+                } else {
+                    showToast("Error linking ID");
+                    document.getElementById('syncStatus').innerText = "Link Error";
+                }
             }
         };
 
         window.resetToOriginalId = () => { 
             if(!activeSyncId) return;
-            if(!confirm("Unlink and CLEAR local data? You will start with a blank slate.")) return;
+            if(!confirm("Disable cloud and clear local data? You will start with a blank slate.")) return;
 
             // 1. Stop Sync
             if(unsubscribeBeats) unsubscribeBeats();
@@ -1804,7 +1809,14 @@
             if(!confirm(`PERMANENTLY DELETE all cloud data for ID: ${id}?\n\nThis cannot be undone.`)) return;
             
             try {
-                await deleteDoc(doc(db, 'users', id, 'data', 'beats'));
+                // Delete Beats Collection (Batch)
+                const q = query(collection(db, 'users', id, 'beats'));
+                const snapshot = await getDocs(q);
+                const batch = writeBatch(db);
+                snapshot.forEach(doc => batch.delete(doc.ref));
+                await batch.commit();
+
+                // Delete Lists
                 await deleteDoc(doc(db, 'users', id, 'data', 'lists'));
                 showToast("Cloud Data Deleted");
                 
@@ -1873,15 +1885,15 @@
         }
 
         function setupBeatsListener() {
-            // CHANGED: Listen to a single document for all beats (Quota Optimization)
-            const beatsDocRef = doc(db, 'users', activeSyncId, 'data', 'beats');
-            unsubscribeBeats = onSnapshot(beatsDocRef, { includeMetadataChanges: true }, (docSnap) => {
+            // Reverted to Collection Listener to match Security Rules
+            const beatsRef = collection(db, 'users', activeSyncId, 'beats');
+            unsubscribeBeats = onSnapshot(beatsRef, { includeMetadataChanges: true }, (snapshot) => {
                 if (editIndex > -1) return; // Don't interrupt editing
                 
-                if (docSnap.exists()) {
-                    const data = docSnap.data();
-                    events = data.items || [];
-                    
+                const remoteEvents = [];
+                snapshot.forEach(doc => remoteEvents.push(doc.data()));
+                events = remoteEvents;
+
                     events.forEach(e => {
                         if (e.plotholeTags && Array.isArray(e.plotholeTags)) {
                             const obj = {}; e.plotholeTags.forEach(id => obj[id] = 'violation'); e.plotholeTags = obj;
@@ -1890,8 +1902,7 @@
                     });
                     saveLocalData(true);
                     sortData(currentSortMethod);
-                    updateSyncStatus(docSnap.metadata.hasPendingWrites);
-                }
+                    updateSyncStatus(snapshot.metadata.hasPendingWrites);
             }, (error) => {
                 console.error("🔥 Beats Sync Error:", error);
                 if (error.code === 'permission-denied') {
@@ -1913,12 +1924,14 @@
             try {
                 const batch = writeBatch(db);
 
-                // 1. Upload Beats (Single Doc)
+                // 1. Upload Beats (Collection)
                 // Ensure IDs exist
                 events.forEach(e => { if (!e.id) e.id = generateId(); });
                 
-                const beatsRef = doc(db, 'users', activeSyncId, 'data', 'beats');
-                batch.set(beatsRef, { items: events });
+                events.forEach(e => {
+                    const ref = doc(db, 'users', activeSyncId, 'beats', e.id);
+                    batch.set(ref, e);
+                });
 
                 // 2. Upload Lists (Single Doc)
                 const listBatch = writeBatch(db);
@@ -1939,28 +1952,20 @@
             }
         }
 
-        /* Deprecated single-batch logic replaced above */
-        /*
-        async function uploadAllToCloud_OLD() {
-            // ...
-            // Upload Beats
-            events.forEach(e => {
-                if (!e.id) e.id = generateId();
-                // ...
-            });
-            // ...
-        } 
-        */
-
-        // Unified Sync Function (Replaces granular saves)
-        window.syncBeatsToCloud = async () => {
+        // Granular Save Functions (Matches Security Rules)
+        window.saveBeatToCloud = async (beat) => {
             if (!db || !activeSyncId) return;
             document.getElementById('syncStatus').innerText = "Saving...";
             try {
-                await setDoc(doc(db, 'users', activeSyncId, 'data', 'beats'), { items: events });
-            } catch(e) { 
-                console.error("🔥 Sync Beats Error:", e);
-            }
+                await setDoc(doc(db, 'users', activeSyncId, 'beats', beat.id), beat);
+            } catch(e) { console.error("🔥 Save Beat Error:", e); }
+        };
+
+        window.deleteBeatFromCloud = async (beatId) => {
+            if (!db || !activeSyncId) return;
+            try {
+                await deleteDoc(doc(db, 'users', activeSyncId, 'beats', beatId));
+            } catch(e) { console.error("🔥 Delete Beat Error:", e); }
         };
 
         window.saveListsToCloud = async () => {
@@ -2248,7 +2253,7 @@
             }
             
             saveLocalData();
-            syncBeatsToCloud();
+            saveBeatToCloud(events[beatIndex]);
             renderPlotholeList();
             render();
             closeModal();
@@ -2268,7 +2273,7 @@
                 }
                 
                 saveLocalData();
-                syncBeatsToCloud();
+                saveBeatToCloud(events[beatIndex]);
                 renderPlotholeList();
                 render();
             }
@@ -2677,7 +2682,7 @@
             const country = sel.options[sel.selectedIndex].text;
             events[index].preferredDisplayTz = tz;
             events[index].preferredCountry = country;
-            saveLocalData(); syncBeatsToCloud(); render(); showToast(`Display set to ${country}`);
+            saveLocalData(); saveBeatToCloud(events[index]); render(); showToast(`Display set to ${country}`);
         }
 
         window.handleAdd = () => {
@@ -2697,7 +2702,7 @@
                 beat.id = old.id || generateId(); beat.preferredDisplayTz = old.preferredDisplayTz; beat.preferredCountry = old.preferredCountry;
                 events[editIndex] = beat; cancelEdit(); 
             } else { events.push(beat); sortData(currentSortMethod); clearInputs(); }
-            saveLocalData(); syncBeatsToCloud(); renderCharList(); renderPlotholeList(); render();
+            saveLocalData(); saveBeatToCloud(beat); renderCharList(); renderPlotholeList(); render();
         }
 
         function updateActiveDotVisuals() {
@@ -2766,10 +2771,13 @@
             events.forEach((ev, idx) => { if(Math.floor(ev.number) === intPart) groupIndices.push(idx); });
             const step = groupIndices.length > 9 ? 0.01 : 0.1;
             
+            const batch = writeBatch(db);
             groupIndices.forEach((arrayIdx, k) => { 
                 events[arrayIdx].number = parseFloat((intPart + (k + 1) * step).toFixed(2));
+                if(activeSyncId) batch.set(doc(db, 'users', activeSyncId, 'beats', events[arrayIdx].id), events[arrayIdx]);
             });
-            saveLocalData(); syncBeatsToCloud(); render();
+            if(activeSyncId) batch.commit();
+            saveLocalData(); render();
         };
 
         function createCardHtml(evt, i) {
@@ -3181,7 +3189,7 @@
 
         function clearInputs() { document.getElementById('dateIn').value = ''; document.getElementById('numIn').value = ''; document.getElementById('chapTitleIn').value = ''; document.getElementById('subChapTitleIn').value = ''; document.getElementById('detailIn').value = ''; document.getElementById('remarksIn').value = ''; document.getElementById('narrativeModeIn').value = 'Present'; document.getElementById('detailIn').style.height = 'auto'; }
         function showToast(m) { const t = document.getElementById("toast"); t.innerText = m; t.className = "show"; setTimeout(() => t.className = "", 3000); }
-        window.askDelete = (i) => { if(confirm("Delete this event?")) { events.splice(i, 1); saveLocalData(); syncBeatsToCloud(); render(); } }
+        window.askDelete = (i) => { if(confirm("Delete this event?")) { const id = events[i].id; events.splice(i, 1); saveLocalData(); deleteBeatFromCloud(id); render(); } }
         window.closeModal = () => { document.querySelectorAll('.modal-overlay').forEach(m => m.style.display = 'none'); }
 
         window.downloadCSV = () => { 
@@ -3388,10 +3396,13 @@
                     events.forEach((ev, idx) => { if(Math.floor(ev.number) === intPart) groupIndices.push(idx); });
                     const step = groupIndices.length > 9 ? 0.01 : 0.1;
                     
+                    const batch = writeBatch(db);
                     groupIndices.forEach((arrayIdx, k) => { 
                         events[arrayIdx].number = parseFloat((intPart + (k + 1) * step).toFixed(2)); 
+                        if(activeSyncId) batch.set(doc(db, 'users', activeSyncId, 'beats', events[arrayIdx].id), events[arrayIdx]);
                     });
-                    saveLocalData(); syncBeatsToCloud(); render(); 
+                    if(activeSyncId) batch.commit();
+                    saveLocalData(); render(); 
                 }; 
             }); 
         }
