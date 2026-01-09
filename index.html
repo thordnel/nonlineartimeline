@@ -1626,8 +1626,9 @@
         </div>
         <div class="id-input-group">
             <input type="text" id="manualIdIn" class="id-input" placeholder="Paste Device ID">
-            <button class="btn-cloud" onclick="linkExistingId()">Link</button>
-            <button class="btn-reset" onclick="resetToOriginalId()" style="border-color:#991b1b; color:#991b1b;">Unlink</button>
+            <button class="btn-cloud" onclick="linkExistingId()">Sync to Cloud</button>
+            <button class="btn-reset" onclick="resetToOriginalId()" style="border-color:#991b1b; color:#991b1b;">Disable / Set Offline</button>
+            <button id="btnDeleteCloud" class="btn-reset" onclick="deleteCloudData()" style="border-color:#991b1b; color:#fff; background:#991b1b; display:none;">Delete</button>
         </div>
     </div>
 
@@ -1693,20 +1694,138 @@
                     console.warn("Persistence disabled:", err.code);
                 }
                 if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) { await signInWithCustomToken(auth, __initial_auth_token); } else { await signInAnonymously(auth); }
-                onAuthStateChanged(auth, (u) => { user = u; if (user) { activeSyncId = activeSyncId || user.uid; updateCloudUI(); setupRealtimeSync(); } });
+                onAuthStateChanged(auth, (u) => { 
+                    user = u; 
+                    if (user) { 
+                        // Only sync if we have a stored ID (Explicit Link)
+                        if (activeSyncId) {
+                            updateCloudUI(); 
+                            setupRealtimeSync(); 
+                        } else {
+                            updateCloudUI(); // Show Offline state
+                        }
+                    } 
+                });
             } catch (err) { document.getElementById('syncStatus').innerText = "Connection Failed"; }
         };
 
         function updateCloudUI() {
-            document.getElementById('syncStatus').innerText = "Live Sync Active";
-            document.getElementById('userIdDisplay').style.display = "block";
-            document.getElementById('userIdText').innerText = activeSyncId;
+            const isLinked = !!activeSyncId;
+            document.getElementById('syncStatus').innerText = isLinked ? "Live Sync Active" : "Offline (Unlinked)";
+            document.getElementById('userIdDisplay').style.display = isLinked ? "block" : "none";
+            document.getElementById('userIdText').innerText = activeSyncId || '';
+            document.getElementById('btnDeleteCloud').style.display = isLinked ? "inline-block" : "none";
         }
 
-        window.copyId = () => { const val = activeSyncId; const el = document.createElement('textarea'); el.value = val; document.body.appendChild(el); el.select(); document.execCommand('copy'); document.body.removeChild(el); showToast("ID Copied!"); }
-        window.linkExistingId = () => { const id = document.getElementById('manualIdIn').value.trim(); if(!id) return; activeSyncId = id; localStorage.setItem('storylines_active_id', id); updateCloudUI(); setupRealtimeSync(); showToast("Device Linked!"); }
-        window.resetToOriginalId = () => { localStorage.removeItem('storylines_active_id'); if (user) { activeSyncId = user.uid; updateCloudUI(); setupRealtimeSync(); showToast("Unlinked"); document.getElementById('manualIdIn').value = ''; } }
+        window.copyId = () => { if(!activeSyncId) return; const val = activeSyncId; const el = document.createElement('textarea'); el.value = val; document.body.appendChild(el); el.select(); document.execCommand('copy'); document.body.removeChild(el); showToast("ID Copied!"); }
         
+        window.linkExistingId = async () => { 
+            const id = document.getElementById('manualIdIn').value.trim(); 
+            if(!id) return showToast("Enter an ID");
+            
+            document.getElementById('syncStatus').innerText = "Checking Cloud...";
+            
+            try {
+                // Check if cloud data exists for this ID
+                const beatsRef = doc(db, 'users', id, 'data', 'beats');
+                const listsRef = doc(db, 'users', id, 'data', 'lists');
+                const [bSnap, lSnap] = await Promise.all([getDoc(beatsRef), getDoc(listsRef)]);
+                
+                const cloudHasData = (bSnap.exists() && bSnap.data().items && bSnap.data().items.length > 0) || lSnap.exists();
+                const localHasData = events.length > 0 || continuityItems.length > 0 || chekhovItems.length > 0 || characterItems.length > 0 || plotholeItems.length > 0;
+
+                if (cloudHasData) {
+                    if(!confirm("Cloud data found! Linking will OVERWRITE your local data. Continue?")) {
+                        document.getElementById('syncStatus').innerText = "Link Cancelled";
+                        return;
+                    }
+                    // Cloud wins: Clear local (will be overwritten by sync listener anyway)
+                    events = []; continuityItems = []; chekhovItems = []; characterItems = []; plotholeItems = [];
+                    saveLocalData(true); 
+                } else {
+                    // Cloud Empty
+                    if (localHasData) {
+                        // Local has data, Cloud empty -> Upload Local
+                        // Proceed to link, then upload
+                    } else {
+                        // Both empty -> Just link
+                    }
+                }
+
+                // Apply Link
+                activeSyncId = id;
+                localStorage.setItem('storylines_active_id', id);
+                updateCloudUI();
+
+                if (!cloudHasData && localHasData) {
+                    // Upload Local to Cloud (Initialization)
+                    await uploadAllToCloud();
+                }
+                
+                // Start Sync (Download/Listen)
+                setupRealtimeSync();
+                showToast("Linked Successfully");
+                document.getElementById('manualIdIn').value = '';
+
+            } catch (e) {
+                console.error("Link Error:", e);
+                showToast("Error linking ID");
+                document.getElementById('syncStatus').innerText = "Link Error";
+            }
+        };
+
+        window.resetToOriginalId = () => { 
+            if(!activeSyncId) return;
+            if(!confirm("Unlink and CLEAR local data? You will start with a blank slate.")) return;
+
+            // 1. Stop Sync
+            if(unsubscribeBeats) unsubscribeBeats();
+            if(unsubscribeLists) unsubscribeLists();
+            unsubscribeBeats = null; unsubscribeLists = null;
+
+            // 2. Clear ID
+            localStorage.removeItem('storylines_active_id');
+            activeSyncId = null;
+
+            // 3. Clear Local Data
+            events = []; continuityItems = []; chekhovItems = []; characterItems = []; plotholeItems = [];
+            saveLocalData(true);
+
+            // 4. Update UI
+            updateCloudUI();
+            render();
+            showToast("Unlinked & Cleared");
+            document.getElementById('manualIdIn').value = ''; 
+        };
+
+        window.deleteCloudData = async () => {
+            if(!activeSyncId) return;
+            const id = activeSyncId;
+            if(!confirm(`PERMANENTLY DELETE all cloud data for ID: ${id}?\n\nThis cannot be undone.`)) return;
+            
+            try {
+                await deleteDoc(doc(db, 'users', id, 'data', 'beats'));
+                await deleteDoc(doc(db, 'users', id, 'data', 'lists'));
+                showToast("Cloud Data Deleted");
+                
+                // Auto Unlink after delete (Clear local)
+                if(unsubscribeBeats) unsubscribeBeats();
+                if(unsubscribeLists) unsubscribeLists();
+                unsubscribeBeats = null; unsubscribeLists = null;
+                
+                localStorage.removeItem('storylines_active_id');
+                activeSyncId = null;
+                
+                events = []; continuityItems = []; chekhovItems = []; characterItems = []; plotholeItems = [];
+                saveLocalData(true);
+                
+                updateCloudUI();
+                render();
+            } catch(e) {
+                console.error(e);
+                showToast("Delete Failed");
+            }
+        };
         
         // --- LIVE SYNC LOGIC ---
         let unsubscribeBeats = null;
