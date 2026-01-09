@@ -1733,6 +1733,9 @@
                     // If we have no data, we just wait (uploadAllToCloud handles empty arrays too)
                     uploadAllToCloud();
                 }
+            }, (error) => {
+                console.error("🔥 List Sync Error:", error);
+                document.getElementById('syncStatus').innerText = "Sync Error (Lists)";
             });
         }
 
@@ -1753,6 +1756,9 @@
                 });
                 saveLocalData(true);
                 sortData(currentSortMethod);
+            }, (error) => {
+                console.error("🔥 Beats Sync Error:", error);
+                document.getElementById('syncStatus').innerText = "Sync Error (Beats)";
             });
         }
 
@@ -1760,36 +1766,42 @@
             if (!db || !activeSyncId) return;
             showToast("Initializing Cloud...");
             
-            // Chunking for Batch Limits (500 ops)
-            const chunks = [];
-            const chunkSize = 450; // Safe margin
-            for (let i = 0; i < events.length; i += chunkSize) {
-                chunks.push(events.slice(i, i + chunkSize));
-            }
+            try {
+                // Chunking for Batch Limits (500 ops)
+                const chunks = [];
+                const chunkSize = 450; // Safe margin
+                for (let i = 0; i < events.length; i += chunkSize) {
+                    chunks.push(events.slice(i, i + chunkSize));
+                }
 
-            // 1. Upload Beats in Chunks
-            for (const chunk of chunks) {
-                const batch = writeBatch(db);
-                chunk.forEach(e => {
-                    if (!e.id) e.id = generateId();
-                    const ref = doc(db, 'users', activeSyncId, 'beats', e.id);
-                    batch.set(ref, e);
+                // 1. Upload Beats in Chunks
+                for (const chunk of chunks) {
+                    const batch = writeBatch(db);
+                    chunk.forEach(e => {
+                        if (!e.id) e.id = generateId();
+                        const ref = doc(db, 'users', activeSyncId, 'beats', e.id);
+                        batch.set(ref, e);
+                    });
+                    await batch.commit();
+                }
+
+                // 2. Upload Lists (Single Doc)
+                const listBatch = writeBatch(db);
+                const listRef = doc(db, 'users', activeSyncId, 'data', 'lists');
+                listBatch.set(listRef, { 
+                    continuity: continuityItems, 
+                    chekhov: chekhovItems, 
+                    characters: characterItems, 
+                    plotholes: plotholeItems 
                 });
-                await batch.commit();
+                await listBatch.commit();
+
+                showToast("Cloud Initialized!");
+            } catch (e) {
+                console.error("🔥 Upload Init Error:", e);
+                showToast("Cloud Init Failed");
+                document.getElementById('syncStatus').innerText = "Init Error";
             }
-
-            // 2. Upload Lists (Single Doc)
-            const listBatch = writeBatch(db);
-            const listRef = doc(db, 'users', activeSyncId, 'data', 'lists');
-            listBatch.set(listRef, { 
-                continuity: continuityItems, 
-                chekhov: chekhovItems, 
-                characters: characterItems, 
-                plotholes: plotholeItems 
-            });
-            await listBatch.commit();
-
-            showToast("Cloud Initialized!");
         }
 
         /* Deprecated single-batch logic replaced above */
@@ -1812,21 +1824,31 @@
             try {
                 await setDoc(doc(db, 'users', activeSyncId, 'beats', beat.id), beat);
                 document.getElementById('syncStatus').innerText = "Live Sync Active";
-            } catch(e) { document.getElementById('syncStatus').innerText = "Sync Error"; }
+            } catch(e) { 
+                console.error("🔥 Save Beat Error:", e);
+                document.getElementById('syncStatus').innerText = "Sync Error"; 
+            }
         };
 
         window.deleteBeatFromCloud = async (beatId) => {
             if (!db || !activeSyncId) return;
-            await deleteDoc(doc(db, 'users', activeSyncId, 'beats', beatId));
+            try {
+                await deleteDoc(doc(db, 'users', activeSyncId, 'beats', beatId));
+            } catch(e) { console.error("🔥 Delete Beat Error:", e); }
         };
 
         window.saveListsToCloud = async () => {
             if (!db || !activeSyncId) return;
             document.getElementById('syncStatus').innerText = "Saving...";
-            await setDoc(doc(db, 'users', activeSyncId, 'data', 'lists'), {
-                continuity: continuityItems, chekhov: chekhovItems, characters: characterItems, plotholes: plotholeItems
-            });
-            document.getElementById('syncStatus').innerText = "Live Sync Active";
+            try {
+                await setDoc(doc(db, 'users', activeSyncId, 'data', 'lists'), {
+                    continuity: continuityItems, chekhov: chekhovItems, characters: characterItems, plotholes: plotholeItems
+                });
+                document.getElementById('syncStatus').innerText = "Live Sync Active";
+            } catch(e) {
+                console.error("🔥 Save Lists Error:", e);
+                document.getElementById('syncStatus').innerText = "Sync Error";
+            }
         };
 
         // --- CORE LOGIC ---
