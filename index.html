@@ -853,8 +853,9 @@
             }
 
             .cloud-banner { flex-direction: column; align-items: stretch; padding: 15px; }
-            .id-input-group { width: 100%; display: flex; gap: 5px; }
-            .id-input-group input { flex-grow: 1; min-width: 0; }
+            .id-input-group { width: 100%; display: flex; flex-direction: column; gap: 10px; }
+            .id-input-group input { width: 100% !important; }
+            .id-input-group button { width: 100%; }
             .cloud-banner .btn-row { width: 100%; display: flex; gap: 10px; margin: 0; margin-top: 10px; }
             .cloud-banner .btn-row button { flex: 1; }
 
@@ -1626,6 +1627,7 @@
         </div>
         <div class="id-input-group">
             <input type="text" id="manualIdIn" class="id-input" placeholder="Paste Device ID">
+            <input type="password" id="syncPassIn" class="id-input" placeholder="Password (Optional)">
             <button class="btn-cloud" onclick="linkExistingId()">Sync to Cloud</button>
             <button class="btn-reset" onclick="resetToOriginalId()" style="border-color:#991b1b; color:#991b1b;">Disable / Set Offline</button>
             <button id="btnDeleteCloud" class="btn-reset" onclick="deleteCloudData()" style="border-color:#991b1b; color:#fff; background:#991b1b; display:none;">Delete</button>
@@ -1721,6 +1723,7 @@
         
         window.linkExistingId = async () => { 
             const id = document.getElementById('manualIdIn').value.trim(); 
+            const pass = document.getElementById('syncPassIn').value.trim();
             if(!id) return showToast("Enter an ID");
             
             document.getElementById('syncStatus').innerText = "Checking Cloud...";
@@ -1729,13 +1732,23 @@
                 // Check if cloud data exists for this ID
                 const beatsRef = collection(db, 'users', id, 'beats');
                 const listsRef = doc(db, 'users', id, 'data', 'lists');
-                const [bSnap, lSnap] = await Promise.all([getDocs(query(beatsRef, limit(1))), getDoc(listsRef)]);
+                const lockRef = doc(db, 'users', id, 'data', 'lock');
+                const [bSnap, lSnap, lockSnap] = await Promise.all([getDocs(query(beatsRef, limit(1))), getDoc(listsRef), getDoc(lockRef)]);
                 
+                // 1. Security Check
+                if (lockSnap.exists() && lockSnap.data().password) {
+                    if (lockSnap.data().password !== pass) {
+                        document.getElementById('syncStatus').innerText = "Auth Failed";
+                        alert("🔒 Access Denied: Incorrect Password for this ID.");
+                        return;
+                    }
+                }
+
                 const cloudHasData = (!bSnap.empty) || lSnap.exists();
                 const localHasData = events.length > 0 || continuityItems.length > 0 || chekhovItems.length > 0 || characterItems.length > 0 || plotholeItems.length > 0;
 
                 if (cloudHasData) {
-                    if(!confirm("Cloud data found! Linking will OVERWRITE your local data. Continue?")) {
+                    if(!confirm("Cloud data found! Enabling this will overwrite your local data. Continue?")) {
                         document.getElementById('syncStatus').innerText = "Link Cancelled";
                         return;
                     }
@@ -1757,6 +1770,11 @@
                 localStorage.setItem('storylines_active_id', id);
                 updateCloudUI();
 
+                // Set Password if provided and not already set
+                if (pass && (!lockSnap.exists() || !lockSnap.data().password)) {
+                    await setDoc(lockRef, { password: pass });
+                }
+
                 if (!cloudHasData && localHasData) {
                     // Upload Local to Cloud (Initialization)
                     await uploadAllToCloud();
@@ -1770,7 +1788,7 @@
             } catch (e) {
                 console.error("Link Error:", e);
                 if (e.code === 'permission-denied') {
-                    alert("⚠️ Access Denied\n\nPlease ensure your Firestore Security Rules allow access to:\n/users/{userId}/beats/{beatId}\n/users/{userId}/data/lists");
+                    alert("⚠️ Access Denied\n\nPlease ensure your Firestore Security Rules allow access to:\n/users/{userId}/beats/{beatId}\n/users/{userId}/data/lists\n/users/{userId}/data/lock");
                     document.getElementById('syncStatus').innerText = "Rules Error";
                 } else {
                     showToast("Error linking ID");
@@ -1800,7 +1818,8 @@
             updateCloudUI();
             render();
             showToast("Unlinked & Cleared");
-            document.getElementById('manualIdIn').value = ''; 
+            document.getElementById('manualIdIn').value = '';
+            document.getElementById('syncPassIn').value = '';
         };
 
         window.deleteCloudData = async () => {
@@ -1818,6 +1837,7 @@
 
                 // Delete Lists
                 await deleteDoc(doc(db, 'users', id, 'data', 'lists'));
+                await deleteDoc(doc(db, 'users', id, 'data', 'lock'));
                 showToast("Cloud Data Deleted");
                 
                 // Auto Unlink after delete (Clear local)
