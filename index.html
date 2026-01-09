@@ -1224,7 +1224,7 @@
 
     <div class="header-branding">
         <h2 class="main-title">Storylines</h2>
-        <h4 class="main-subtitle">Non-Linear Timeline Manager</h4>
+        <h4 class="main-subtitle">Non-Linear Space-Timeline Manager</h4>
     </div>
 
     <!-- BEAT SPACE -->
@@ -1754,23 +1754,25 @@
         }
 
         function setupBeatsListener() {
-            const beatsRef = collection(db, 'users', activeSyncId, 'beats');
-            unsubscribeBeats = onSnapshot(beatsRef, { includeMetadataChanges: true }, (snapshot) => {
+            // CHANGED: Listen to a single document for all beats (Quota Optimization)
+            const beatsDocRef = doc(db, 'users', activeSyncId, 'data', 'beats');
+            unsubscribeBeats = onSnapshot(beatsDocRef, { includeMetadataChanges: true }, (docSnap) => {
                 if (editIndex > -1) return; // Don't interrupt editing
                 
-                const remoteEvents = [];
-                snapshot.forEach(doc => remoteEvents.push(doc.data()));
-                
-                events = remoteEvents;
-                events.forEach(e => {
-                    if (e.plotholeTags && Array.isArray(e.plotholeTags)) {
-                        const obj = {}; e.plotholeTags.forEach(id => obj[id] = 'violation'); e.plotholeTags = obj;
-                    }
-                    if (!e.id) e.id = generateId();
-                });
-                saveLocalData(true);
-                sortData(currentSortMethod);
-                updateSyncStatus(snapshot.metadata.hasPendingWrites);
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    events = data.items || [];
+                    
+                    events.forEach(e => {
+                        if (e.plotholeTags && Array.isArray(e.plotholeTags)) {
+                            const obj = {}; e.plotholeTags.forEach(id => obj[id] = 'violation'); e.plotholeTags = obj;
+                        }
+                        if (!e.id) e.id = generateId();
+                    });
+                    saveLocalData(true);
+                    sortData(currentSortMethod);
+                    updateSyncStatus(docSnap.metadata.hasPendingWrites);
+                }
             }, (error) => {
                 console.error("🔥 Beats Sync Error:", error);
                 if (error.code === 'permission-denied') {
@@ -1790,23 +1792,14 @@
             showToast("Initializing Cloud...");
             
             try {
-                // Chunking for Batch Limits (500 ops)
-                const chunks = [];
-                const chunkSize = 450; // Safe margin
-                for (let i = 0; i < events.length; i += chunkSize) {
-                    chunks.push(events.slice(i, i + chunkSize));
-                }
+                const batch = writeBatch(db);
 
-                // 1. Upload Beats in Chunks
-                for (const chunk of chunks) {
-                    const batch = writeBatch(db);
-                    chunk.forEach(e => {
-                        if (!e.id) e.id = generateId();
-                        const ref = doc(db, 'users', activeSyncId, 'beats', e.id);
-                        batch.set(ref, e);
-                    });
-                    await batch.commit();
-                }
+                // 1. Upload Beats (Single Doc)
+                // Ensure IDs exist
+                events.forEach(e => { if (!e.id) e.id = generateId(); });
+                
+                const beatsRef = doc(db, 'users', activeSyncId, 'data', 'beats');
+                batch.set(beatsRef, { items: events });
 
                 // 2. Upload Lists (Single Doc)
                 const listBatch = writeBatch(db);
@@ -1840,22 +1833,15 @@
         } 
         */
 
-        // Granular Save Functions
-        window.saveBeatToCloud = async (beat) => {
+        // Unified Sync Function (Replaces granular saves)
+        window.syncBeatsToCloud = async () => {
             if (!db || !activeSyncId) return;
             document.getElementById('syncStatus').innerText = "Saving...";
             try {
-                await setDoc(doc(db, 'users', activeSyncId, 'beats', beat.id), beat);
+                await setDoc(doc(db, 'users', activeSyncId, 'data', 'beats'), { items: events });
             } catch(e) { 
-                console.error("🔥 Save Beat Error:", e);
+                console.error("🔥 Sync Beats Error:", e);
             }
-        };
-
-        window.deleteBeatFromCloud = async (beatId) => {
-            if (!db || !activeSyncId) return;
-            try {
-                await deleteDoc(doc(db, 'users', activeSyncId, 'beats', beatId));
-            } catch(e) { console.error("🔥 Delete Beat Error:", e); }
         };
 
         window.saveListsToCloud = async () => {
@@ -2143,7 +2129,7 @@
             }
             
             saveLocalData();
-            saveBeatToCloud(events[beatIndex]);
+            syncBeatsToCloud();
             renderPlotholeList();
             render();
             closeModal();
@@ -2163,7 +2149,7 @@
                 }
                 
                 saveLocalData();
-                saveBeatToCloud(events[beatIndex]);
+                syncBeatsToCloud();
                 renderPlotholeList();
                 render();
             }
@@ -2572,7 +2558,7 @@
             const country = sel.options[sel.selectedIndex].text;
             events[index].preferredDisplayTz = tz;
             events[index].preferredCountry = country;
-            saveLocalData(); saveBeatToCloud(events[index]); render(); showToast(`Display set to ${country}`);
+            saveLocalData(); syncBeatsToCloud(); render(); showToast(`Display set to ${country}`);
         }
 
         window.handleAdd = () => {
@@ -2592,7 +2578,7 @@
                 beat.id = old.id || generateId(); beat.preferredDisplayTz = old.preferredDisplayTz; beat.preferredCountry = old.preferredCountry;
                 events[editIndex] = beat; cancelEdit(); 
             } else { events.push(beat); sortData(currentSortMethod); clearInputs(); }
-            saveLocalData(); saveBeatToCloud(beat); renderCharList(); renderPlotholeList(); render();
+            saveLocalData(); syncBeatsToCloud(); renderCharList(); renderPlotholeList(); render();
         }
 
         function updateActiveDotVisuals() {
@@ -2661,13 +2647,10 @@
             events.forEach((ev, idx) => { if(Math.floor(ev.number) === intPart) groupIndices.push(idx); });
             const step = groupIndices.length > 9 ? 0.01 : 0.1;
             
-            const batch = writeBatch(db);
             groupIndices.forEach((arrayIdx, k) => { 
                 events[arrayIdx].number = parseFloat((intPart + (k + 1) * step).toFixed(2));
-                if(activeSyncId) batch.set(doc(db, 'users', activeSyncId, 'beats', events[arrayIdx].id), events[arrayIdx]);
             });
-            if(activeSyncId) batch.commit();
-            saveLocalData(); render();
+            saveLocalData(); syncBeatsToCloud(); render();
         };
 
         function createCardHtml(evt, i) {
@@ -3079,7 +3062,7 @@
 
         function clearInputs() { document.getElementById('dateIn').value = ''; document.getElementById('numIn').value = ''; document.getElementById('chapTitleIn').value = ''; document.getElementById('subChapTitleIn').value = ''; document.getElementById('detailIn').value = ''; document.getElementById('remarksIn').value = ''; document.getElementById('narrativeModeIn').value = 'Present'; document.getElementById('detailIn').style.height = 'auto'; }
         function showToast(m) { const t = document.getElementById("toast"); t.innerText = m; t.className = "show"; setTimeout(() => t.className = "", 3000); }
-        window.askDelete = (i) => { if(confirm("Delete this event?")) { const id = events[i].id; events.splice(i, 1); saveLocalData(); deleteBeatFromCloud(id); render(); } }
+        window.askDelete = (i) => { if(confirm("Delete this event?")) { events.splice(i, 1); saveLocalData(); syncBeatsToCloud(); render(); } }
         window.closeModal = () => { document.querySelectorAll('.modal-overlay').forEach(m => m.style.display = 'none'); }
 
         window.downloadCSV = () => { 
@@ -3286,13 +3269,10 @@
                     events.forEach((ev, idx) => { if(Math.floor(ev.number) === intPart) groupIndices.push(idx); });
                     const step = groupIndices.length > 9 ? 0.01 : 0.1;
                     
-                    const batch = writeBatch(db);
                     groupIndices.forEach((arrayIdx, k) => { 
                         events[arrayIdx].number = parseFloat((intPart + (k + 1) * step).toFixed(2)); 
-                        if(activeSyncId) batch.set(doc(db, 'users', activeSyncId, 'beats', events[arrayIdx].id), events[arrayIdx]);
                     });
-                    if(activeSyncId) batch.commit();
-                    saveLocalData(); render(); 
+                    saveLocalData(); syncBeatsToCloud(); render(); 
                 }; 
             }); 
         }
