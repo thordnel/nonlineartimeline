@@ -1668,7 +1668,7 @@
 
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js';
         import { getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js';
-        import { getFirestore, doc, setDoc, getDoc, collection, onSnapshot, deleteDoc, writeBatch } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js';
+        import { getFirestore, doc, setDoc, getDoc, collection, onSnapshot, deleteDoc, writeBatch, enableIndexedDbPersistence } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js';
 
         let firebaseConfig = null;
         try { if (typeof __firebase_config !== 'undefined') { firebaseConfig = JSON.parse(__firebase_config); } } catch (e) {}
@@ -1687,6 +1687,11 @@
                 const app = initializeApp(firebaseConfig);
                 auth = getAuth(app);
                 db = getFirestore(app);
+                try {
+                    await enableIndexedDbPersistence(db);
+                } catch (err) {
+                    console.warn("Persistence disabled:", err.code);
+                }
                 if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) { await signInWithCustomToken(auth, __initial_auth_token); } else { await signInAnonymously(auth); }
                 onAuthStateChanged(auth, (u) => { user = u; if (user) { activeSyncId = activeSyncId || user.uid; updateCloudUI(); setupRealtimeSync(); } });
             } catch (err) { document.getElementById('syncStatus').innerText = "Connection Failed"; }
@@ -1716,7 +1721,7 @@
             const listsRef = doc(db, 'users', activeSyncId, 'data', 'lists');
 
             // 1. Listen for Lists (Metadata) FIRST to establish state
-            unsubscribeLists = onSnapshot(listsRef, (docSnap) => {
+            unsubscribeLists = onSnapshot(listsRef, { includeMetadataChanges: true }, (docSnap) => {
                 if (docSnap.exists()) {
                     // Cloud exists: Sync Lists
                     const data = docSnap.data();
@@ -1728,6 +1733,8 @@
                     saveLocalData(true);
                     renderContinuityList(); renderChekhovList(); renderCharList(); renderPlotholeList();
                     populateCharSelect(); populatePlotholeSelect(); render();
+
+                    updateSyncStatus(docSnap.metadata.hasPendingWrites);
 
                     // Now safe to listen to beats (Cloud Wins)
                     if (!unsubscribeBeats) setupBeatsListener();
@@ -1748,7 +1755,7 @@
 
         function setupBeatsListener() {
             const beatsRef = collection(db, 'users', activeSyncId, 'beats');
-            unsubscribeBeats = onSnapshot(beatsRef, (snapshot) => {
+            unsubscribeBeats = onSnapshot(beatsRef, { includeMetadataChanges: true }, (snapshot) => {
                 if (editIndex > -1) return; // Don't interrupt editing
                 
                 const remoteEvents = [];
@@ -1763,6 +1770,7 @@
                 });
                 saveLocalData(true);
                 sortData(currentSortMethod);
+                updateSyncStatus(snapshot.metadata.hasPendingWrites);
             }, (error) => {
                 console.error("🔥 Beats Sync Error:", error);
                 if (error.code === 'permission-denied') {
@@ -1771,6 +1779,10 @@
                     document.getElementById('syncStatus').innerText = "Sync Error (Beats)";
                 }
             });
+        }
+
+        function updateSyncStatus(pending) {
+            document.getElementById('syncStatus').innerText = pending ? "Saving (Offline)..." : "Live Sync Active";
         }
 
         async function uploadAllToCloud() {
@@ -1834,10 +1846,8 @@
             document.getElementById('syncStatus').innerText = "Saving...";
             try {
                 await setDoc(doc(db, 'users', activeSyncId, 'beats', beat.id), beat);
-                document.getElementById('syncStatus').innerText = "Live Sync Active";
             } catch(e) { 
                 console.error("🔥 Save Beat Error:", e);
-                document.getElementById('syncStatus').innerText = "Sync Error"; 
             }
         };
 
@@ -1855,10 +1865,8 @@
                 await setDoc(doc(db, 'users', activeSyncId, 'data', 'lists'), {
                     continuity: continuityItems, chekhov: chekhovItems, characters: characterItems, plotholes: plotholeItems
                 });
-                document.getElementById('syncStatus').innerText = "Live Sync Active";
             } catch(e) {
                 console.error("🔥 Save Lists Error:", e);
-                document.getElementById('syncStatus').innerText = "Sync Error";
             }
         };
 
@@ -1919,6 +1927,7 @@
             const color = document.getElementById('charColorIn').value;
 
             if(!name) return showToast("Name required");
+            if (characterItems.length >= 50 && !editingCharId) return showToast("Limit reached (Max 50)");
 
             if (editingCharId) {
                 const idx = characterItems.findIndex(i => i.id === editingCharId);
@@ -2051,6 +2060,7 @@
             const rule = document.getElementById('phRuleIn').value;
             const detail = document.getElementById('phDetailIn').value;
             if(!rule) return showToast("Rule Name required");
+            if (plotholeItems.length >= 50 && !editingPlotholeId) return showToast("Limit reached (Max 50)");
 
             if (editingPlotholeId) {
                 const idx = plotholeItems.findIndex(i => i.id === editingPlotholeId);
@@ -2308,6 +2318,7 @@
         window.addContinuityItem = () => {
             const name = document.getElementById('cNameIn').value, icon = document.getElementById('cIconIn').value || '🔹', start = document.getElementById('cStartIn').value, end = document.getElementById('cEndIn').value;
             if(!name || !start) return showToast("Name and Start Date required");
+            if (continuityItems.length >= 100 && !editingContinuityId) return showToast("Limit reached (Max 100)");
             
             // Append 'Z' to treat input as UTC
             const startUTC = start.endsWith('Z') ? start : start + 'Z';
@@ -2435,6 +2446,7 @@
             const setup = document.getElementById('cgSetupIn').value, misdirection = document.getElementById('cgMisdIn').value, payoff = document.getElementById('cgPayoffIn').value, status = document.getElementById('cgStatusIn').value;
             
             if(!name) return showToast("Item Name required");
+            if (chekhovItems.length >= 100 && !editingChekhovId) return showToast("Limit reached (Max 100)");
             if (editingChekhovId) {
                 const idx = chekhovItems.findIndex(i => i.id === editingChekhovId);
                 if (idx > -1) { 
