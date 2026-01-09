@@ -1681,6 +1681,9 @@
         const initFirebase = async () => {
             if (!firebaseConfig || !firebaseConfig.apiKey) { document.getElementById('syncStatus').innerText = "Setup Required"; return; }
             try {
+                if (firebaseConfig.projectId === "storylines-2c573") {
+                    console.warn("⚠️ Using public demo project. Cloud sync requires your own Firebase project with updated Security Rules.");
+                }
                 const app = initializeApp(firebaseConfig);
                 auth = getAuth(app);
                 db = getFirestore(app);
@@ -1735,7 +1738,11 @@
                 }
             }, (error) => {
                 console.error("🔥 List Sync Error:", error);
-                document.getElementById('syncStatus').innerText = "Sync Error (Lists)";
+                if (error.code === 'permission-denied') {
+                    document.getElementById('syncStatus').innerText = "Permission Denied (Check Rules)";
+                } else {
+                    document.getElementById('syncStatus').innerText = "Sync Error (Lists)";
+                }
             });
         }
 
@@ -1758,7 +1765,11 @@
                 sortData(currentSortMethod);
             }, (error) => {
                 console.error("🔥 Beats Sync Error:", error);
-                document.getElementById('syncStatus').innerText = "Sync Error (Beats)";
+                if (error.code === 'permission-denied') {
+                    document.getElementById('syncStatus').innerText = "Permission Denied (Check Rules)";
+                } else {
+                    document.getElementById('syncStatus').innerText = "Sync Error (Beats)";
+                }
             });
         }
 
