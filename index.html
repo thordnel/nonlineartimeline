@@ -94,6 +94,9 @@
             font-family: var(--font-ui);
             text-transform: uppercase;
             letter-spacing: 1px;
+            background-color: rgba(255, 255, 255, 0.7);
+            padding: 2px 8px;
+            border-radius: 4px;
         }
 
         /* Print Header - Hidden on screen */
@@ -1225,7 +1228,13 @@
 
     <div class="header-branding">
         <h2 class="main-title">Storylines</h2>
-        <h4 class="main-subtitle">Non-Linear Space-Timeline Manager</h4>
+        <h4 class="main-subtitle">Story Beat Manager for Non-Linear Spacetimeline</h4>
+    </div>
+
+    <div style="text-align: center; margin-bottom: 25px; display: flex; justify-content: center; gap: 10px; align-items: center;">
+        <input type="text" id="bookTitleIn" placeholder="Book Title" style="width: 320px; text-align: center; background: transparent; border: none; border-bottom: 1px dashed var(--secondary); font-weight: bold; font-size: 1.1rem; color: var(--primary);" onchange="saveBookMetadata()">
+        <span style="color: var(--text-muted); font-family: var(--font-ui); font-size: 0.8rem; text-transform: uppercase;">by</span>
+        <input type="text" id="bookAuthorIn" placeholder="Author" style="width: 160px; text-align: center; background: transparent; border: none; border-bottom: 1px dashed var(--secondary); font-style: italic;" onchange="saveBookMetadata()">
     </div>
 
     <!-- BEAT SPACE -->
@@ -1280,11 +1289,11 @@
                 </div>
                 <div class="input-group col-span-full">
                     <label>Details (Markdown supported)</label>
-                    <textarea id="detailIn" rows="3" maxlength="1000" placeholder="Use **bold**, *italic*, or - lists..."></textarea>
+                    <textarea id="detailIn" rows="3" maxlength="1000" placeholder=""></textarea>
                 </div>
                 <div class="input-group col-span-full">
                     <label>Remarks</label>
-                    <textarea id="remarksIn" rows="2" maxlength="500" placeholder="Notes, themes, or internal comments..." style="min-height:80px;"></textarea>
+                    <textarea id="remarksIn" rows="2" maxlength="500" placeholder="" style="min-height:80px;"></textarea>
                 </div>
                 <!-- ADD: Character Presence in Beat Space -->
                 <div class="input-group col-span-full" style="padding-top: 10px; border-top: 1px dashed #d4cdc3;">
@@ -1890,9 +1899,14 @@
                     if (data.characters) characterItems = data.characters;
                     if (data.plotholes) plotholeItems = data.plotholes;
                     
+                    if (data.bookTitle !== undefined) bookTitle = data.bookTitle;
+                    if (data.bookAuthor !== undefined) bookAuthor = data.bookAuthor;
+
                     saveLocalData(true);
                     renderContinuityList(); renderChekhovList(); renderCharList(); renderPlotholeList();
                     populateCharSelect(); populatePlotholeSelect(); render();
+                    if(document.getElementById('bookTitleIn')) document.getElementById('bookTitleIn').value = bookTitle;
+                    if(document.getElementById('bookAuthorIn')) document.getElementById('bookAuthorIn').value = bookAuthor;
 
                     updateSyncStatus(docSnap.metadata.hasPendingWrites);
 
@@ -1973,7 +1987,8 @@
                     continuity: continuityItems, 
                     chekhov: chekhovItems, 
                     characters: characterItems, 
-                    plotholes: plotholeItems 
+                    plotholes: plotholeItems,
+                    bookTitle, bookAuthor
                 });
                 await listBatch.commit();
 
@@ -2006,15 +2021,24 @@
             document.getElementById('syncStatus').innerText = "Saving...";
             try {
                 await setDoc(doc(db, 'users', activeSyncId, 'data', 'lists'), {
-                    continuity: continuityItems, chekhov: chekhovItems, characters: characterItems, plotholes: plotholeItems
+                    continuity: continuityItems, chekhov: chekhovItems, characters: characterItems, plotholes: plotholeItems,
+                    bookTitle, bookAuthor
                 });
             } catch(e) {
                 console.error("🔥 Save Lists Error:", e);
             }
         };
 
+        window.saveBookMetadata = () => {
+            bookTitle = document.getElementById('bookTitleIn').value;
+            bookAuthor = document.getElementById('bookAuthorIn').value;
+            saveLocalData();
+            saveListsToCloud();
+        }
+
         // --- CORE LOGIC ---
         let events = [], continuityItems = [], chekhovItems = [], editIndex = -1, currentSortMethod = 'unsorted', currentTz = localStorage.getItem('storylines_tz') || '', editingContinuityId = null, editingChekhovId = null, modificationCount = 0;
+        let bookTitle = '', bookAuthor = '';
         let currentSearchTerm = '';
         let activeFilterIds = [], activeCharFilterIds = [], activeChekhovFilterIds = [];
         const STORAGE_KEY = 'storylines_persist';
@@ -2418,7 +2442,7 @@
         }
 
         function saveLocalData(skipCloud = false) { 
-            localStorage.setItem(STORAGE_KEY, JSON.stringify({ events, continuity: continuityItems, chekhov: chekhovItems, characters: characterItems, plotholes: plotholeItems })); 
+            localStorage.setItem(STORAGE_KEY, JSON.stringify({ events, continuity: continuityItems, chekhov: chekhovItems, characters: characterItems, plotholes: plotholeItems, bookTitle, bookAuthor })); 
             // modificationCount is deprecated in live sync mode
             if (!skipCloud) { /* Triggered manually by granular functions now */ }
             updateModCountUI();
@@ -2431,7 +2455,7 @@
             if(data) {
                 try {
                     const parsed = JSON.parse(data);
-                    if (Array.isArray(parsed)) { events = parsed; continuityItems = []; chekhovItems = []; characterItems = []; plotholeItems = []; } 
+                    if (Array.isArray(parsed)) { events = parsed; continuityItems = []; chekhovItems = []; characterItems = []; plotholeItems = []; bookTitle = ''; bookAuthor = ''; } 
                     else { 
                         events = parsed.events || []; 
                         continuityItems = parsed.continuity || []; 
@@ -2439,6 +2463,8 @@
                         characterItems = parsed.characters || [];
                         plotholeItems = parsed.plotholes || [];
                         chekhovItems = chekhovItems.map(i => ({ ...i, type: i.type || "Chekhov's Gun", setup: i.setup || '', misdirection: i.misdirection || '', payoff: i.payoff || '', status: i.status || 'Pending' }));
+                        bookTitle = parsed.bookTitle || '';
+                        bookAuthor = parsed.bookAuthor || '';
                     }
                     // Normalize Plothole Tags (Array -> Object)
                     events.forEach(e => {
@@ -2450,6 +2476,8 @@
                     events.forEach(e => e.number = parseFloat(e.number)); 
                     renderContinuityList(); renderChekhovList(); renderCharList(); renderPlotholeList();
                     populateCharSelect(); populatePlotholeSelect();
+                    if(document.getElementById('bookTitleIn')) document.getElementById('bookTitleIn').value = bookTitle;
+                    if(document.getElementById('bookAuthorIn')) document.getElementById('bookAuthorIn').value = bookAuthor;
                     render();
                 } catch(e) { console.error(e); }
             }
@@ -3274,6 +3302,10 @@
                 });
                 csv += "[PLOTHOLE_DATA_END]\n";
             }
+            
+            if(bookTitle || bookAuthor) {
+                csv += `\n[METADATA_START]\nTitle,Author\n${(bookTitle||'').replace(/,/g,'{com}')},${(bookAuthor||'').replace(/,/g,'{com}')}\n[METADATA_END]\n`;
+            }
 
             const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' })); a.download = 'storylines.csv'; a.click(); 
         }
@@ -3285,8 +3317,12 @@
                 const text = e.target.result;
                 
                 // 1. Split Sections (Characters are at the very bottom)
-                const phSplit = text.split('[PLOTHOLE_DATA_START]');
-                let mainContent = phSplit[0];
+                const metaSplit = text.split('[METADATA_START]');
+                let mainContent = metaSplit[0];
+                const metaData = metaSplit[1] ? metaSplit[1].split('[METADATA_END]')[0].trim() : null;
+
+                const phSplit = mainContent.split('[PLOTHOLE_DATA_START]');
+                mainContent = phSplit[0];
                 const phData = phSplit[1] ? phSplit[1].split('[PLOTHOLE_DATA_END]')[0].trim() : null;
 
                 const charSplit = mainContent.split('[CHARACTER_DATA_START]');
@@ -3402,8 +3438,19 @@
                     }
                 }
 
+                if(metaData) {
+                    const mLines = metaData.split('\n');
+                    if(mLines.length >= 2) {
+                        const mParts = mLines[1].split(',');
+                        if(mParts.length >= 2) {
+                            bookTitle = mParts[0].replace(/{com}/g, ',');
+                            bookAuthor = mParts[1].replace(/{com}/g, ',');
+                        }
+                    }
+                }
+
                 // 7. Update State
-                if(newEvents.length > 0 || newContinuity.length > 0 || newChekhov.length > 0 || newChars.length > 0 || newPlotholes.length > 0) { 
+                if(newEvents.length > 0 || newContinuity.length > 0 || newChekhov.length > 0 || newChars.length > 0 || newPlotholes.length > 0 || metaData) { 
                     events = newEvents; 
                     if(newContinuity.length > 0) continuityItems = newContinuity; 
                     if(newChekhov.length > 0) chekhovItems = newChekhov;
@@ -3417,6 +3464,8 @@
                     renderPlotholeList();
                     populateCharSelect(); // Update dropdowns
                     populatePlotholeSelect();
+                    if(document.getElementById('bookTitleIn')) document.getElementById('bookTitleIn').value = bookTitle;
+                    if(document.getElementById('bookAuthorIn')) document.getElementById('bookAuthorIn').value = bookAuthor;
                     render(); 
                     uploadAllToCloud(); // Trigger Cloud Sync
                     showToast("Imported & Syncing..."); 

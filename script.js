@@ -11,7 +11,8 @@ const showToast = (m) => { const t = $('toast'); t.innerText = m; t.className = 
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
 // --- STATE ---
-let events = [], continuityItems = [], chekhovItems = [], characterItems = [];
+let events = [], continuityItems = [], chekhovItems = [], characterItems = [], plotholeItems = [];
+let bookTitle = '', bookAuthor = '';
 let editIndex = -1, editingContinuityId = null, editingChekhovId = null, editingCharId = null;
 let currentSortMethod = 'unsorted', currentTz = localStorage.getItem('storylines_tz') || '';
 let currentSearchTerm = '', activeFilterIds = [];
@@ -39,18 +40,34 @@ function updateCloudUI() {
 // --- DATA & RENDERING ---
 window.onload = () => { $('tzSelect').value = currentTz; loadLocalData(); initFirebase(); };
 
-function saveLocalData() { localStorage.setItem(STORAGE_KEY, JSON.stringify({ events, continuity: continuityItems, chekhov: chekhovItems, characters: characterItems })); }
+function saveLocalData() { localStorage.setItem(STORAGE_KEY, JSON.stringify({ events, continuity: continuityItems, chekhov: chekhovItems, characters: characterItems, plotholes: plotholeItems, bookTitle, bookAuthor })); }
 function loadLocalData() {
     const data = localStorage.getItem(STORAGE_KEY);
     if(data) {
         try {
             const parsed = JSON.parse(data);
-            if (Array.isArray(parsed)) { events = parsed; } 
-            else { events = parsed.events || []; continuityItems = parsed.continuity || []; chekhovItems = parsed.chekhov || []; characterItems = parsed.characters || []; }
+            if (Array.isArray(parsed)) { events = parsed; }
+            else { 
+                events = parsed.events || []; 
+                continuityItems = parsed.continuity || []; 
+                chekhovItems = parsed.chekhov || []; 
+                characterItems = parsed.characters || [];
+                plotholeItems = parsed.plotholes || [];
+                bookTitle = parsed.bookTitle || '';
+                bookAuthor = parsed.bookAuthor || '';
+            }
             events.forEach(e => e.number = parseFloat(e.number)); 
             renderContinuityList(); renderChekhovList(); renderCharList(); populateChekhovSelect(); populateCharSelect(); render();
+            if($('bookTitleIn')) $('bookTitleIn').value = bookTitle;
+            if($('bookAuthorIn')) $('bookAuthorIn').value = bookAuthor;
         } catch(e) { console.error(e); }
     }
+}
+
+window.saveBookMetadata = () => {
+    bookTitle = val('bookTitleIn');
+    bookAuthor = val('bookAuthorIn');
+    saveLocalData();
 }
 
 // --- CORE BEAT LOGIC ---
@@ -263,6 +280,9 @@ window.downloadCSV = () => {
     events.forEach(e => {
         csv += `${e.date},${e.number},"${(e.chapterTitle||'').replace(/"/g,'""')}","${(e.details||'').replace(/\n/g,' ')}","${JSON.stringify(e.chekhovTags||{}).replace(/"/g,'""')}","${JSON.stringify(e.charTags||[]).replace(/"/g,'""')}"\n`;
     });
+    if(bookTitle || bookAuthor) {
+        csv += `\n[METADATA_START]\nTitle:${bookTitle}\nAuthor:${bookAuthor}\n[METADATA_END]\n`;
+    }
     const blob = new Blob([csv], { type: 'text/csv' });
     const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = 'storylines.csv'; a.click();
 }
@@ -308,7 +328,11 @@ window.resetToOriginalId = () => { localStorage.removeItem('storylines_active_id
 window.confirmBackup = () => { if(activeSyncId && activeSyncId !== 'blank') { $('backupInfo').innerText = "Overwrite cloud data?"; show('backupModal'); } }
 window.executeBackup = async () => { 
     hide('backupModal'); 
-    try { await setDoc(doc(db, 'artifacts', 'storylines-public', 'public', 'data', 'backups', activeSyncId), { beats: events, continuity: continuityItems, chekhov: chekhovItems, characters: characterItems, lastUpdated: Date.now() }); showToast("Backed up!"); } 
+    try { await setDoc(doc(db, 'artifacts', 'storylines-public', 'public', 'data', 'backups', activeSyncId), { 
+        beats: events, continuity: continuityItems, chekhov: chekhovItems, characters: characterItems, plotholes: plotholeItems,
+        bookTitle, bookAuthor,
+        lastUpdated: Date.now() 
+    }); showToast("Backed up!"); } 
     catch(e) { showToast("Error backing up"); } 
 }
 window.confirmRestore = () => { if(activeSyncId) { $('restoreInfo').innerText = "Replace local data?"; show('restoreModal'); } }
@@ -317,8 +341,17 @@ window.executeRestore = async () => {
     try { 
         const d = await getDoc(doc(db, 'artifacts', 'storylines-public', 'public', 'data', 'backups', activeSyncId));
         if(d.exists()) { 
-            const data = d.data(); events = data.beats||[]; continuityItems = data.continuity||[]; chekhovItems = data.chekhov||[]; characterItems = data.characters||[];
+            const data = d.data(); 
+            events = data.beats||[]; 
+            continuityItems = data.continuity||[]; 
+            chekhovItems = data.chekhov||[]; 
+            characterItems = data.characters||[];
+            plotholeItems = data.plotholes||[];
+            bookTitle = data.bookTitle || '';
+            bookAuthor = data.bookAuthor || '';
             saveLocalData(); renderCharList(); render(); showToast("Restored!");
+            if($('bookTitleIn')) $('bookTitleIn').value = bookTitle;
+            if($('bookAuthorIn')) $('bookAuthorIn').value = bookAuthor;
         } else showToast("No backup found");
     } catch(e) { showToast("Error restoring"); }
 }
