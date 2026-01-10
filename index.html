@@ -1245,7 +1245,7 @@
                 <div class="input-group">
                     <label>Chapter No.</label>
                     <div style="display:flex;">
-                        <input type="number" id="numIn" placeholder="e.g. 1.1" step="0.01" list="chapterList" style="border-radius: 3px 0 0 3px; border-right: none; flex: 1; min-width: 0;" onfocus="this.dataset.old=this.value; this.value='';" onblur="if(!this.value) this.value=this.dataset.old||'';">
+                        <input type="number" id="numIn" placeholder="" step="0.1" list="chapterList" style="border-radius: 3px 0 0 3px; border-right: none; flex: 1; min-width: 0;" onfocus="this.dataset.old=this.value; this.value='';" onblur="if(!this.value) this.value=this.dataset.old||'';">
                         <button class="action-btn" onclick="loadBeatByNumber()" title="Load Beat Details" style="padding: 0 12px; border: 1px solid #d4cdc3; background: #f0f0f0; border-radius: 0 3px 3px 0; cursor: pointer;">➔</button>
                     </div>
                     <datalist id="chapterList"></datalist>
@@ -1272,11 +1272,11 @@
                 </div>
                 <div class="input-group col-span-2">
                     <label>Chapter Title</label>
-                    <input type="text" id="chapTitleIn" placeholder="e.g. The Beginning">
+                    <input type="text" id="chapTitleIn" placeholder="">
                 </div>
                 <div class="input-group">
                     <label>SubChapter Title</label>
-                    <input type="text" id="subChapTitleIn" placeholder="e.g. The Arrival">
+                    <input type="text" id="subChapTitleIn" placeholder="">
                 </div>
                 <div class="input-group col-span-full">
                     <label>Details (Markdown supported)</label>
@@ -1341,11 +1341,11 @@
             <div class="c-row-70-30">
                 <div class="input-group">
                     <label>Item Name</label>
-                    <input type="text" id="cNameIn" placeholder="e.g. Scar, Ring">
+                    <input type="text" id="cNameIn" placeholder="">
                 </div>
                 <div class="input-group">
                     <label>Icon</label>
-                    <input type="text" id="cIconIn" placeholder="e.g. ⚡" style="text-align:center;">
+                    <input type="text" id="cIconIn" placeholder="" style="text-align:center;">
                 </div>
             </div>
             <div class="c-row-50-50">
@@ -1380,7 +1380,7 @@
             <div class="controls">
                 <div class="input-group">
                     <label>Item Name</label>
-                    <input type="text" id="cgNameIn" placeholder="e.g. The Letter, Dagger">
+                    <input type="text" id="cgNameIn" placeholder="">
                 </div>
                 <div class="input-group">
                     <label>Type</label>
@@ -1388,7 +1388,7 @@
                 </div>
                 <div class="input-group">
                     <label>Icon</label>
-                    <input type="text" id="cgIconIn" placeholder="e.g. ✉️" style="text-align:center;">
+                    <input type="text" id="cgIconIn" placeholder="" style="text-align:center;">
                 </div>
                 <div class="input-group">
                     <label>Status</label>
@@ -1396,15 +1396,15 @@
                 </div>
                 <div class="input-group col-span-full">
                     <label>Appearance (Setup)</label>
-                    <input type="text" id="cgSetupIn" placeholder="e.g. Found in drawer (Ch 2)">
+                    <input type="text" id="cgSetupIn" placeholder="">
                 </div>
                 <div class="input-group col-span-full">
                     <label>Intended Misdirection</label>
-                    <input type="text" id="cgMisdIn" placeholder="e.g. Make reader suspect the brother">
+                    <input type="text" id="cgMisdIn" placeholder="">
                 </div>
                 <div class="input-group col-span-full">
                     <label>Real Usage (Payoff)</label>
-                    <input type="text" id="cgPayoffIn" placeholder="e.g. Unlocks the secret diary">
+                    <input type="text" id="cgPayoffIn" placeholder="">
                 </div>
             </div>
             <div class="btn-row sticky-footer">
@@ -1443,11 +1443,11 @@
             <div class="controls">
                 <div class="input-group">
                     <label>Rule or Idea</label>
-                    <input type="text" id="phRuleIn" placeholder="e.g. Magic Cost">
+                    <input type="text" id="phRuleIn" placeholder="">
                 </div>
                 <div class="input-group col-span-2">
                     <label>Details</label>
-                    <input type="text" id="phDetailIn" placeholder="e.g. Magic requires blood sacrifice">
+                    <input type="text" id="phDetailIn" placeholder="">
                 </div>
             </div>
             <div class="btn-row sticky-footer" style="justify-content: space-between;">
@@ -1492,7 +1492,7 @@
             <div class="c-row-50-50">
                 <div class="input-group">
                     <label>Character Name</label>
-                    <input type="text" id="charNameIn" placeholder="e.g. Sherlock Holmes">
+                    <input type="text" id="charNameIn" placeholder="">
                 </div>
                 <div class="input-group">
                     <label>Color Tag</label>
@@ -1504,7 +1504,7 @@
             </div>
             <div class="input-group" style="margin-top:15px;">
                 <label>Role / Profile / Archetype</label>
-                <textarea id="charRoleIn" rows="3" placeholder="e.g. Protagonist" style="min-height:80px;"></textarea>
+                <textarea id="charRoleIn" rows="3" placeholder="" style="min-height:80px;"></textarea>
             </div>
 
             <div class="btn-row sticky-footer">
