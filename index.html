@@ -1628,7 +1628,7 @@
         <div class="id-input-group">
             <input type="text" id="manualIdIn" class="id-input" placeholder="Paste Device ID">
             <input type="password" id="syncPassIn" class="id-input" placeholder="Password (Optional)">
-            <button class="btn-cloud" onclick="linkExistingId()">Sync to Cloud</button>
+            <button id="btnLinkCloud" class="btn-cloud" onclick="linkExistingId()">Sync to Cloud</button>
             <button class="btn-reset" onclick="resetToOriginalId()" style="border-color:#991b1b; color:#991b1b;">Disable / Set Offline</button>
             <button id="btnDeleteCloud" class="btn-reset" onclick="deleteCloudData()" style="border-color:#991b1b; color:#fff; background:#991b1b; display:none;">Delete</button>
         </div>
@@ -1712,6 +1712,13 @@
             document.getElementById('userIdDisplay').style.display = isLinked ? "block" : "none";
             document.getElementById('userIdText').innerText = activeSyncId || '';
             document.getElementById('btnDeleteCloud').style.display = isLinked ? "inline-block" : "none";
+            
+            // Disable Link button and inputs when already linked
+            const btnLink = document.getElementById('btnLinkCloud');
+            if (btnLink) btnLink.disabled = isLinked;
+            
+            document.getElementById('manualIdIn').disabled = isLinked;
+            document.getElementById('syncPassIn').disabled = isLinked;
         }
 
         window.copyId = () => { if(!activeSyncId) return; const val = activeSyncId; const el = document.createElement('textarea'); el.value = val; document.body.appendChild(el); el.select(); document.execCommand('copy'); document.body.removeChild(el); showToast("ID Copied!"); }
