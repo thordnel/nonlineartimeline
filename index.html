@@ -786,6 +786,14 @@
             
             .c-item-tag { border: 1px solid #999; color: #000; }
         }
+
+        /* Book Metadata Styles */
+        .book-metadata-container { display: flex; justify-content: center; align-items: center; gap: 10px; margin-bottom: 25px; flex-wrap: wrap; }
+        .book-title-input { width: 320px; max-width: 90vw; text-align: center; background: transparent; border: none; border-bottom: 1px dashed var(--secondary); font-weight: bold; font-size: 1.25rem; color: var(--primary); font-family: var(--font-main); }
+        .book-author-wrapper { display: flex; align-items: center; gap: 10px; }
+        .book-by-label { color: var(--text-muted); font-family: var(--font-ui); font-size: 0.8rem; text-transform: uppercase; }
+        .book-author-input { width: 160px; max-width: 90vw; text-align: center; background: transparent; border: none; border-bottom: 1px dashed var(--secondary); font-style: italic; font-family: var(--font-main); font-size: 1rem; }
+
         @media (min-width: 769px) {
             /* 1. Center the Color Column */
             #charListArea td:first-child {
@@ -1159,6 +1167,9 @@
             }
 
             #readmeContainer { padding: 20px; }
+            
+            /* Stack Book Title and Author on Mobile */
+            .book-metadata-container { flex-direction: column; gap: 5px; }
         }
 
         .clickable-link { cursor: pointer; text-decoration: underline; color: var(--info); }
@@ -1215,6 +1226,7 @@
             background: #fff; border: 1px dashed #a89f91; color: #a89f91; border-radius: 4px; padding: 1px 8px; font-size: 0.8rem; cursor: pointer; margin-left: 4px; transition: all 0.2s;
         }
         .mini-add-btn:hover { border-color: var(--primary); color: var(--primary); background: #fff; }
+    
     </style>
 </head>
 <body>
@@ -1231,10 +1243,12 @@
         <h4 class="main-subtitle">Story Beat Manager for Non-Linear Spacetimeline</h4>
     </div>
 
-    <div style="text-align: center; margin-bottom: 25px; display: flex; justify-content: center; gap: 10px; align-items: center;">
-        <input type="text" id="bookTitleIn" placeholder="Book Title" style="width: 320px; text-align: center; background: transparent; border: none; border-bottom: 1px dashed var(--secondary); font-weight: bold; font-size: 1.1rem; color: var(--primary);" onchange="saveBookMetadata()">
-        <span style="color: var(--text-muted); font-family: var(--font-ui); font-size: 0.8rem; text-transform: uppercase;">by</span>
-        <input type="text" id="bookAuthorIn" placeholder="Author" style="width: 160px; text-align: center; background: transparent; border: none; border-bottom: 1px dashed var(--secondary); font-style: italic;" onchange="saveBookMetadata()">
+    <div class="book-metadata-container">
+        <input type="text" id="bookTitleIn" class="book-title-input" placeholder="Book Title" onchange="saveBookMetadata()">
+        <div class="book-author-wrapper">
+            <span class="book-by-label">by</span>
+            <input type="text" id="bookAuthorIn" class="book-author-input" placeholder="Author" onchange="saveBookMetadata()">
+        </div>
     </div>
 
     <!-- BEAT SPACE -->
@@ -1772,6 +1786,7 @@
                     }
                     // Cloud wins: Clear local (will be overwritten by sync listener anyway)
                     events = []; continuityItems = []; chekhovItems = []; characterItems = []; plotholeItems = [];
+                    bookTitle = ''; bookAuthor = '';
                     saveLocalData(true); 
                 } else {
                     // Cloud Empty
@@ -1830,11 +1845,14 @@
 
             // 3. Clear Local Data
             events = []; continuityItems = []; chekhovItems = []; characterItems = []; plotholeItems = [];
+            bookTitle = ''; bookAuthor = '';
             saveLocalData(true);
 
             // 4. Update UI
             updateCloudUI();
             render();
+            if(document.getElementById('bookTitleIn')) document.getElementById('bookTitleIn').value = '';
+            if(document.getElementById('bookAuthorIn')) document.getElementById('bookAuthorIn').value = '';
             showToast("Unlinked & Cleared");
             document.getElementById('manualIdIn').value = '';
             document.getElementById('syncPassIn').value = '';
@@ -1867,10 +1885,13 @@
                 activeSyncId = null;
                 
                 events = []; continuityItems = []; chekhovItems = []; characterItems = []; plotholeItems = [];
+                bookTitle = ''; bookAuthor = '';
                 saveLocalData(true);
                 
                 updateCloudUI();
                 render();
+                if(document.getElementById('bookTitleIn')) document.getElementById('bookTitleIn').value = '';
+                if(document.getElementById('bookAuthorIn')) document.getElementById('bookAuthorIn').value = '';
             } catch(e) {
                 console.error(e);
                 showToast("Delete Failed");
@@ -1899,8 +1920,8 @@
                     if (data.characters) characterItems = data.characters;
                     if (data.plotholes) plotholeItems = data.plotholes;
                     
-                    if (data.bookTitle !== undefined) bookTitle = data.bookTitle;
-                    if (data.bookAuthor !== undefined) bookAuthor = data.bookAuthor;
+                    bookTitle = data.bookTitle || '';
+                    bookAuthor = data.bookAuthor || '';
 
                     saveLocalData(true);
                     renderContinuityList(); renderChekhovList(); renderCharList(); renderPlotholeList();
@@ -3304,7 +3325,7 @@
             }
             
             if(bookTitle || bookAuthor) {
-                csv += `\n[METADATA_START]\nTitle,Author\n${(bookTitle||'').replace(/,/g,'{com}')},${(bookAuthor||'').replace(/,/g,'{com}')}\n[METADATA_END]\n`;
+                csv += `\n[METADATA_START]\nTitle,Author\n${(bookTitle||'').replace(/\n/g,'{nl}').replace(/,/g,'{com}')},${(bookAuthor||'').replace(/\n/g,'{nl}').replace(/,/g,'{com}')}\n[METADATA_END]\n`;
             }
 
             const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' })); a.download = 'storylines.csv'; a.click(); 
@@ -3438,13 +3459,16 @@
                     }
                 }
 
+                let newBookTitle = '';
+                let newBookAuthor = '';
+
                 if(metaData) {
                     const mLines = metaData.split('\n');
                     if(mLines.length >= 2) {
                         const mParts = mLines[1].split(',');
                         if(mParts.length >= 2) {
-                            bookTitle = mParts[0].replace(/{com}/g, ',');
-                            bookAuthor = mParts[1].replace(/{com}/g, ',');
+                            newBookTitle = (mParts[0] || '').replace(/{nl}/g, '\n').replace(/{com}/g, ',');
+                            newBookAuthor = (mParts[1] || '').replace(/{nl}/g, '\n').replace(/{com}/g, ',');
                         }
                     }
                 }
@@ -3457,6 +3481,9 @@
                     if(newChars.length > 0) characterItems = newChars; // Save characters
                     if(newPlotholes.length > 0) plotholeItems = newPlotholes;
                     
+                    bookTitle = newBookTitle;
+                    bookAuthor = newBookAuthor;
+
                     saveLocalData(); 
                     renderContinuityList(); 
                     renderChekhovList(); 
