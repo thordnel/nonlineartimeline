@@ -1433,29 +1433,36 @@
 
     <!-- PLOTHOLE TRACKER SPACE -->
     <div class="panel">
-        <div class="section-label">World Logic Tracker</div>
+        <div class="section-label">New Ideas and World Logic Tracker</div>
         <div class="panel-header" onclick="togglePlotholePanel()">
-            <span style="font-weight:700; color:var(--text-main);">Manage World Rules</span>
+            <span style="font-weight:700; color:var(--text-main);">Manage New Ideas and World Rules</span>
             <span id="plotholePanelIcon" style="color:var(--secondary);">➕</span>
         </div>
         
         <div id="plotholeContent" class="panel-content" style="display: none;">
             <div class="controls">
                 <div class="input-group">
-                    <label>Rule (Short)</label>
+                    <label>Rule or Idea</label>
                     <input type="text" id="phRuleIn" placeholder="e.g. Magic Cost">
                 </div>
                 <div class="input-group col-span-2">
-                    <label>Rule Details</label>
+                    <label>Details</label>
                     <input type="text" id="phDetailIn" placeholder="e.g. Magic requires blood sacrifice">
                 </div>
             </div>
             <div class="btn-row sticky-footer" style="justify-content: space-between;">
                 <div class="action-group">
-                    <button id="btnPhAdd" class="btn-add" onclick="addPlotholeItem()">+ Add Rule</button>
+                    <button id="btnPhAdd" class="btn-add" onclick="addPlotholeItem()">+ Add</button>
                     <button id="btnPhCancel" class="btn-cancel" onclick="cancelPlotholeEdit()">Cancel</button>
                 </div>
-                <input type="text" id="plotholeSearchInput" placeholder="🔍 Search rules..." oninput="renderPlotholeList()" style="width: 200px; padding: 8px; font-size: 0.9rem;">
+                <div style="display:flex; gap:10px;">
+                    <select id="plotholeFilterSelect" onchange="renderPlotholeList()" style="width: auto; padding: 8px; font-size: 0.9rem; border: 1px solid #d4cdc3; border-radius: 3px;">
+                        <option value="all">All</option>
+                        <option value="available">Available</option>
+                        <option value="applied">Applied</option>
+                    </select>
+                    <input type="text" id="plotholeSearchInput" placeholder="🔍 Search rules..." oninput="renderPlotholeList()" style="width: 200px; padding: 8px; font-size: 0.9rem;">
+                </div>
             </div>
             
             <table class="chekhov-table">
@@ -2208,6 +2215,7 @@
                 cancelPlotholeEdit();
             } else {
                 plotholeItems.push({ id: Date.now().toString(), rule, detail });
+                cancelPlotholeEdit();
             }
             saveLocalData(); saveListsToCloud(); renderPlotholeList(); populatePlotholeSelect(); render();
         }
@@ -2217,14 +2225,14 @@
             editingPlotholeId = id;
             document.getElementById('phRuleIn').value = item.rule;
             document.getElementById('phDetailIn').value = item.detail || '';
-            const btn = document.getElementById('btnPhAdd'); btn.innerText = "Update Rule"; btn.className = "btn-update";
+            const btn = document.getElementById('btnPhAdd'); btn.innerText = "Update"; btn.className = "btn-update";
             document.getElementById('btnPhCancel').style.display = 'inline-block';
         }
 
         window.cancelPlotholeEdit = () => {
             editingPlotholeId = null;
             document.getElementById('phRuleIn').value = ''; document.getElementById('phDetailIn').value = '';
-            const btn = document.getElementById('btnPhAdd'); btn.innerText = "+ Add Rule"; btn.className = "btn-add";
+            const btn = document.getElementById('btnPhAdd'); btn.innerText = "+ Add"; btn.className = "btn-add";
             document.getElementById('btnPhCancel').style.display = 'none';
         }
 
@@ -2308,9 +2316,19 @@
         function renderPlotholeList() {
             const tbody = document.getElementById('plotholeListArea'); tbody.innerHTML = '';
             const searchTerm = document.getElementById('plotholeSearchInput') ? document.getElementById('plotholeSearchInput').value.toLowerCase() : '';
+            const filterType = document.getElementById('plotholeFilterSelect') ? document.getElementById('plotholeFilterSelect').value : 'all';
 
             plotholeItems.filter(item => {
-                return !searchTerm || item.rule.toLowerCase().includes(searchTerm) || (item.detail || '').toLowerCase().includes(searchTerm);
+                const matchesSearch = !searchTerm || item.rule.toLowerCase().includes(searchTerm) || (item.detail || '').toLowerCase().includes(searchTerm);
+                if (!matchesSearch) return false;
+
+                if (filterType === 'all') return true;
+                const isApplied = events.some(e => {
+                    if (!e.plotholeTags) return false;
+                    if (Array.isArray(e.plotholeTags)) return e.plotholeTags.includes(item.id);
+                    return e.plotholeTags[item.id];
+                });
+                return filterType === 'applied' ? isApplied : !isApplied;
             }).forEach(item => {
                 // Normalize tags for calculation
                 const affectedBeats = events.filter(e => {
