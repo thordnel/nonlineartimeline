@@ -1419,15 +1419,15 @@
                 </div>
                 <div class="input-group col-span-full">
                     <label>Appearance (Setup)</label>
-                    <input type="text" id="cgSetupIn" placeholder="">
+                    <textarea id="cgSetupIn" rows="2" placeholder="" style="min-height:60px;"></textarea>
                 </div>
                 <div class="input-group col-span-full">
                     <label>Intended Misdirection</label>
-                    <input type="text" id="cgMisdIn" placeholder="">
+                    <textarea id="cgMisdIn" rows="2" placeholder="" style="min-height:60px;"></textarea>
                 </div>
                 <div class="input-group col-span-full">
                     <label>Real Usage (Payoff)</label>
-                    <input type="text" id="cgPayoffIn" placeholder="">
+                    <textarea id="cgPayoffIn" rows="2" placeholder="" style="min-height:60px;"></textarea>
                 </div>
             </div>
             <div class="btn-row sticky-footer">
@@ -1464,13 +1464,13 @@
         
         <div id="plotholeContent" class="panel-content" style="display: none;">
             <div class="controls">
-                <div class="input-group">
+                <div class="input-group col-span-full">
                     <label>Rule or Idea</label>
                     <input type="text" id="phRuleIn" placeholder="">
                 </div>
-                <div class="input-group col-span-2">
+                <div class="input-group col-span-full">
                     <label>Details</label>
-                    <input type="text" id="phDetailIn" placeholder="">
+                    <textarea id="phDetailIn" rows="2" placeholder="" style="min-height:60px;"></textarea>
                 </div>
             </div>
             <div class="btn-row sticky-footer" style="justify-content: space-between;">
@@ -2277,6 +2277,7 @@
         window.cancelPlotholeEdit = () => {
             editingPlotholeId = null;
             document.getElementById('phRuleIn').value = ''; document.getElementById('phDetailIn').value = '';
+            document.getElementById('phDetailIn').style.height = 'auto';
             const btn = document.getElementById('btnPhAdd'); btn.innerText = "+ Add"; btn.className = "btn-add";
             document.getElementById('btnPhCancel').style.display = 'none';
         }
@@ -2453,6 +2454,10 @@
             document.getElementById('detailIn').addEventListener('input', function() { this.style.height = 'auto'; this.style.height = (this.scrollHeight) + 'px'; });
             document.getElementById('remarksIn').addEventListener('input', function() { this.style.height = 'auto'; this.style.height = (this.scrollHeight) + 'px'; });
             document.getElementById('charRoleIn').addEventListener('input', function() { this.style.height = 'auto'; this.style.height = (this.scrollHeight) + 'px'; });
+            document.getElementById('phDetailIn').addEventListener('input', function() { this.style.height = 'auto'; this.style.height = (this.scrollHeight) + 'px'; });
+            document.getElementById('cgSetupIn').addEventListener('input', function() { this.style.height = 'auto'; this.style.height = (this.scrollHeight) + 'px'; });
+            document.getElementById('cgMisdIn').addEventListener('input', function() { this.style.height = 'auto'; this.style.height = (this.scrollHeight) + 'px'; });
+            document.getElementById('cgPayoffIn').addEventListener('input', function() { this.style.height = 'auto'; this.style.height = (this.scrollHeight) + 'px'; });
             sortData('number');
             setupMentionLogic();
         };
@@ -2687,6 +2692,9 @@
         function clearChekhovInputs() {
             document.getElementById('cgNameIn').value = ''; document.getElementById('cgIconIn').value = ''; document.getElementById('cgTypeIn').value = "Chekhov's Gun";
             document.getElementById('cgSetupIn').value = ''; document.getElementById('cgMisdIn').value = ''; document.getElementById('cgPayoffIn').value = ''; document.getElementById('cgStatusIn').value = 'Pending';
+            document.getElementById('cgSetupIn').style.height = 'auto';
+            document.getElementById('cgMisdIn').style.height = 'auto';
+            document.getElementById('cgPayoffIn').style.height = 'auto';
         }
 
         window.deleteChekhovItem = (id) => {
