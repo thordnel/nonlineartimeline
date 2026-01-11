@@ -19,14 +19,20 @@ const ASSETS = [
 // Install: Cache core assets
 self.addEventListener('install', (event) => {
   // Force this new service worker to become the active one, bypassing the "waiting" state
-  self.skipWaiting(); 
-  
+  // self.skipWaiting(); // Removed to allow user-triggered updates
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
       console.log('[Service Worker] Caching all: app shell and content');
       return cache.addAll(ASSETS);
     })
   );
+});
+
+// Listen for skipWaiting message from client
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
 });
 
 // Activate: Clean up old caches and take control of clients
