@@ -1220,6 +1220,7 @@
         }
         .track-badge.violation { background: #fee2e2; color: #991b1b; border-color: #fca5a5; }
         .track-badge.adherence { background: #dcfce7; color: #166534; border-color: #86efac; }
+        .track-badge.planned { background: #fef9c3; color: #854d0e; border-color: #fde047; }
         .track-del { margin-left: 4px; opacity: 0.5; font-weight: bold; font-size: 0.9rem; }
         .track-del:hover { opacity: 1; }
         .mini-add-btn {
@@ -1330,6 +1331,7 @@
                         </select>
                         <button class="action-btn" onclick="tagPlotholeToBeat('violation')" title="Mark as Broken/Plothole">⚠️ Broken</button>
                         <button class="action-btn" onclick="tagPlotholeToBeat('adherence')" title="Mark as Upheld/Established">✅ Upheld</button>
+                        <button class="action-btn" onclick="tagPlotholeToBeat('planned')" title="Mark as Planned">🗓️ Planned</button>
                     </div>
                     <div id="currentPlotholeTags" class="char-tag-row" style="border-color:var(--danger); background:#fff5f5;"></div>
                 </div>
@@ -1687,6 +1689,7 @@
             <div class="btn-row" style="justify-content: center; gap: 10px; margin-top: 20px;">
                 <button class="action-btn" onclick="executeQuickTag('violation')" style="background:#fee2e2; color:#991b1b; border:1px solid #fca5a5; padding: 8px 15px;">⚠️ Broken</button>
                 <button class="action-btn" onclick="executeQuickTag('adherence')" style="background:#dcfce7; color:#166534; border:1px solid #86efac; padding: 8px 15px;">✅ Upheld</button>
+                <button class="action-btn" onclick="executeQuickTag('planned')" style="background:#fef9c3; color:#854d0e; border:1px solid #fde047; padding: 8px 15px;">🗓️ Planned</button>
             </div>
             <div style="margin-top:15px;"><button class="btn-dl" onclick="closeModal()">Cancel</button></div>
         </div>
@@ -2018,7 +2021,9 @@
                 if (oldTags[ruleId] !== type) {
                     const rule = plotholeItems.find(r => r.id === ruleId);
                     const ruleName = rule ? rule.rule : 'Unknown Rule';
-                    const status = type === 'violation' ? 'Violated ⚠️' : 'Adhered ✅';
+                    let status = 'Adhered ✅';
+                    if (type === 'violation') status = 'Violated ⚠️';
+                    else if (type === 'planned') status = 'Planned 🗓️';
                     const chapInfo = `Ch ${newBeat.number}${newBeat.chapterTitle ? ' (' + newBeat.chapterTitle + ')' : ''}`;
                     const titlePrefix = bookTitle ? `[${bookTitle}] ` : '';
                     sendAppNotification(`${titlePrefix}World Logic Alert`, `${ruleName} ${status} in ${chapInfo}`);
@@ -2432,24 +2437,26 @@
                     return e.plotholeTags[item.id];
                 });
 
-                let violations = [], adherences = [];
+                let violations = [], adherences = [], planned = [];
                 affectedBeats.forEach(e => {
                     const tag = Array.isArray(e.plotholeTags) ? 'violation' : e.plotholeTags[item.id];
                     if (tag === 'violation') violations.push(e.number);
                     else if (tag === 'adherence') adherences.push(e.number);
+                    else if (tag === 'planned') planned.push(e.number);
                 });
 
                 const statusIcon = violations.length > 0 ? '⚠️' : (adherences.length > 0 ? '✅' : '⚪');
                 
-                const vStr = [...new Set(violations)].sort((a,b)=>a-b).map(n => `<span class="track-badge violation" onclick="jumpToChapter(${n})" title="Go to Chapter ${n}">⚠️ ${n} <span class="track-del" onclick="event.stopPropagation(); removePlotholeTagFromTable('${item.id}', ${n})">×</span></span>`).join('');
-                const aStr = [...new Set(adherences)].sort((a,b)=>a-b).map(n => `<span class="track-badge adherence" onclick="jumpToChapter(${n})" title="Go to Chapter ${n}">✅ ${n} <span class="track-del" onclick="event.stopPropagation(); removePlotholeTagFromTable('${item.id}', ${n})">×</span></span>`).join('');
+                const vStr = [...new Set(violations)].sort((a,b)=>a-b).map(n => `<span class="track-badge violation" onclick="jumpToChapter(${n})" oncontextmenu="openPhMenu(event, ${n}, '${item.id}')" title="Go to Chapter ${n}">⚠️ ${n} <span class="track-del" onclick="event.stopPropagation(); removePlotholeTagFromTable('${item.id}', ${n})">×</span></span>`).join('');
+                const aStr = [...new Set(adherences)].sort((a,b)=>a-b).map(n => `<span class="track-badge adherence" onclick="jumpToChapter(${n})" oncontextmenu="openPhMenu(event, ${n}, '${item.id}')" title="Go to Chapter ${n}">✅ ${n} <span class="track-del" onclick="event.stopPropagation(); removePlotholeTagFromTable('${item.id}', ${n})">×</span></span>`).join('');
+                const pStr = [...new Set(planned)].sort((a,b)=>a-b).map(n => `<span class="track-badge planned" onclick="jumpToChapter(${n})" oncontextmenu="openPhMenu(event, ${n}, '${item.id}')" title="Go to Chapter ${n}">🗓️ ${n} <span class="track-del" onclick="event.stopPropagation(); removePlotholeTagFromTable('${item.id}', ${n})">×</span></span>`).join('');
                 
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
                     <td style="font-size:1.2rem; text-align:center;">${statusIcon}</td>
                     <td style="font-weight:bold;">${item.rule}</td>
                     <td style="text-align: left;">${item.detail || '-'}</td>
-                    <td style="text-align:left;">${vStr}${aStr}<button class="mini-add-btn" onclick="openQuickTagModal('${item.id}')" title="Add Record">+</button></td>
+                    <td style="text-align:left;">${vStr}${aStr}${pStr}<button class="mini-add-btn" onclick="openQuickTagModal('${item.id}')" title="Add Record">+</button></td>
                     <td>
                         <div style="display:flex; gap:8px; justify-content:center; align-items:center;">
                             <button class="action-btn" onclick="editPlotholeItem('${item.id}')" title="Edit">✎</button> 
@@ -2489,14 +2496,47 @@
                 const item = plotholeItems.find(i => i.id === pid);
                 if(item) {
                     const tag = document.createElement('span'); tag.className = 'char-badge';
-                    const isBroken = type === 'violation';
-                    tag.style.cssText = `background-color:${isBroken ? 'var(--danger)' : 'var(--success)'}; cursor:pointer; color:white;`;
-                    tag.innerHTML = `${isBroken ? '⚠️' : '✅'} ${item.rule} <span style="margin-left:4px; opacity:0.7;">×</span>`;
+                    let bg = 'var(--success)', icon = '✅';
+                    if (type === 'violation') { bg = 'var(--danger)'; icon = '⚠️'; }
+                    else if (type === 'planned') { bg = '#eab308'; icon = '🗓️'; }
+                    
+                    tag.style.cssText = `background-color:${bg}; cursor:pointer; color:white;`;
+                    tag.innerHTML = `${icon} ${item.rule} <span style="margin-left:4px; opacity:0.7;">×</span>`;
                     tag.onclick = () => removePlotholeFromBeat(pid);
                     div.appendChild(tag);
                 }
             }
         }
+
+        // --- Context Menu Logic ---
+        let ctxMenuBeatIndex = -1;
+        let ctxMenuRuleId = null;
+
+        window.openPhMenu = (e, beatNum, ruleId) => {
+            e.preventDefault(); e.stopPropagation();
+            
+            // Find index by number since we pass number from the badge
+            const idx = events.findIndex(ev => ev.number === beatNum);
+            if (idx === -1) return;
+            
+            ctxMenuBeatIndex = idx; ctxMenuRuleId = ruleId;
+            const menu = document.getElementById('phContextMenu');
+            menu.style.display = 'block';
+            menu.style.left = e.pageX + 'px'; menu.style.top = e.pageY + 'px';
+        }
+
+        window.applyPhContext = (type) => {
+            document.getElementById('phContextMenu').style.display = 'none';
+            if (ctxMenuBeatIndex === -1 || !ctxMenuRuleId) return;
+            const beat = events[ctxMenuBeatIndex]; if (!beat) return;
+            if (!beat.plotholeTags || Array.isArray(beat.plotholeTags)) beat.plotholeTags = {};
+            
+            if (type === 'remove') delete beat.plotholeTags[ctxMenuRuleId];
+            else beat.plotholeTags[ctxMenuRuleId] = type;
+            
+            saveLocalData(); saveBeatToCloud(beat); render(); renderPlotholeList();
+        }
+        window.addEventListener('click', () => { const m = document.getElementById('phContextMenu'); if(m) m.style.display = 'none'; });
 
         window.onload = function() {
             document.getElementById('tzSelect').value = currentTz; detectUserNearestZone(); loadLocalData(); initFirebase();
@@ -2978,10 +3018,16 @@
                 phKeys.forEach(pid => {
                     const item = plotholeItems.find(i => i.id === pid);
                     if(item) {
-                        const isBroken = Array.isArray(phTags) ? true : (phTags[pid] === 'violation');
-                        const statusLine = isBroken ? "Violated Rule:" : "Complied Rule:";
+                        let statusLine = "Complied Rule:";
+                        let badgeColor = 'var(--success)';
+                        let badgeIcon = '✅';
+                        const tagType = Array.isArray(phTags) ? 'violation' : phTags[pid];
+                        
+                        if (tagType === 'violation') { statusLine = "Violated Rule:"; badgeColor = 'var(--danger)'; badgeIcon = '⚠️'; }
+                        else if (tagType === 'planned') { statusLine = "Planned Application:"; badgeColor = '#eab308'; badgeIcon = '🗓️'; }
+                        
                         const tooltip = `${statusLine}\n${item.detail || ''}`.replace(/"/g, '&quot;');
-                        cHtml += `<span class="c-badge" style="color:white; background-color:${isBroken?'var(--danger)':'var(--success)'}; border-color:${isBroken?'var(--danger)':'var(--success)'};" data-tooltip="${tooltip}" onclick="event.stopPropagation()">${isBroken?'⚠️':'✅'} ${item.rule}</span>`;
+                        cHtml += `<span class="c-badge" style="color:white; background-color:${badgeColor}; border-color:${badgeColor};" data-tooltip="${tooltip}" onclick="event.stopPropagation()">${badgeIcon} ${item.rule}</span>`;
                     }
                 });
                 cHtml += '</div>';
@@ -3767,6 +3813,8 @@
         window.collapseAllPanels = window.collapseAllPanels;
         window.toggleChekhovFilter = window.toggleChekhovFilter;
         window.printChapterList = printChapterList;
+        window.openPhMenu = window.openPhMenu;
+        window.applyPhContext = window.applyPhContext;
         window.loadBeatByNumber = () => {
             const val = parseFloat(document.getElementById('numIn').value);
             if (isNaN(val)) return showToast("Enter a number");
