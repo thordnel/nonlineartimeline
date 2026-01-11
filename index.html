@@ -1917,7 +1917,22 @@
                     // Cloud exists: Sync Lists
                     const data = docSnap.data();
                     if (data.continuity) continuityItems = data.continuity;
-                    if (data.chekhov) chekhovItems = data.chekhov;
+                    
+                    if (data.chekhov) {
+                        // Check for Status Updates (Completed/Abandoned)
+                        if (!docSnap.metadata.hasPendingWrites && chekhovItems.length > 0) {
+                            data.chekhov.forEach(newItem => {
+                                const oldItem = chekhovItems.find(i => i.id === newItem.id);
+                                if (oldItem && oldItem.status !== newItem.status) {
+                                    if (newItem.status === 'Completed' || newItem.status === 'Abandoned') {
+                                        sendAppNotification("Narrative Update", `${newItem.name} is now ${newItem.status}`);
+                                    }
+                                }
+                            });
+                        }
+                        chekhovItems = data.chekhov;
+                    }
+                    
                     if (data.characters) characterItems = data.characters;
                     if (data.plotholes) plotholeItems = data.plotholes;
                     
@@ -1955,6 +1970,17 @@
             unsubscribeBeats = onSnapshot(beatsRef, { includeMetadataChanges: true }, (snapshot) => {
                 if (editIndex > -1) return; // Don't interrupt editing
                 
+                // Check for Plothole/Rule Updates
+                if (!snapshot.metadata.hasPendingWrites && events.length > 0) {
+                    snapshot.docChanges().forEach(change => {
+                        if (change.type === 'modified') {
+                            const newBeat = change.doc.data();
+                            const oldBeat = events.find(e => e.id === newBeat.id);
+                            if (oldBeat) checkPlotholeDiff(oldBeat, newBeat);
+                        }
+                    });
+                }
+
                 const remoteEvents = [];
                 snapshot.forEach(doc => remoteEvents.push(doc.data()));
                 events = remoteEvents;
@@ -1976,6 +2002,26 @@
                     document.getElementById('syncStatus').innerText = "Sync Error (Beats)";
                 }
             });
+        }
+
+        function checkPlotholeDiff(oldBeat, newBeat) {
+            const normalize = (tags) => {
+                if (!tags) return {};
+                if (Array.isArray(tags)) { const o={}; tags.forEach(id=>o[id]='violation'); return o; }
+                return tags;
+            };
+            const oldTags = normalize(oldBeat.plotholeTags);
+            const newTags = normalize(newBeat.plotholeTags);
+            
+            for (const [ruleId, type] of Object.entries(newTags)) {
+                if (oldTags[ruleId] !== type) {
+                    const rule = plotholeItems.find(r => r.id === ruleId);
+                    const ruleName = rule ? rule.rule : 'Unknown Rule';
+                    const status = type === 'violation' ? 'Violated ⚠️' : 'Adhered ✅';
+                    const chapInfo = `Ch ${newBeat.number}${newBeat.chapterTitle ? ' (' + newBeat.chapterTitle + ')' : ''}`;
+                    sendAppNotification("World Logic Alert", `${ruleName} ${status} in ${chapInfo}`);
+                }
+            }
         }
 
         function updateSyncStatus(pending) {
@@ -3887,6 +3933,20 @@
             t.innerHTML = `New version available <button onclick="triggerUpdate()" style="margin-left:10px; padding:2px 8px; color:#333; cursor:pointer;">Update</button>`;
             t.className = "show";
             window.triggerUpdate = () => worker.postMessage({ type: 'SKIP_WAITING' });
+        }
+
+        // --- APP NOTIFICATION HELPER ---
+        function sendAppNotification(title, body) {
+            // 1. Try System Notification if permitted
+            if ("Notification" in window && Notification.permission === "granted") {
+                new Notification(title, { 
+                    body: body, 
+                    icon: "https://placehold.co/192x192/8c6b5d/ffffff?text=SL" 
+                });
+            } else {
+                // 2. Fallback to In-App Toast
+                showToast(`${title}: ${body}`);
+            }
         }
 
     </script>
