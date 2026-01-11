@@ -1228,6 +1228,25 @@
         }
         .mini-add-btn:hover { border-color: var(--primary); color: var(--primary); background: #fff; }
     
+        /* Context Menu */
+        .context-menu {
+            position: absolute; background: white; border: 1px solid #d4cdc3;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15); border-radius: 4px;
+            z-index: 5000; display: none; min-width: 140px; overflow: hidden;
+        }
+        .context-menu-item {
+            padding: 10px 15px; cursor: pointer; font-size: 0.85rem;
+            color: var(--text-main); border-bottom: 1px solid #f0ebe4;
+            transition: background 0.1s;
+        }
+        .context-menu-item:last-child { border-bottom: none; }
+        .context-menu-item:hover { background-color: #f0ebe4; color: var(--primary); }
+
+        /* Prevent default touch actions on badges to allow custom context menu */
+        .track-badge, .c-badge {
+            -webkit-touch-callout: none;
+            user-select: none;
+        }
     </style>
 </head>
 <body>
@@ -1693,6 +1712,14 @@
             </div>
             <div style="margin-top:15px;"><button class="btn-dl" onclick="closeModal()">Cancel</button></div>
         </div>
+    </div>
+
+    <!-- Context Menu for Plothole Tags -->
+    <div id="phContextMenu" class="context-menu">
+        <div class="context-menu-item" onclick="applyPhContext('planned')">🗓️ Set Planned</div>
+        <div class="context-menu-item" onclick="applyPhContext('violation')">⚠️ Set Broken</div>
+        <div class="context-menu-item" onclick="applyPhContext('adherence')">✅ Set Upheld</div>
+        <div class="context-menu-item" onclick="applyPhContext('remove')" style="color:var(--danger);">× Remove</div>
     </div>
 
     <div id="toast"></div>
@@ -3027,7 +3054,7 @@
                         else if (tagType === 'planned') { statusLine = "Planned Application:"; badgeColor = '#eab308'; badgeIcon = '🗓️'; }
                         
                         const tooltip = `${statusLine}\n${item.detail || ''}`.replace(/"/g, '&quot;');
-                        cHtml += `<span class="c-badge" style="color:white; background-color:${badgeColor}; border-color:${badgeColor};" data-tooltip="${tooltip}" onclick="event.stopPropagation()">${badgeIcon} ${item.rule}</span>`;
+                        cHtml += `<span class="c-badge" style="color:white; background-color:${badgeColor}; border-color:${badgeColor}; cursor:pointer;" data-tooltip="${tooltip}" onclick="event.stopPropagation()" oncontextmenu="openPhMenu(event, ${evt.number}, '${pid}')">${badgeIcon} ${item.rule}</span>`;
                     }
                 });
                 cHtml += '</div>';
