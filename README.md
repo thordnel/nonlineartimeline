@@ -1,8 +1,8 @@
 ![image](https://thordnel.github.io/nonlineartimeline/parchtitle.png)
 
-# **STORYLINES**
+# **Storylines**
 
-## **Non-Linear Timeline Manager**
+## **Story Beat Manager for Non-Linear SpaceTimeline**
 
 Visualize story beats in chronological order or in chapter sequence (linear or non-linear timeline).
 
@@ -35,6 +35,7 @@ This repository contains a single-page web app that helps you manage complex sto
 
 ### **Features**
 
+* **Book Metadata**: Define your Book Title and Author directly within the timeline view. These are saved and exported with your project.
 * **Narrative Modes**: Visually distinguish beats using color-coded modes:
   * **Present**: Standard background.
   * **Flashback**: Grey background.
@@ -44,10 +45,11 @@ This repository contains a single-page web app that helps you manage complex sto
 * **Search & Filter**:
   * **Global Search**: Instantly filter beats by details, titles, remarks, or narrative modes.
   * **Tag Filtering**: Click character or item badges to filter the timeline to only show beats involving those specific elements.
+  * **Chapter Filtering**: Isolate specific chapters using the dedicated dropdown.
+  * **Smart Clear**: A global "Clear Filters" button appears when any filter is active.
 * **Timezone Intelligence**: Enter events in their local timezone and compare them against global zones. Set a "Preferred Display" timezone per beat for international narratives.
+* **Real-Time Cloud Sync**: Link devices using a personal ID. The application now uses live listeners to sync beats instantly across devices. Optional password protection adds a layer of security to your sync ID.
 * **Smart Reordering**: Drag-and-drop (desktop) or use Up/Down arrows (mobile) to sequence beats. Movement is restricted to within the same chapter to maintain data integrity.
-* **Cloud Sync**: Link multiple devices using a personal ID. The "Restore" process includes conflict checking, showing local vs. cloud beat counts before overwriting.
-* **UI Enhancements**: Includes a "Collapse All" floating button for decluttering the workspace and sticky footers for easier data entry on long forms.
 
 ## **CSV Format**
 
@@ -58,7 +60,7 @@ The app utilizes an extended CSV format to preserve all metadata:
 * **NarrativeMode**: Stores the type of event (Present, Flashback, etc.).
 * **Details/Remarks**: Newlines are encoded as {nl} and commas as {com}.
 * **JSON Metadata**: Complex tags (Characters, Plotholes) are stored as escaped JSON strings within the CSV columns.
-* **Data Blocks**: Continuity, Narrative Items (Chekhov), Character, and Plothole definitions are stored in dedicated \[DATA\_START\] blocks at the end of the file.
+* **Data Blocks**: Continuity, Narrative Items (Chekhov), Character, Plothole, and Book Metadata are stored in dedicated `[DATA_START]` blocks at the end of the file.
 
 ## **Limitations / Known Issues**
 
@@ -70,13 +72,20 @@ The app utilizes an extended CSV format to preserve all metadata:
 
 * **Single-File Architecture**: Application logic, styling, and Markdown parsing are contained within index.html.
 * **Markdown Engine**: Uses [marked.js](https://cdnjs.cloudflare.com/ajax/libs/marked/4.3.0/marked.min.js) for rendering.
-* **Storage**: Primary local key is storylines\_persist.
+* **Storage**: Primary local key is `storylines_persist`.
 * **PWA**: Includes a Service Worker (sw.js) for offline reliability and update notifications.
 
 ## **Changelog**
 
+* **v18.0**:
+  * **Real-Time Sync**: Moved from manual backup/restore to live Firestore listeners (`onSnapshot`) for instant bi-directional updates.
+  * **Architecture**: Data structure migrated to sub-collections (`/users/{id}/beats`) for better scalability.
+  * **Security**: Added optional password protection for Cloud IDs.
+  * **Book Metadata**: Added Title and Author fields to the main UI.
+  * **Filtering**: Added specific Chapter Filter dropdown and enhanced "Clear Filters" logic.
+  * **World Logic**: Added internal filtering (Show Available vs. Applied rules).
 * **v17.0**:
-  * Renamed Chekhov Space to **Master Narrative Tracker** with expanded item types (Motifs, Red Herrings).
+  * Renamed Chekhov Space to **Master Narrative Tracker**.
   * Added **Narrative Modes** for styling Flashbacks and Visions.
   * Added **Smart Mentions** (`@` autocomplete) for quick cross-referencing.
   * Added global "Collapse All" button and sticky action footers.
