@@ -1631,6 +1631,7 @@
                 <div class="btn-group-mobile">
                     <button id="btnSortDate" class="btn-sort" onclick="sortData('date')">Sort Date</button>
                     <button id="btnSortChapter" class="btn-sort" onclick="sortData('number')">Sort Chapter</button>
+                    <button id="btnSortPriority" class="btn-sort" onclick="sortData('priority')">Sort Priority</button>
                 </div>
             </div>
             <div class="nav-right">
@@ -3441,6 +3442,17 @@
                 label.innerText = "CHRONOLOGICAL"; 
                 if(printSub) printSub.innerText = "Sorted by: Chronological";
                 document.getElementById('allowDragDrop').checked = false; // Uncheck when not in chapter sort
+            } else if (type === 'priority') {
+                const pMap = { "Ongoing (Current)": 1, "Not Yet Started": 2, "Ongoing": 3, "Completed": 4 };
+                events.sort((a, b) => {
+                    const pA = pMap[a.manuscriptStatus || "Not Yet Started"] || 99;
+                    const pB = pMap[b.manuscriptStatus || "Not Yet Started"] || 99;
+                    if (pA !== pB) return pA - pB;
+                    return a.number - b.number;
+                });
+                label.innerText = "PRIORITY";
+                if(printSub) printSub.innerText = "Sorted by: Priority";
+                document.getElementById('allowDragDrop').checked = false;
             } else { // 'number'
                 events.sort((a, b) => a.number - b.number); 
                 label.innerText = "CHAPTER"; 
@@ -3464,6 +3476,7 @@
             const isMulti = v === 'multi';
             document.getElementById('btnSortDate').disabled = isMulti;
             document.getElementById('btnSortChapter').disabled = isMulti;
+            if(document.getElementById('btnSortPriority')) document.getElementById('btnSortPriority').disabled = isMulti;
         }
 
         function clearInputs() { document.getElementById('dateIn').value = ''; document.getElementById('numIn').value = ''; document.getElementById('chapTitleIn').value = ''; document.getElementById('subChapTitleIn').value = ''; document.getElementById('detailIn').value = ''; document.getElementById('remarksIn').value = ''; document.getElementById('narrativeModeIn').value = 'Present'; document.getElementById('manuscriptStatusIn').value = 'Not Yet Started'; document.getElementById('detailIn').style.height = 'auto'; }
