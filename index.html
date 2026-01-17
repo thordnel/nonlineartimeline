@@ -2252,6 +2252,7 @@
             const btn = document.getElementById('btnCharAdd'); 
             btn.innerText = "Update Character"; btn.className = "btn-update"; 
             document.getElementById('btnCharCancel').style.display = 'inline-block';
+            document.getElementById('charNameIn').scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
 
         window.cancelCharEdit = () => {
@@ -2389,6 +2390,7 @@
             document.getElementById('phDetailIn').value = item.detail || '';
             const btn = document.getElementById('btnPhAdd'); btn.innerText = "Update"; btn.className = "btn-update";
             document.getElementById('btnPhCancel').style.display = 'inline-block';
+            document.getElementById('phRuleIn').scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
 
         function removePlotholeUsage(id) {
@@ -2744,6 +2746,7 @@
             btn.innerText = "Update Item"; btn.className = "btn-update"; 
             document.getElementById('btnCCancel').style.display = 'inline-block'; 
             if (document.getElementById('continuityContent').style.display !== 'block') window.toggleContinuityPanel(); 
+            document.getElementById('cNameIn').scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
 
         window.deleteContinuityItem = (id) => { 
@@ -2858,6 +2861,7 @@
             const btn = document.getElementById('btnCGAdd'); 
             btn.innerText = "Update Item"; btn.className = "btn-update"; 
             document.getElementById('btnCGCancel').style.display = 'inline-block';
+            document.getElementById('cgNameIn').scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
 
         window.cancelChekhovEdit = () => {
