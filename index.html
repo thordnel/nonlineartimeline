@@ -1303,7 +1303,9 @@
                 <div class="input-group">
                     <label>Chapter No.</label>
                     <div style="display:flex;">
-                        <input type="number" id="numIn" placeholder="" step="0.1" list="chapterList" style="border-radius: 3px 0 0 3px; border-right: none; flex: 1; min-width: 0;" onfocus="this.dataset.old=this.value; this.value='';" onblur="if(!this.value) this.value=this.dataset.old||'';">
+                        <button class="action-btn" onclick="navigateBeat(-1)" title="Previous Beat" style="padding: 0 8px; border: 1px solid #d4cdc3; background: #f0f0f0; border-radius: 3px 0 0 3px; border-right: none; cursor: pointer;">⬅️</button>
+                        <input type="number" id="numIn" placeholder="" step="0.1" list="chapterList" style="border-radius: 0; border-right: none; border-left: none; flex: 1; min-width: 0;" onfocus="this.dataset.old=this.value; this.value='';" onblur="if(!this.value) this.value=this.dataset.old||'';">
+                        <button class="action-btn" onclick="navigateBeat(1)" title="Next Beat" style="padding: 0 8px; border: 1px solid #d4cdc3; background: #f0f0f0; border-left: none; border-right: none; cursor: pointer;">➡️</button>
                         <button class="action-btn" onclick="loadBeatByNumber()" title="Load Beat Details" style="padding: 0 12px; border: 1px solid #d4cdc3; background: #f0f0f0; border-radius: 0 3px 3px 0; cursor: pointer;">➔</button>
                     </div>
                     <datalist id="chapterList"></datalist>
@@ -3912,6 +3914,75 @@
         window.printChapterList = printChapterList;
         window.openPhMenu = window.openPhMenu;
         window.applyPhContext = window.applyPhContext;
+        
+        window.scrollToBeat = (idx) => {
+            setTimeout(() => {
+                const visualArea = document.getElementById('visualArea');
+                const multiArea = document.getElementById('multiArea');
+                const tableArea = document.getElementById('tableArea');
+                
+                let target = null;
+                let container = null;
+                let isHorizontal = false;
+
+                if (visualArea.classList.contains('show')) {
+                    container = visualArea;
+                    target = container.querySelector(`.h-item[data-index="${idx}"]`);
+                    isHorizontal = true;
+                } else if (multiArea.classList.contains('show')) {
+                    container = multiArea;
+                    target = container.querySelector(`.h-card[data-index="${idx}"]`);
+                } else if (tableArea.classList.contains('show')) {
+                    target = tableArea.querySelector(`tr[data-index="${idx}"]`);
+                }
+
+                if (target) {
+                    const animateTarget = target.classList.contains('h-item') ? target.querySelector('.h-card') : target;
+                    if (animateTarget) {
+                        animateTarget.classList.remove('highlight-pulse');
+                        void animateTarget.offsetWidth;
+                        animateTarget.classList.add('highlight-pulse');
+                        setTimeout(() => animateTarget.classList.remove('highlight-pulse'), 2000);
+                    }
+
+                    if (container) {
+                        const rect = target.getBoundingClientRect();
+                        const cRect = container.getBoundingClientRect();
+                        const scrollPos = isHorizontal ? (rect.left - cRect.left + container.scrollLeft - (container.clientWidth / 2) + (rect.width / 2)) : (rect.top - cRect.top + container.scrollTop - (container.clientHeight / 2) + (rect.height / 2));
+                        container.scrollTo({ [isHorizontal ? 'left' : 'top']: scrollPos, behavior: 'smooth' });
+                    } else {
+                        target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                }
+            }, 300);
+        };
+
+        window.navigateBeat = (direction) => {
+            if (events.length === 0) return showToast("No beats to navigate.");
+            
+            // Clear filters to ensure visibility
+            if (activeFilterIds.length > 0 || activeCharFilterIds.length > 0 || activeChekhovFilterIds.length > 0 || currentSearchTerm || document.getElementById('filterBeatsToggle').checked || document.getElementById('filterChapter').value || document.getElementById('filterPlotholesToggle').checked || document.getElementById('filterNarrativeMode').value) {
+                activeFilterIds = []; activeCharFilterIds = []; activeChekhovFilterIds = []; currentSearchTerm = '';
+                document.getElementById('filterChapter').value = ''; document.getElementById('filterNarrativeMode').value = ''; document.getElementById('searchInput').value = '';
+                document.getElementById('filterBeatsToggle').checked = false; document.getElementById('filterPlotholesToggle').checked = false;
+                document.getElementById('btnSearchClear').style.display = 'none';
+                if (document.getElementById('btnCAdd')) document.getElementById('btnCAdd').disabled = false;
+                if (document.getElementById('btnCCancel')) document.getElementById('btnCCancel').disabled = false;
+                render();
+            }
+
+            let newIndex;
+            if (editIndex === -1) {
+                newIndex = direction === -1 ? events.length - 1 : 0;
+            } else {
+                newIndex = editIndex + direction;
+                if (newIndex < 0) newIndex = events.length - 1;
+                else if (newIndex >= events.length) newIndex = 0;
+            }
+            editEvent(newIndex);
+            scrollToBeat(newIndex);
+        };
+
         window.loadBeatByNumber = () => {
             const val = parseFloat(document.getElementById('numIn').value);
             if (isNaN(val)) return showToast("Enter a number");
@@ -3938,43 +4009,7 @@
             if (idx !== -1) {
                 editEvent(idx);
                 showToast(`Loaded Chapter ${val}`);
-                
-                // Scroll container logic (without scrolling window)
-                setTimeout(() => {
-                    const visualArea = document.getElementById('visualArea');
-                    const multiArea = document.getElementById('multiArea');
-                    const tableArea = document.getElementById('tableArea');
-                    
-                    let target = null;
-                    let container = null;
-                    let isHorizontal = false;
-
-                    if (visualArea.classList.contains('show')) {
-                        container = visualArea;
-                        target = container.querySelector(`.h-item[data-index="${idx}"]`);
-                        isHorizontal = true;
-                    } else if (multiArea.classList.contains('show')) {
-                        container = multiArea;
-                        target = container.querySelector(`.h-card[data-index="${idx}"]`);
-                    } else if (tableArea.classList.contains('show')) {
-                        target = tableArea.querySelector(`tr[data-index="${idx}"]`);
-                    }
-
-                    if (target) {
-                        const animateTarget = target.classList.contains('h-item') ? target.querySelector('.h-card') : target;
-                        if (animateTarget) {
-                            animateTarget.classList.add('highlight-pulse');
-                            setTimeout(() => animateTarget.classList.remove('highlight-pulse'), 2000);
-                        }
-
-                        if (container) {
-                            const rect = target.getBoundingClientRect();
-                            const cRect = container.getBoundingClientRect();
-                            const scrollPos = isHorizontal ? (rect.left - cRect.left + container.scrollLeft - (container.clientWidth / 2) + (rect.width / 2)) : (rect.top - cRect.top + container.scrollTop - (container.clientHeight / 2) + (rect.height / 2));
-                            container.scrollTo({ [isHorizontal ? 'left' : 'top']: scrollPos, behavior: 'smooth' });
-                        }
-                    }
-                }, 300);
+                scrollToBeat(idx);
             } else {
                 showToast("Chapter not found");
             }

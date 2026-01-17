@@ -1,4 +1,4 @@
-const CACHE_NAME = 'storylines-v63-offline'; // Increment version to force update
+const CACHE_NAME = 'storylines-v64-offline'; // Increment version to force update
 const ASSETS = [
   './',
   './index.html',
