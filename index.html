@@ -2603,6 +2603,7 @@
             document.getElementById('cgPayoffIn').addEventListener('input', function() { this.style.height = 'auto'; this.style.height = (this.scrollHeight) + 'px'; });
             sortData('number');
             setupMentionLogic();
+            setupSwipeGestures();
         };
 
         function updateModCountUI() {
@@ -4066,6 +4067,29 @@
                 });
                 el.addEventListener('blur', () => { setTimeout(() => box.style.display = 'none', 200); });
             });
+        }
+
+        function setupSwipeGestures() {
+            const container = document.getElementById('beatPanelContent');
+            let touchStartX = 0;
+            let touchStartY = 0;
+
+            container.addEventListener('touchstart', e => {
+                touchStartX = e.changedTouches[0].screenX;
+                touchStartY = e.changedTouches[0].screenY;
+            }, {passive: true});
+
+            container.addEventListener('touchend', e => {
+                const touchEndX = e.changedTouches[0].screenX;
+                const touchEndY = e.changedTouches[0].screenY;
+                const xDiff = touchEndX - touchStartX;
+                const yDiff = touchEndY - touchStartY;
+
+                if (Math.abs(xDiff) > 50 && Math.abs(yDiff) < 30) {
+                    if (xDiff > 0) navigateBeat(-1); // Swipe Right -> Previous
+                    else navigateBeat(1); // Swipe Left -> Next
+                }
+            }, {passive: true});
         }
 
         window.enableNotifications = async () => {
