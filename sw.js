@@ -1,4 +1,4 @@
-const CACHE_NAME = 'storylines-v66-offline'; // Increment version to force update
+const CACHE_NAME = 'storylines-v67-offline'; // Increment version to force update
 const ASSETS = [
   './',
   './index.html',
@@ -45,10 +45,8 @@ self.addEventListener('activate', (event) => {
           return caches.delete(key);
         }
       }));
-    })
+    }).then(() => self.clients.claim())
   );
-  // Tell the service worker to take control of all open clients (tabs) immediately
-  return self.clients.claim();
 });
 
 // Fetch: Network First for HTML (to get updates), Cache First for assets
