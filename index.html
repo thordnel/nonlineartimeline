@@ -1511,9 +1511,13 @@
         
         <div id="plotholeContent" class="panel-content" style="display: none;">
             <div class="controls">
-                <div class="input-group col-span-full">
+                <div class="input-group col-span-2">
                     <label>Rule or Idea</label>
                     <input type="text" id="phRuleIn" placeholder="">
+                </div>
+                <div class="input-group">
+                    <label>Status</label>
+                    <select id="phStatusIn"><option value="Active">Active</option><option value="Dismissed">Dismissed</option></select>
                 </div>
                 <div class="input-group col-span-full">
                     <label>Details</label>
@@ -2355,19 +2359,23 @@
         window.addPlotholeItem = () => {
             const rule = document.getElementById('phRuleIn').value;
             const detail = document.getElementById('phDetailIn').value;
+            const status = document.getElementById('phStatusIn').value;
             if(!rule) return showToast("Rule Name required");
             if (plotholeItems.length >= 50 && !editingPlotholeId) return showToast("Limit reached (Max 50)");
 
             if (editingPlotholeId) {
                 const idx = plotholeItems.findIndex(i => i.id === editingPlotholeId);
                 if (idx > -1) { 
-                    plotholeItems[idx] = { ...plotholeItems[idx], rule, detail }; 
+                    if (status === 'Dismissed' && plotholeItems[idx].status !== 'Dismissed') {
+                        removePlotholeUsage(editingPlotholeId);
+                    }
+                    plotholeItems[idx] = { ...plotholeItems[idx], rule, detail, status }; 
                     updateBeatPlotholeDisplay(); // Sync: Update form if this rule is currently displayed
                     showToast("Updated Rule"); 
                 }
                 cancelPlotholeEdit();
             } else {
-                plotholeItems.push({ id: Date.now().toString(), rule, detail });
+                plotholeItems.push({ id: Date.now().toString(), rule, detail, status });
                 cancelPlotholeEdit();
             }
             saveLocalData(); saveListsToCloud(); renderPlotholeList(); populatePlotholeSelect(); render();
@@ -2377,14 +2385,36 @@
             const item = plotholeItems.find(i => i.id === id); if(!item) return;
             editingPlotholeId = id;
             document.getElementById('phRuleIn').value = item.rule;
+            document.getElementById('phStatusIn').value = item.status || 'Active';
             document.getElementById('phDetailIn').value = item.detail || '';
             const btn = document.getElementById('btnPhAdd'); btn.innerText = "Update"; btn.className = "btn-update";
             document.getElementById('btnPhCancel').style.display = 'inline-block';
         }
 
+        function removePlotholeUsage(id) {
+            let changed = false;
+            events.forEach(e => {
+                if (e.plotholeTags) {
+                    if (Array.isArray(e.plotholeTags)) {
+                        if (e.plotholeTags.includes(id)) { e.plotholeTags = e.plotholeTags.filter(x => x !== id); changed = true; saveBeatToCloud(e); }
+                    } else {
+                        if (e.plotholeTags[id]) { delete e.plotholeTags[id]; changed = true; saveBeatToCloud(e); }
+                    }
+                }
+            });
+            if (changed) {
+                if (currentBeatPlotholeTags[id]) {
+                    delete currentBeatPlotholeTags[id];
+                    updateBeatPlotholeDisplay();
+                }
+                showToast("Removed from all chapters");
+            }
+        }
+
         window.cancelPlotholeEdit = () => {
             editingPlotholeId = null;
             document.getElementById('phRuleIn').value = ''; document.getElementById('phDetailIn').value = '';
+            document.getElementById('phStatusIn').value = 'Active';
             document.getElementById('phDetailIn').style.height = 'auto';
             const btn = document.getElementById('btnPhAdd'); btn.innerText = "+ Add"; btn.className = "btn-add";
             document.getElementById('btnPhCancel').style.display = 'none';
@@ -2473,6 +2503,7 @@
             const filterType = document.getElementById('plotholeFilterSelect') ? document.getElementById('plotholeFilterSelect').value : 'all';
 
             plotholeItems.filter(item => {
+                // Search Filter
                 const matchesSearch = !searchTerm || item.rule.toLowerCase().includes(searchTerm) || (item.detail || '').toLowerCase().includes(searchTerm);
                 if (!matchesSearch) return false;
 
@@ -2499,14 +2530,16 @@
                     else if (tag === 'planned') planned.push(e.number);
                 });
 
-                const statusIcon = violations.length > 0 ? '⚠️' : (adherences.length > 0 ? '✅' : '⚪');
+                const isDismissed = item.status === 'Dismissed';
+                const statusIcon = isDismissed ? '❌' : (violations.length > 0 ? '⚠️' : (adherences.length > 0 ? '✅' : '⚪'));
+                const rowStyle = isDismissed ? 'opacity:0.6; background-color:#f9f9f9;' : '';
                 
                 const vStr = [...new Set(violations)].sort((a,b)=>a-b).map(n => `<span class="track-badge violation" onclick="jumpToChapter(${n})" oncontextmenu="openPhMenu(event, ${n}, '${item.id}')" title="Go to Chapter ${n}">⚠️ ${n} <span class="track-del" onclick="event.stopPropagation(); removePlotholeTagFromTable('${item.id}', ${n})">×</span></span>`).join('');
                 const aStr = [...new Set(adherences)].sort((a,b)=>a-b).map(n => `<span class="track-badge adherence" onclick="jumpToChapter(${n})" oncontextmenu="openPhMenu(event, ${n}, '${item.id}')" title="Go to Chapter ${n}">✅ ${n} <span class="track-del" onclick="event.stopPropagation(); removePlotholeTagFromTable('${item.id}', ${n})">×</span></span>`).join('');
                 const pStr = [...new Set(planned)].sort((a,b)=>a-b).map(n => `<span class="track-badge planned" onclick="jumpToChapter(${n})" oncontextmenu="openPhMenu(event, ${n}, '${item.id}')" title="Go to Chapter ${n}">🗓️ ${n} <span class="track-del" onclick="event.stopPropagation(); removePlotholeTagFromTable('${item.id}', ${n})">×</span></span>`).join('');
                 
                 const tr = document.createElement('tr');
-                tr.innerHTML = `
+                tr.innerHTML = `<tr style="${rowStyle}">
                     <td style="font-size:1.2rem; text-align:center;">${statusIcon}</td>
                     <td style="font-weight:bold;">${item.rule}</td>
                     <td style="text-align: left;">${item.detail || '-'}</td>
@@ -2516,7 +2549,7 @@
                             <button class="action-btn" onclick="editPlotholeItem('${item.id}')" title="Edit">✎</button> 
                             <button class="action-btn del-btn" onclick="deletePlotholeItem('${item.id}')" title="Delete">×</button>
                         </div>
-                    </td>
+                    </td></tr>
                 `;
                 tbody.appendChild(tr);
             });
@@ -2526,7 +2559,7 @@
         function populatePlotholeSelect() {
             const sel = document.getElementById('plotholeSelect');
             sel.innerHTML = '<option value="">-- Select Rule --</option>';
-            plotholeItems.forEach(i => {
+            plotholeItems.filter(i => i.status !== 'Dismissed').forEach(i => {
                 const opt = document.createElement('option');
                 opt.value = i.id; opt.text = i.rule;
                 sel.appendChild(opt);
@@ -3519,9 +3552,9 @@
                 csv += "[CHARACTER_DATA_END]\n";
             }
             if(plotholeItems.length > 0) {
-                csv += "\n[PLOTHOLE_DATA_START]\nID,Rule,Detail\n";
+                csv += "\n[PLOTHOLE_DATA_START]\nID,Rule,Detail,Status\n";
                 plotholeItems.forEach(p => {
-                    csv += `${p.id},${p.rule.replace(/,/g,'{com}')},${(p.detail||'').replace(/,/g,'{com}')}\n`;
+                    csv += `${p.id},${p.rule.replace(/,/g,'{com}')},${(p.detail||'').replace(/,/g,'{com}')},${p.status||'Active'}\n`;
                 });
                 csv += "[PLOTHOLE_DATA_END]\n";
             }
@@ -3658,7 +3691,7 @@
                     const cLines = phData.split('\n');
                     for(let i=1; i<cLines.length; i++) {
                         const c = cLines[i].trim().split(',');
-                        if(c.length >= 3) newPlotholes.push({ id: c[0], rule: c[1].replace(/{com}/g, ','), detail: c[2].replace(/{com}/g, ',') });
+                        if(c.length >= 3) newPlotholes.push({ id: c[0], rule: c[1].replace(/{com}/g, ','), detail: c[2].replace(/{com}/g, ','), status: c[3] || 'Active' });
                     }
                 }
 
