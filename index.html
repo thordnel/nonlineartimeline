@@ -1262,6 +1262,27 @@
             font-style: italic;
             z-index: 5;
         }
+
+        .card-section-label {
+            display: flex;
+            align-items: center;
+            font-size: 0.6rem;
+            color: var(--secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-top: 8px;
+            margin-bottom: 4px;
+            font-family: var(--font-ui);
+            font-weight: 700;
+            opacity: 0.8;
+        }
+        .card-section-label::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: #e6e0d4;
+            margin-left: 6px;
+        }
     </style>
 </head>
 <body>
@@ -3104,24 +3125,24 @@
                 altTzHtml = `<div class="tz-display clickable" onclick="event.stopPropagation(); setPreferredDisplayTz(${i}, '${currentTz}')" title="Click to set as Display Date">${countryName}: ${conv.dateRaw}, ${conv.time}<br><span style="font-weight: normal;">${conv.weekday}</span></div>`;
             }
 
+            // 1. Temporal Continuity
+            let continuityHtml = '';
             const activeItems = getActiveContinuity(evt.date).sort((a, b) => new Date(a.start) - new Date(b.start));
-            let cHtml = ''; 
-            
-            // Continuity Badges
             if(activeItems.length > 0) {
-                cHtml += '<div class="c-badges-container">';
+                continuityHtml += `<div class="card-section-label">Temporal Continuity</div><div class="c-badges-container" style="border-top:none; margin-top:0; padding-top:0;">`;
                 activeItems.forEach(ci => {
                     const startStr = getFormattedDate(ci.start), endStr = ci.end ? getFormattedDate(ci.end) : "Ongoing", durationText = `${startStr} - ${endStr}`;
-                    cHtml += `<span class="c-badge" data-tooltip="Duration (UTC): ${durationText}" onclick="event.stopPropagation()">${ci.icon} ${ci.name}</span>`;
+                    continuityHtml += `<span class="c-badge" data-tooltip="${durationText}" onclick="event.stopPropagation()">${ci.icon} ${ci.name}</span>`;
                 });
-                cHtml += '</div>';
+                continuityHtml += '</div>';
             }
 
-            // Plothole Badges
+            // 2. Rules / Ideas (Plotholes)
+            let plotholeHtml = '';
             const phTags = evt.plotholeTags || {};
             const phKeys = Array.isArray(phTags) ? phTags : Object.keys(phTags);
             if (phKeys.length > 0) {
-                cHtml += '<div style="margin-top:2px; padding-top:0; display:flex; flex-wrap:wrap;">';
+                plotholeHtml += `<div class="card-section-label">Rules / Ideas</div><div style="display:flex; flex-wrap:wrap;">`;
                 phKeys.forEach(pid => {
                     const item = plotholeItems.find(i => i.id === pid);
                     if(item) {
@@ -3134,13 +3155,14 @@
                         else if (tagType === 'planned') { statusLine = "Planned Application:"; badgeColor = '#eab308'; badgeIcon = '🗓️'; }
                         
                         const tooltip = `${statusLine}\n${item.detail || ''}`.replace(/"/g, '&quot;');
-                        cHtml += `<span class="c-badge" style="color:white; background-color:${badgeColor}; border-color:${badgeColor}; cursor:pointer;" data-tooltip="${tooltip}" onclick="event.stopPropagation()" ondblclick="jumpToPlotholeEditor(event, '${pid}')" oncontextmenu="openPhMenu(event, ${evt.number}, '${pid}')">${badgeIcon} ${item.rule}</span>`;
+                        plotholeHtml += `<span class="c-badge" style="color:white; background-color:${badgeColor}; border-color:${badgeColor}; cursor:pointer;" data-tooltip="${tooltip}" onclick="event.stopPropagation()" ondblclick="jumpToPlotholeEditor(event, '${pid}')" oncontextmenu="openPhMenu(event, ${evt.number}, '${pid}')">${badgeIcon} ${item.rule}</span>`;
                     }
                 });
-                cHtml += '</div>';
+                plotholeHtml += '</div>';
             }
 
-            // Narrative Item Badges (Chekhov, etc.)
+            // 3. Narrative Elements
+            let narrativeHtml = '';
             const narrativeBadges = [];
             const TYPE_EMOJIS = { "Motif": "🎈", "Chekhov's Gun": "🛡️", "Twist": "🥨", "Symbolism": "⚜️", "Red Herring": "🐡" };
             
@@ -3158,39 +3180,46 @@
             });
 
             if (narrativeBadges.length > 0) {
-                cHtml += '<div style="margin-top:5px; padding-top:4px; border-top:1px dashed #eee;">';
+                narrativeHtml += `<div class="card-section-label">Narrative Elements</div><div style="display:flex; flex-wrap:wrap;">`;
                 narrativeBadges.forEach(nb => {
                     const isActive = activeChekhovFilterIds.includes(nb.item.id);
                     const activeStyle = isActive ? 'box-shadow:0 0 0 2px #555;' : '';
-                    cHtml += `<span class="n-badge ${nb.class}" style="${activeStyle}" data-tooltip="${nb.item.name} (${nb.label})" onclick="event.stopPropagation(); toggleChekhovFilter('${nb.item.id}')">${nb.emoji} ${nb.item.icon}</span>`;
+                    narrativeHtml += `<span class="n-badge ${nb.class}" style="${activeStyle}" data-tooltip="${nb.item.name} (${nb.label})" onclick="event.stopPropagation(); toggleChekhovFilter('${nb.item.id}')">${nb.emoji} ${nb.item.icon}</span>`;
                 });
-                cHtml += '</div>';
+                narrativeHtml += '</div>';
             }
 
-            // Character Badges
+            // 4. Characters
+            let charHtml = '';
             if (evt.charTags && evt.charTags.length > 0) {
-                cHtml += '<div style="margin-top:5px; padding-top:4px; border-top:1px dashed #eee;">';
+                charHtml += `<div class="card-section-label">Characters</div><div style="display:flex; flex-wrap:wrap;">`;
                 // Display characters in the order defined in the Character Database
                 const orderedChars = characterItems.filter(c => evt.charTags.includes(c.id));
                 orderedChars.forEach(char => {
                     const isActive = activeCharFilterIds.includes(char.id);
                     const activeStyle = isActive ? 'border:2px solid #444; box-shadow:0 0 2px rgba(0,0,0,0.5);' : '';
                     const check = isActive ? '✓ ' : '';
-                    cHtml += `<span class="char-badge" style="background-color:${char.color}; cursor:pointer; ${activeStyle}" title="Filter by ${char.name}" onclick="event.stopPropagation(); toggleCharFilter('${char.id}')">${check}${char.name}</span>`;
+                    charHtml += `<span class="char-badge" style="background-color:${char.color}; cursor:pointer; ${activeStyle}" title="Filter by ${char.name}" onclick="event.stopPropagation(); toggleCharFilter('${char.id}')">${check}${char.name}</span>`;
                 });
-                cHtml += '</div>';
+                charHtml += '</div>';
             }
             const allowDrag = currentSortMethod === 'number' && document.getElementById('allowDragDrop').checked;
             const dragAttr = allowDrag ? 'draggable="true"' : '', dragClass = allowDrag ? 'draggable' : '';
 
             let parsedDetails = marked.parse(evt.details.replace(/{nl}/g, '\n'));
+            
+            // 5. Remarks
+            let remarksHtml = '';
             let parsedRemarks = evt.remarks ? marked.parse(evt.remarks.replace(/{nl}/g, '\n')) : '';
 
             // Cross-referencing: Convert ChX.Y to links
             const linkRegex = /\bCh(\d+(?:\.\d+)?)\b/g;
             const linkReplacement = '<span class="clickable-link" onclick="event.stopPropagation(); jumpToChapter($1)">Ch$1</span>';
             parsedDetails = parsedDetails.replace(linkRegex, linkReplacement);
-            if (parsedRemarks) parsedRemarks = parsedRemarks.replace(linkRegex, linkReplacement);
+            if (parsedRemarks) {
+                parsedRemarks = parsedRemarks.replace(linkRegex, linkReplacement);
+                remarksHtml = `<div class="card-section-label">Remarks</div><div class="markdown-body" style="font-size:0.75rem; font-style:italic; color:var(--text-muted);">${parsedRemarks}</div>`;
+            }
 
             const dotClass = (i === editIndex) ? 'h-dot active' : 'h-dot';
             
@@ -3224,10 +3253,12 @@
             else if (msStat === 'Completed') msIcon = '🟢';
             const msHtml = `<span title="${msStat}" style="margin-right:4px; font-style:normal; cursor:help;">${msIcon}</span>`;
 
+            const combinedBadges = continuityHtml + plotholeHtml + narrativeHtml + charHtml;
+
             return {
-                table: `<tr class="${dragClass}" data-index="${i}" ${dragAttr} style="${bgStyle}" ondblclick="handleCardDblClick(event, ${i})"><td>${currentSortMethod === 'number' ? '☰' : ''}</td><td style="white-space: nowrap;">${displayDate} ${displayTime}<br><small>${displayDay}</small><br><span class="display-basis-tag">${displayBasis}</span>${altTzHtml}</td><td>${msHtml}<b>${evt.number}</b><br><span style="font-weight:700;">${evt.chapterTitle || ''}</span>${evt.subChapterTitle ? `<br><span style="font-size:0.8rem; font-style:italic; color:var(--text-muted);">${evt.subChapterTitle}</span>` : ''}<br><span style="font-size:0.65rem; color:var(--info); text-transform:uppercase; letter-spacing:0.5px;">${evt.manuscriptStatus || 'Not Yet Started'}</span></td><td><div class="markdown-body">${parsedDetails}</div>${evt.remarks ? `<div class="td-remarks">📝 <div class="markdown-body" style="display:inline;">${parsedRemarks}</div></div>` : ''}<div style="margin-top:4px">${cHtml}</div></td><td><div class="action-btn-group"><button class="action-btn" onclick="editEvent(${i})" title="Edit">✎</button>${currentSortMethod === 'number' ? `<button class="action-btn" onclick="moveBeat(${i}, -1)" title="Move Up">↑</button><button class="action-btn" onclick="moveBeat(${i}, 1)" title="Move Down">↓</button>` : ''}<button class="action-btn del-btn" onclick="askDelete(${i})" title="Delete">×</button></div></td></tr>`,
-                linear: `<div class="h-item ${dragClass}" data-index="${i}" ${dragAttr}><div class="h-date-wrap"><div class="h-date">${displayDate}</div><div class="h-day">${displayDay}</div><div class="h-time">${displayTime}<br><span class="display-basis-tag">${displayBasis}</span>${altTzHtml}</div></div><div class="h-dot-container"><div class="h-line"></div>${durationHtml}<div class="${dotClass}" onclick="editEvent(${i})"></div></div><div class="h-card" onclick="editEvent(${i})" ondblclick="handleCardDblClick(event, ${i})" style="${bgStyle}"><span class="card-del" onclick="event.stopPropagation(); askDelete(${i})">×</span><div class="h-val-text">${msHtml}Chapter ${evt.number}</div>${evt.chapterTitle ? `<div class="h-chap-title">${evt.chapterTitle}</div>` : ''}${evt.subChapterTitle ? `<div class="h-sub-title">${evt.subChapterTitle}</div>` : ''}<div class="h-divider"></div><div class="h-detail-text markdown-body">${parsedDetails}</div>${evt.remarks ? `<div class="h-remarks"><div class="markdown-body">${parsedRemarks}</div></div>` : ''}${cHtml}</div></div>`,
-                multi: `<div class="h-item"><div class="h-date-wrap" style="min-height:auto; text-align:left;"><div class="h-date" style="font-size:0.7rem; font-weight:900;">${displayDate}</div><div class="h-time" style="font-size:0.6rem; color:var(--text-muted)">${displayTime} <span class="display-basis-tag" style="font-size:0.5rem; padding:1px 3px;">${displayBasis}</span></div>${altTzHtml}</div><div class="h-card" data-index="${i}" onclick="editEvent(${i})" ondblclick="handleCardDblClick(event, ${i})" style="${bgStyle}"><span class="card-del" onclick="event.stopPropagation(); askDelete(${i})">×</span><div class="h-val-text" style="font-size:0.55rem">${msHtml}CH ${evt.number}</div>${evt.chapterTitle ? `<div class="h-chap-title" style="font-size:0.75rem">${evt.chapterTitle}</div>` : ''}${evt.subChapterTitle ? `<div class="h-sub-title" style="font-size:0.65rem">${evt.subChapterTitle}</div>` : ''}<div class="h-divider"></div><div class="h-detail-text markdown-body" style="font-size:0.75rem">${parsedDetails.substring(0, 150)}${evt.details.length > 150 ? '...' : ''}</div>${cHtml}</div></div>`
+                table: `<tr class="${dragClass}" data-index="${i}" ${dragAttr} style="${bgStyle}" ondblclick="handleCardDblClick(event, ${i})"><td>${currentSortMethod === 'number' ? '☰' : ''}</td><td style="white-space: nowrap;">${displayDate} ${displayTime}<br><small>${displayDay}</small><br><span class="display-basis-tag">${displayBasis}</span>${altTzHtml}</td><td>${msHtml}<b>${evt.number}</b><br><span style="font-weight:700;">${evt.chapterTitle || ''}</span>${evt.subChapterTitle ? `<br><span style="font-size:0.8rem; font-style:italic; color:var(--text-muted);">${evt.subChapterTitle}</span>` : ''}<br><span style="font-size:0.65rem; color:var(--info); text-transform:uppercase; letter-spacing:0.5px;">${evt.manuscriptStatus || 'Not Yet Started'}</span></td><td><div class="markdown-body">${parsedDetails}</div>${remarksHtml}<div style="margin-top:4px">${combinedBadges}</div></td><td><div class="action-btn-group"><button class="action-btn" onclick="editEvent(${i})" title="Edit">✎</button>${currentSortMethod === 'number' ? `<button class="action-btn" onclick="moveBeat(${i}, -1)" title="Move Up">↑</button><button class="action-btn" onclick="moveBeat(${i}, 1)" title="Move Down">↓</button>` : ''}<button class="action-btn del-btn" onclick="askDelete(${i})" title="Delete">×</button></div></td></tr>`,
+                linear: `<div class="h-item ${dragClass}" data-index="${i}" ${dragAttr}><div class="h-date-wrap"><div class="h-date">${displayDate}</div><div class="h-day">${displayDay}</div><div class="h-time">${displayTime}<br><span class="display-basis-tag">${displayBasis}</span>${altTzHtml}</div></div><div class="h-dot-container"><div class="h-line"></div>${durationHtml}<div class="${dotClass}" onclick="editEvent(${i})"></div></div><div class="h-card" onclick="editEvent(${i})" ondblclick="handleCardDblClick(event, ${i})" style="${bgStyle}"><span class="card-del" onclick="event.stopPropagation(); askDelete(${i})">×</span><div class="h-val-text">${msHtml}Chapter ${evt.number}</div>${evt.chapterTitle ? `<div class="h-chap-title">${evt.chapterTitle}</div>` : ''}${evt.subChapterTitle ? `<div class="h-sub-title">${evt.subChapterTitle}</div>` : ''}<div class="h-divider"></div><div class="h-detail-text markdown-body">${parsedDetails}</div>${remarksHtml}${combinedBadges}</div></div>`,
+                multi: `<div class="h-item"><div class="h-date-wrap" style="min-height:auto; text-align:left;"><div class="h-date" style="font-size:0.7rem; font-weight:900;">${displayDate}</div><div class="h-time" style="font-size:0.6rem; color:var(--text-muted)">${displayTime} <span class="display-basis-tag" style="font-size:0.5rem; padding:1px 3px;">${displayBasis}</span></div>${altTzHtml}</div><div class="h-card" data-index="${i}" onclick="editEvent(${i})" ondblclick="handleCardDblClick(event, ${i})" style="${bgStyle}"><span class="card-del" onclick="event.stopPropagation(); askDelete(${i})">×</span><div class="h-val-text" style="font-size:0.55rem">${msHtml}CH ${evt.number}</div>${evt.chapterTitle ? `<div class="h-chap-title" style="font-size:0.75rem">${evt.chapterTitle}</div>` : ''}${evt.subChapterTitle ? `<div class="h-sub-title" style="font-size:0.65rem">${evt.subChapterTitle}</div>` : ''}<div class="h-divider"></div><div class="h-detail-text markdown-body" style="font-size:0.75rem">${parsedDetails.substring(0, 150)}${evt.details.length > 150 ? '...' : ''}</div>${remarksHtml}${combinedBadges}</div></div>`
             };
         }
 
