@@ -2330,7 +2330,7 @@
         function populateCharSelect() {
             const sel = document.getElementById('charSelect');
             sel.innerHTML = '<option value="">-- Select Character --</option>';
-            characterItems.forEach(i => {
+            [...characterItems].sort((a, b) => a.name.localeCompare(b.name)).forEach(i => {
                 const opt = document.createElement('option');
                 opt.value = i.id; opt.text = i.name;
                 sel.appendChild(opt);
@@ -2589,7 +2589,7 @@
         function populatePlotholeSelect() {
             const sel = document.getElementById('plotholeSelect');
             sel.innerHTML = '<option value="">-- Select Rule --</option>';
-            plotholeItems.filter(i => i.status !== 'Dismissed').forEach(i => {
+            plotholeItems.filter(i => i.status !== 'Dismissed').sort((a, b) => a.rule.localeCompare(b.rule)).forEach(i => {
                 const opt = document.createElement('option');
                 opt.value = i.id; opt.text = i.rule;
                 sel.appendChild(opt);
