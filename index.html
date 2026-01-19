@@ -1713,6 +1713,7 @@
         <div class="file-tools">
             <div class="file-tools-row-1">
                 <button class="btn-dl" onclick="downloadCSV()">Save CSV</button>
+                <button class="btn-dl" onclick="downloadICS()">Export Calendar (.ics)</button>
                 <button class="btn-print" onclick="window.print()">Print / Save PDF</button>
                 <button class="btn-dl" onclick="printChapterList()">Print Chapter List</button>
             </div>
@@ -1772,6 +1773,28 @@
         <div class="context-menu-item" onclick="applyPhContext('violation')">⚠️ Set Broken</div>
         <div class="context-menu-item" onclick="applyPhContext('adherence')">✅ Set Upheld</div>
         <div class="context-menu-item" onclick="applyPhContext('remove')" style="color:var(--danger);">× Remove</div>
+    </div>
+
+    <!-- ICS Export Modal -->
+    <div id="icsModal" class="modal-overlay">
+        <div class="modal-content">
+            <h3>Export Calendar</h3>
+            <div class="input-group" style="text-align:left; margin-bottom:15px;">
+                <label>Export Mode</label>
+                <select id="icsMode" onchange="toggleIcsOptions()">
+                    <option value="story">Story Timeline (Actual Dates)</option>
+                    <option value="planning">Planning Schedule (Current Month)</option>
+                </select>
+            </div>
+            <div id="icsPlanningOptions" style="display:none; text-align:left; margin-bottom:15px; background:#fdfbf7; padding:10px; border:1px dashed #d4cdc3; border-radius:4px;">
+                <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;"><input type="checkbox" id="icsRecur" checked style="width:auto;"><label for="icsRecur" style="margin:0; font-weight:normal; cursor:pointer;">Repeat Monthly</label></div>
+                <div style="display:flex; align-items:center; gap:8px;"><input type="checkbox" id="icsAlarm" checked style="width:auto;"><label for="icsAlarm" style="margin:0; font-weight:normal; cursor:pointer;">15 Min Reminder</label></div>
+            </div>
+            <div class="btn-row" style="justify-content: center;">
+                <button class="btn-cloud" onclick="executeICSExport()">Download .ics</button>
+                <button class="btn-dl" onclick="closeModal()">Cancel</button>
+            </div>
+        </div>
     </div>
 
     <div id="toast"></div>
@@ -3616,6 +3639,102 @@
             const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' })); a.download = 'storylines.csv'; a.click(); 
         }
 
+        window.downloadICS = () => {
+            if (events.length === 0) return showToast("No data to export.");
+            document.getElementById('icsModal').style.display = 'flex';
+            toggleIcsOptions();
+        };
+
+        window.toggleIcsOptions = () => {
+            const mode = document.getElementById('icsMode').value;
+            document.getElementById('icsPlanningOptions').style.display = mode === 'planning' ? 'block' : 'none';
+        };
+
+        window.executeICSExport = () => {
+            closeModal();
+            const mode = document.getElementById('icsMode').value;
+            const useRecur = document.getElementById('icsRecur').checked;
+            const useAlarm = document.getElementById('icsAlarm').checked;
+            
+            let ics = "BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//Storylines//NonLinearTimeline//EN\r\nCALSCALE:GREGORIAN\r\nMETHOD:PUBLISH\r\n";
+            if (bookTitle) ics += `X-WR-CALNAME:${bookTitle.replace(/,/g, '\\,')}\r\n`;
+
+            const escapeICS = (str) => {
+                if (!str) return "";
+                return str.replace(/\\/g, "\\\\").replace(/;/g, "\\;").replace(/,/g, "\\,").replace(/\n/g, "\\n");
+            };
+
+            const now = new Date();
+            const currentYear = now.getFullYear();
+            const currentMonth = now.getMonth();
+
+            // Construct base URL (strip existing query params)
+            const baseUrl = window.location.origin + window.location.pathname;
+
+            events.forEach(e => {
+                const uid = (e.id || Date.now() + Math.random()) + "@storylines";
+                const dtStamp = new Date().toISOString().replace(/[-:]/g, "").split('.')[0] + "Z";
+                let startStr = "";
+
+                if (mode === 'planning') {
+                    const parts = e.date.split('T');
+                    const dateParts = parts[0].split('-');
+                    const timeParts = parts[1].split(':');
+                    const day = parseInt(dateParts[2]);
+                    const hour = parseInt(timeParts[0]);
+                    const min = parseInt(timeParts[1]);
+                    
+                    const planDate = new Date(currentYear, currentMonth, day, hour, min, 0);
+                    const pad = (n) => n.toString().padStart(2, '0');
+                    startStr = `${planDate.getFullYear()}${pad(planDate.getMonth()+1)}${pad(planDate.getDate())}T${pad(planDate.getHours())}${pad(planDate.getMinutes())}00`;
+                } else {
+                    startStr = e.date.replace(/[-:]/g, "") + (e.date.split(':').length === 2 ? "00" : "");
+                }
+                
+                let summary = `Ch ${e.number}`;
+                if (e.chapterTitle) summary += `: ${e.chapterTitle}`;
+                
+                let descParts = [];
+                if (e.subChapterTitle) descParts.push(`Sub-Chapter: ${e.subChapterTitle}`);
+                if (e.narrativeMode && e.narrativeMode !== 'Present') descParts.push(`Mode: ${e.narrativeMode}`);
+                descParts.push(""); 
+                descParts.push(e.details);
+                if (e.remarks) { descParts.push(""); descParts.push("Remarks:"); descParts.push(e.remarks); }
+
+                // Add Deep Link
+                const deepLink = `${baseUrl}?id=${e.id}`;
+                descParts.push("");
+                descParts.push(deepLink);
+
+                const description = escapeICS(descParts.join('\n'));
+                
+                ics += "BEGIN:VEVENT\r\n";
+                ics += `UID:${uid}\r\n`;
+                ics += `DTSTAMP:${dtStamp}\r\n`;
+                ics += `DTSTART:${startStr}\r\n`;
+                if (mode === 'planning' && useRecur) ics += "RRULE:FREQ=MONTHLY\r\n";
+                ics += `SUMMARY:${escapeICS(summary)}\r\n`;
+                ics += `DESCRIPTION:${description}\r\n`;
+                ics += `URL:${deepLink}\r\n`;
+                if (e.preferredCountry) ics += `LOCATION:${escapeICS(e.preferredCountry)}\r\n`;
+                
+                if (mode === 'planning' && useAlarm) {
+                    ics += "BEGIN:VALARM\r\nTRIGGER:-PT15M\r\nACTION:DISPLAY\r\nDESCRIPTION:Reminder\r\nEND:VALARM\r\n";
+                }
+                ics += "END:VEVENT\r\n";
+            });
+
+            ics += "END:VCALENDAR\r\n";
+
+            const blob = new Blob([ics], { type: 'text/calendar;charset=utf-8' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = (bookTitle ? bookTitle.replace(/[^a-z0-9]/gi, '_') : 'storylines') + (mode === 'planning' ? '_schedule' : '') + '.ics';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        };
+
         window.uploadCSV = (input) => { 
             if (!input.files[0]) return; 
             const reader = new FileReader(); 
@@ -4012,6 +4131,9 @@
         window.executeDelete = window.executeDelete;
         window.closeModal = window.closeModal;
         window.downloadCSV = window.downloadCSV;
+        window.downloadICS = window.downloadICS;
+        window.toggleIcsOptions = window.toggleIcsOptions;
+        window.executeICSExport = window.executeICSExport;
         window.uploadCSV = window.uploadCSV;
         window.copyId = window.copyId;
         window.linkExistingId = window.linkExistingId;
