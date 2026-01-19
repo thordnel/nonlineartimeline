@@ -2667,6 +2667,7 @@
             sortData('number');
             setupMentionLogic();
             setupSwipeGestures();
+            setTimeout(checkDeepLink, 500);
         };
 
         function updateModCountUI() {
@@ -3961,6 +3962,23 @@
                     }
                 }
             }, 300);
+        }
+
+        function checkDeepLink() {
+            const params = new URLSearchParams(window.location.search);
+            const chapter = params.get('chapter');
+            const id = params.get('id');
+            
+            if (id) {
+                const idx = events.findIndex(e => e.id === id);
+                if (idx !== -1) {
+                    clearAllFilters();
+                    editEvent(idx);
+                    scrollToBeat(idx);
+                }
+            } else if (chapter) {
+                jumpToChapter(chapter);
+            }
         }
 
         // Global exposure
