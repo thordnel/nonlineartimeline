@@ -3857,15 +3857,25 @@
                 return;
             }
 
+            let headerHtml = '<h1>Chapter List</h1>';
+            if (bookTitle) {
+                headerHtml = `<h1>${bookTitle}</h1>`;
+                if (bookAuthor) {
+                    headerHtml += `<h2>by ${bookAuthor}</h2>`;
+                }
+            }
+
             let printContent = `
-                <html><head><title>Chapter List</title><style>
-                    body { font-family: sans-serif; margin: 2rem; }
-                    h1 { text-align: center; border-bottom: 2px solid #333; padding-bottom: 1rem; margin-bottom: 2rem; }
+                <html><head><title>Chapter List</title>
+                <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@300;400&display=swap" rel="stylesheet">
+                <style>
+                    body { font-family: 'Merriweather', serif; margin: 2rem; font-weight: 300; }
+                    h1 { text-align: center; margin-bottom: 0.5rem; font-weight: 300; }
+                    h2 { text-align: center; margin-top: 0; margin-bottom: 2rem; font-weight: 300; font-size: 1.2rem; color: #555; }
                     ul { list-style-type: none; padding: 0; }
-                    li { font-size: 1.2rem; padding: 0.5rem 0; border-bottom: 1px solid #eee; }
-                    li:last-child { border-bottom: none; }
-                    span { font-weight: bold; color: #555; margin-right: 1em; }
-                </style></head><body><h1>Chapter List</h1><ul>
+                    li { font-size: 1rem; padding: 0.2rem 0; border: none; }
+                    span { font-weight: 300; margin-right: 1em; }
+                </style></head><body>${headerHtml}<ul>
             `;
 
             const sortedChapters = Array.from(chapters.entries()).sort((a, b) => a[0] - b[0]);
