@@ -20,4 +20,13 @@
       "type": "image/png"
     }
   ]
+  ],
+  "url_handlers": [
+    {
+      "origin": "https://thordnel.github.io"
+    }
+  ],
+  "launch_handler": {
+    "client_mode": ["navigate-existing", "auto"]
+  }
 }
