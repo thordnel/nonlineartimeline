@@ -1,7 +1,9 @@
 {
   "name": "Storyline Manager",
   "short_name": "Storyline",
+  "id": "storylines-manager",
   "start_url": "./index.html",
+  "scope": "./",
   "display": "standalone",
   "background_color": "#f4f1ea",
   "theme_color": "#8c6b5d",

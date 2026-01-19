@@ -1,4 +1,4 @@
-const CACHE_NAME = 'storylines-v74-offline'; // Increment version to force update
+const CACHE_NAME = 'storylines-v75-offline'; // Increment version to force update
 const ASSETS = [
   './',
   './index.html',
@@ -63,7 +63,7 @@ self.addEventListener('fetch', (event) => {
           cache.put(event.request, networkResponse.clone());
           return networkResponse;
         });
-      }).catch(() => caches.match(event.request))
+      }).catch(() => caches.match('./index.html'))
     );
     return;
   }
