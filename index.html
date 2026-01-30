@@ -1395,18 +1395,25 @@
                 </div>
 
                 <!-- ADD: Plothole Tagging in Beat Space -->
-                <div class="input-group col-span-full" style="padding-top: 10px; border-top: 1px dashed #d4cdc3;">
-                    <label>World Logic & Rules</label>
-                    <div style="display:flex; gap:10px; align-items:center;">
-                        <select id="plotholeSelect" style="flex:2;">
-                            <option value="">-- Select Rule --</option>
-                        </select>
-                        <button class="action-btn" onclick="tagPlotholeToBeat('violation')" title="Mark as Broken/Plothole">⚠️ Broken</button>
-                        <button class="action-btn" onclick="tagPlotholeToBeat('adherence')" title="Mark as Upheld/Established">✅ Upheld</button>
-                        <button class="action-btn" onclick="tagPlotholeToBeat('planned')" title="Mark as Planned">🗓️ Planned</button>
-                    </div>
-                    <div id="currentPlotholeTags" class="char-tag-row" style="border-color:var(--danger); background:#fff5f5;"></div>
-                </div>
+<div class="input-group col-span-full" style="padding-top: 10px; border-top: 1px dashed #d4cdc3; width: 100%;">
+    <label>World Logic & Rules</label>
+    
+    <div style="display: flex; flex-direction: column; gap: 10px; width: 100%;">
+        
+        <select id="plotholeSelect" style="width: 100%; box-sizing: border-box;">
+            <option value="">-- Select Rule --</option>
+        </select>
+        
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;">
+            <button class="action-btn" onclick="tagPlotholeToBeat('violation')" title="Mark as Broken/Plothole">⚠️ Broken</button>
+            <button class="action-btn" onclick="tagPlotholeToBeat('adherence')" title="Mark as Upheld/Established">✅ Upheld</button>
+            <button class="action-btn" onclick="tagPlotholeToBeat('planned')" title="Mark as Planned">🗓️ Planned</button>
+        </div>
+        
+    </div>
+
+    <div id="currentPlotholeTags" class="char-tag-row" style="border-color:var(--danger); background:#fff5f5; margin-top: 10px;"></div>
+</div>
 
             </div>
             <div class="btn-row sticky-footer">
