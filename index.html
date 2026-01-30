@@ -3132,7 +3132,7 @@
 
         function createCardHtml(evt, i, nextEvt = null) {
             let displayDate, displayTime, displayDay, displayBasis = "Local Browser";
-const wrapLink = (content, url) => url ? `<a href="${url}" target="_blank" style="text-decoration:none; color:#191970; font-weight:700;">${content}</a>` : content;
+            const wrapLink = (content, url) => url ? `<a href="${url}" target="_blank" style="text-decoration:none; color:#8B0000; font-weight:700;">${content}</a>` : content;
             // Narrative Mode Styling
             let bgStyle = 'background-color: #fff;';
             if (evt.narrativeMode === 'Flashback') bgStyle = 'background-color: #f3f4f6;'; // Light Gray #f3f4f6
@@ -3288,7 +3288,7 @@ const wrapLink = (content, url) => url ? `<a href="${url}" target="_blank" style
             const combinedBadges = continuityHtml + plotholeHtml + narrativeHtml + charHtml;
 
             return {
-    // 2. UPDATED TABLE VIEW
+    // UPDATED TABLE VIEW: Only Number and Title are blue/linked
     table: `<tr class="${dragClass}" data-index="${i}" ${dragAttr} style="${bgStyle}" ondblclick="handleCardDblClick(event, ${i})">
         <td>${currentSortMethod === 'number' ? '☰' : ''}</td>
         <td style="white-space: nowrap;">${displayDate} ${displayTime}<br><small>${displayDay}</small><br><span class="display-basis-tag">${displayBasis}</span>${altTzHtml}</td>
@@ -3302,7 +3302,7 @@ const wrapLink = (content, url) => url ? `<a href="${url}" target="_blank" style
         <td><div class="action-btn-group"><button class="action-btn" onclick="editEvent(${i})" title="Edit">✎</button>${currentSortMethod === 'number' ? `<button class="action-btn" onclick="moveBeat(${i}, -1)" title="Move Up">↑</button><button class="action-btn" onclick="moveBeat(${i}, 1)" title="Move Down">↓</button>` : ''}<button class="action-btn del-btn" onclick="askDelete(${i})" title="Delete">×</button></div></td>
     </tr>`,
 
-    // 3. UPDATED LINEAR VIEW
+    // UPDATED LINEAR VIEW: Sub-title remains muted gray
     linear: `<div class="h-item ${dragClass}" data-index="${i}" ${dragAttr}>
         <div class="h-date-wrap"><div class="h-date">${displayDate}</div><div class="h-day">${displayDay}</div><div class="h-time">${displayTime}<br><span class="display-basis-tag">${displayBasis}</span>${altTzHtml}</div></div>
         <div class="h-dot-container"><div class="h-line"></div>${durationHtml}<div class="${dotClass}" onclick="editEvent(${i})"></div></div>
@@ -3310,21 +3310,21 @@ const wrapLink = (content, url) => url ? `<a href="${url}" target="_blank" style
             <span class="card-del" onclick="event.stopPropagation(); askDelete(${i})">×</span>
             <div class="h-val-text">${msHtml}Chapter ${wrapLink(evt.number, evt.gDocsLink)}</div>
             ${evt.chapterTitle ? `<div class="h-chap-title">${wrapLink(evt.chapterTitle, evt.gDocsLink)}</div>` : ''}
-            ${evt.subChapterTitle ? `<div class="h-sub-title">${wrapLink(evt.subChapterTitle, evt.gDocsLink)}</div>` : ''}
+            ${evt.subChapterTitle ? `<div class="h-sub-title">${evt.subChapterTitle}</div>` : ''}
             <div class="h-divider"></div>
             <div class="h-detail-text markdown-body">${parsedDetails}</div>
             ${remarksHtml}${combinedBadges}
         </div>
     </div>`,
 
-    // 4. UPDATED MULTITIMELINE (CARD) VIEW
+    // UPDATED MULTITIMELINE: Consistent behavior
     multi: `<div class="h-item">
         <div class="h-date-wrap" style="min-height:auto; text-align:left;"><div class="h-date" style="font-size:0.7rem; font-weight:900;">${displayDate}</div><div class="h-time" style="font-size:0.6rem; color:var(--text-muted)">${displayTime} <span class="display-basis-tag" style="font-size:0.5rem; padding:1px 3px;">${displayBasis}</span></div>${altTzHtml}</div>
         <div class="h-card" data-index="${i}" onclick="editEvent(${i})" ondblclick="handleCardDblClick(event, ${i})" style="${bgStyle}">
             <span class="card-del" onclick="event.stopPropagation(); askDelete(${i})">×</span>
             <div class="h-val-text" style="font-size:0.55rem">${msHtml}CH ${wrapLink(evt.number, evt.gDocsLink)}</div>
             ${evt.chapterTitle ? `<div class="h-chap-title" style="font-size:0.75rem">${wrapLink(evt.chapterTitle, evt.gDocsLink)}</div>` : ''}
-            ${evt.subChapterTitle ? `<div class="h-sub-title" style="font-size:0.65rem">${wrapLink(evt.subChapterTitle, evt.gDocsLink)}</div>` : ''}
+            ${evt.subChapterTitle ? `<div class="h-sub-title" style="font-size:0.65rem">${evt.subChapterTitle}</div>` : ''}
             <div class="h-divider"></div>
             <div class="h-detail-text markdown-body" style="font-size:0.75rem">${parsedDetails.substring(0, 150)}${evt.details.length > 150 ? '...' : ''}</div>
             ${remarksHtml}${combinedBadges}
