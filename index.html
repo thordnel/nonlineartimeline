@@ -3132,7 +3132,7 @@
 
         function createCardHtml(evt, i, nextEvt = null) {
             let displayDate, displayTime, displayDay, displayBasis = "Local Browser";
-            const wrapLink = (content, url) => url ? `<a href="${url}" target="_blank" style="text-decoration:none; color:inherit;">${content}</a>` : content;
+const wrapLink = (content, url) => url ? `<a href="${url}" target="_blank" style="text-decoration:none; color:#191970; font-weight:700;">${content}</a>` : content;
             // Narrative Mode Styling
             let bgStyle = 'background-color: #fff;';
             if (evt.narrativeMode === 'Flashback') bgStyle = 'background-color: #f3f4f6;'; // Light Gray #f3f4f6
