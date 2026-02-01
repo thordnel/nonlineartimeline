@@ -3745,6 +3745,21 @@
                     startStr = e.date.replace(/[-:]/g, "") + (e.date.split(':').length === 2 ? "00" : "");
                 }
                 
+                const startDate = new Date(
+                    startStr.slice(0,4),
+                    startStr.slice(4,6) - 1,
+                    startStr.slice(6,8),
+                    startStr.slice(9,11),
+                    startStr.slice(11,13),
+                    0
+                );
+
+                const endDate = new Date(startDate.getTime() + 60 * 60000);
+
+                const pad = n => n.toString().padStart(2, '0');
+                const endStr =
+                    `${endDate.getFullYear()}${pad(endDate.getMonth()+1)}${pad(endDate.getDate())}` +
+                    `T${pad(endDate.getHours())}${pad(endDate.getMinutes())}00`;
                 let summary = `Ch ${e.number}`;
                 if (e.chapterTitle) summary += `: ${e.chapterTitle}`;
                 
@@ -3766,6 +3781,7 @@
                 ics += `UID:${uid}\r\n`;
                 ics += `DTSTAMP:${dtStamp}\r\n`;
                 ics += `DTSTART:${startStr}\r\n`;
+                ics += `DTEND:${endStr}\r\n`;
                 if (mode === 'planning' && useRecur) ics += "RRULE:FREQ=MONTHLY\r\n";
                 ics += `SUMMARY:${escapeICS(summary)}\r\n`;
                 ics += `DESCRIPTION:${description}\r\n`;
