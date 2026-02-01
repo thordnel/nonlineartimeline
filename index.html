@@ -4451,7 +4451,17 @@ navigator.serviceWorker.addEventListener('controllerchange', () => {
             const t = document.getElementById('toast');
             t.innerHTML = `New version available <button onclick="triggerUpdate()" style="margin-left:10px; padding:2px 8px; color:#333; cursor:pointer;">Update</button>`;
             t.className = "show";
-            window.triggerUpdate = () => worker.postMessage({ type: 'SKIP_WAITING' });
+            window.triggerUpdate = () => {
+                // Small delay helps Chrome clear "busy" states
+                setTimeout(() => {
+                    worker.postMessage({ type: 'SKIP_WAITING' });
+                }, 400);
+
+                // Fallback: If controllerchange hasn't fired in 2 seconds, force it
+                setTimeout(() => {
+                    window.location.reload();
+                }, 2000);
+            };
         }
 
         // --- APP NOTIFICATION HELPER ---
